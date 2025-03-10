@@ -1,5 +1,22 @@
 from rest_framework import serializers
-from .models import User, Team, Project, Task, Subtask, Comment, Notification, ActivityLog, ProjectGoal, Subgoal
+from .models import (
+    User,
+    Team,
+    Project,
+    ProjectGoal,
+    Subgoal,
+    Task,
+    Subtask,
+    Tag,
+    TaskTag,
+    Comment,
+    Notification,
+    File,
+    Setting,
+    ActivityLog,
+    UserTeamRelation,
+    ProjectMember
+)
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -16,6 +33,16 @@ class ProjectSerializer(serializers.ModelSerializer):
         model = Project
         fields = '__all__'
 
+class ProjectGoalSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProjectGoal
+        fields = '__all__'
+
+class SubgoalSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Subgoal
+        fields = '__all__'
+
 class TaskSerializer(serializers.ModelSerializer):
     class Meta:
         model = Task
@@ -24,6 +51,16 @@ class TaskSerializer(serializers.ModelSerializer):
 class SubtaskSerializer(serializers.ModelSerializer):
     class Meta:
         model = Subtask
+        fields = '__all__'
+
+class TagSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Tag
+        fields = '__all__'
+
+class TaskTagSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TaskTag
         fields = '__all__'
 
 class CommentSerializer(serializers.ModelSerializer):
@@ -36,17 +73,27 @@ class NotificationSerializer(serializers.ModelSerializer):
         model = Notification
         fields = '__all__'
 
+class FileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = File
+        fields = '__all__'
+
+class SettingSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Setting
+        fields = '__all__'
+
 class ActivityLogSerializer(serializers.ModelSerializer):
     class Meta:
         model = ActivityLog
         fields = '__all__'
 
-class ProjectGoalSerializer(serializers.ModelSerializer):
+class UserTeamRelationSerializer(serializers.ModelSerializer):
     class Meta:
-        model = ProjectGoal
+        model = UserTeamRelation
         fields = '__all__'
 
-class SubgoalSerializer(serializers.ModelSerializer):
+class ProjectMemberSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Subgoal
+        model = ProjectMember
         fields = '__all__'
