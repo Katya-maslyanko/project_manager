@@ -1,11 +1,5 @@
 from django.db import models
-
-class User(models.Model):
-    username = models.CharField(max_length=50, unique=True)
-    email = models.EmailField(max_length=100, unique=True)
-    password_hash = models.CharField(max_length=255)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+from django.contrib.auth.models import User
 
 class Team(models.Model):
     name = models.CharField(max_length=100, unique=True)
@@ -16,7 +10,23 @@ class Team(models.Model):
 class Project(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField()
-    team = models.ForeignKey(Team, on_delete=models.CASCADE)
+    team = models.ForeignKey(Team, related_name='projects', on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+class ProjectGoal(models.Model):
+    project = models.ForeignKey(Project, related_name='goals', on_delete=models.CASCADE)
+    title = models.CharField(max_length=200)
+    description = models.TextField()
+    status = models.CharField(max_length=50)  # Например, "в процессе", "завершено"
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+class Subgoal(models.Model):
+    goal = models.ForeignKey(ProjectGoal, related_name='subgoals', on_delete=models.CASCADE)
+    title = models.CharField(max_length=200)
+    description = models.TextField()
+    status = models.CharField(max_length=50)  # Например, "в процессе", "завершено"
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -26,13 +36,13 @@ class Task(models.Model):
     status = models.CharField(max_length=50)
     priority = models.CharField(max_length=50)
     assignee = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
-    project = models.ForeignKey(Project, on_delete=models.CASCADE)
+    project = models.ForeignKey(Project, related_name='tasks', on_delete=models.CASCADE)
     due_date = models.DateTimeField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
 class Subtask(models.Model):
-    task = models.ForeignKey(Task, on_delete=models.CASCADE)
+    task = models.ForeignKey(Task, related_name='subtasks', on_delete=models.CASCADE)
     title = models.CharField(max_length=200)
     description = models.TextField()
     status = models.CharField(max_length=50)
@@ -42,8 +52,18 @@ class Subtask(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+class Tag(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+    description = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+class TaskTag(models.Model):
+    task = models.ForeignKey(Task, related_name='task_tags', on_delete=models.CASCADE)
+    tag = models.ForeignKey(Tag, related_name='task_tags', on_delete=models.CASCADE)
+
 class Comment(models.Model):
-    task = models.ForeignKey(Task, on_delete=models.CASCADE)
+    task = models.ForeignKey(Task, related_name='comments', on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     content = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
@@ -55,6 +75,18 @@ class Notification(models.Model):
     is_read = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
+class File(models.Model):
+    task = models.ForeignKey(Task, related_name='files', on_delete=models.CASCADE)
+    file_path = models.CharField(max_length=255)
+    uploaded_by = models.ForeignKey(User, on_delete=models.CASCADE)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+class Setting(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    key = models.CharField(max_length=100)
+    value = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
 class ActivityLog(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
@@ -62,18 +94,14 @@ class ActivityLog(models.Model):
     action = models.CharField(max_length=255)
     created_at = models.DateTimeField(auto_now_add=True)
 
-class ProjectGoal(models.Model):
-    project = models.ForeignKey(Project, on_delete=models.CASCADE)
-    title = models.CharField(max_length=200)
-    description = models.TextField()
-    status = models.CharField(max_length=50)  # Например, "в процессе", "завершено"
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+class UserTeamRelation(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    team = models.ForeignKey(Team, on_delete=models.CASCADE)
+    role = models.CharField(max_length=50)
+    joined_at = models.DateTimeField(auto_now_add=True)
 
-class Subgoal(models.Model):
-    goal = models.ForeignKey(ProjectGoal, on_delete=models.CASCADE)
-    title = models.CharField(max_length=200)
-    description = models.TextField()
-    status = models.CharField(max_length=50)  # Например, "в процессе", "завершено"
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+class ProjectMember(models.Model):
+    project = models.ForeignKey(Project, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    role = models.CharField(max_length=50)
+    added_at = models.DateTimeField(auto_now_add=True)
