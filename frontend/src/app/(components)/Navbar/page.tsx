@@ -5,7 +5,7 @@ const Navbar = () => {
   const notificationCount = 3; // Пример количества уведомлений
 
   return (
-    <div className="flex items-center justify-end p-4 space-x-4 border-b" style={{ borderColor: '#E6EDF1', paddingRight: '20px' }}>
+    <div className="fixed top-0 left-0 right-0 flex items-center justify-end p-4 space-x-4 border-b" style={{ borderColor: '#E6EDF1', paddingRight: '20px' }}>
       {/* Поисковая панель */}
       <div className="flex items-center border rounded px-4 py-2" style={{ width: '323px', borderRadius: '4px' }}>
         <input
