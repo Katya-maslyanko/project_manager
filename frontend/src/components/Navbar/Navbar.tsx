@@ -3,22 +3,16 @@ import UserDropdown from "@/components/header/ProfileMenu";
 import React, { useState, useEffect, useRef } from "react";
 import { Search, Bell } from 'lucide-react';
 import Link from "next/link";
+import { ThemeToggleButton } from "@/components/common/ThemeToggleButton";
+import { useSidebar } from "@/context/SidebarContext"; // Импортируем SidebarContext
 
 const AppHeader: React.FC = () => {
-  const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const { isMobileOpen, toggleSidebar, isExpanded } = useSidebar(); // Используем контекст
   const [notifying, setNotifying] = useState(true);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const toggleSidebar = () => {
-    setIsMobileOpen(!isMobileOpen);
-  };
-
   const handleToggle = () => {
-    if (window.innerWidth >= 991) {
-      toggleSidebar();
-    } else {
-      toggleSidebar();
-    }
+    toggleSidebar();
   };
 
   useEffect(() => {
@@ -36,9 +30,9 @@ const AppHeader: React.FC = () => {
   }, []);
 
   return (
-    <header className="fixed top-0 left-0 right-0 flex items-center justify-end p-4 space-x-4 border-b" style={{ borderColor: '#E6EDF1', paddingRight: '20px' }}>
+    <header className={`sticky top-0 flex w-full items-center justify-between p-4 bg-white border-b border-gray-200 dark:bg-dark-bg dark:border-gray-800 transition-all duration-300 ease-in-out ${isExpanded || isMobileOpen ? 'pl-[22rem]' : 'pl-[7.7rem]'}`}>      {/* Левый блок: Кнопка переключения боковой панели */}
       <button
-        className="items-center justify-center w-10 h-10 text-gray-500 border-gray-200 rounded-lg z-99999 dark:border-gray-800 lg:flex dark:text-gray-400 lg:h-11 lg:w-11 lg:border"
+        className="items-center justify-center w-12 h-12 rounded-lg z-99999 lg:flex lg:h-11 lg:w-11 lg:border text-gray-500 transition-colors bg-white border border-gray-200 hover:text-dark-900 hover:bg-gray-100 hover:text-gray-700 dark:border-gray-800 dark:bg-dark-bg dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white"
         onClick={handleToggle}
         aria-label="Toggle Sidebar"
       >
@@ -48,20 +42,27 @@ const AppHeader: React.FC = () => {
           </svg>
         ) : (
           <svg width="16" height="12" viewBox="0 0 16 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path fillRule="evenodd" clipRule="evenodd" d="M0.583252 1C0.583252 0.585788 0.919038 0.25 1.33325 0.25H14.6666C15.0808 0.25 15.4166 0.585786 15.4166 1C15.4166 1.41421 15.0808 1.75 14.6666 1.75L1.33325 1.75C0.919038 1.75 0.583252 1.41422 0.583252 1ZM0.583252 11C0.583252 10 .5858 0.919038 10.25 1.33325 10.25L14.6666 10.25C15.0808 10.25 15.4166 10.5858 15.4166 11C15.4166 11.4142 15.0808 11.75 14.6666 11.75L1.33325 11.75C0.919038 11.75 0.583252 11.4142 0.583252 11ZM1.33325 5.25C0.919038 5.25 0.583252 5.58579 0.583252 6C0.583252 6.41421 0.919038 6.75 1.33325 6.75L7.99992 6.75C8.41413 6.75 8.74992 6.41421 8.74992 6C8.74992 5.58579 8.41413 5.25 7.99992 5.25L1.33325 5.25Z" fill="currentColor" />
+            <path fillRule="evenodd" clipRule="evenodd" d="M0.583252 1C0.583252 0.585788 0.919038 0.25 1.33325 0.25H14.6666C15.0808 0.25 15.4166 0.585786 15.4166 1C15.4166 1.41421 15.0808 1.75 14.6666  1.75L1.33325 1.75C0.919038 1.75 0.583252 1.41422 0.583252 1ZM0.583252 11C0.583252 10.5858 0.919038 10.25 1.33325 10.25L14.6666 10.25C15.0808 10.25 15.4166 10.5858 15.4166 11C15.4166 11.4142 15.0808 11.75 14.6666 11.75L1.33325 11.75C0.919038 11.75 0.583252 11.4142 0.583252 11ZM1.33325 5.25C0.919038 5.25 0.583252 5.58579 0.583252 6C0.583252 6.41421 0.919038 6.75 1.33325 6.75L7.99992 6.75C8.41413 6.75 8.74992 6.41421 8.74992 6C8.74992 5.58579 8.41413 5.25 7.99992 5.25L1.33325 5.25Z" fill="currentColor" />
           </svg>
         )}
       </button>
 
-      <div className="flex items-center border rounded px-4 py-2" style={{ width: '323px', borderRadius: '4px' }}>
-        <input type="text" placeholder="Поиск" className="outline-none w-full bg-transparent text-sm dark:bg-gray-800 dark:text-white" />
-        <Search className="text-gray-500 ml-2 dark:text-gray-400" />
-      </div>
-
+      {/* Правый блок: Поиск, уведомления и выпадающее меню пользователя */}
       <div className="flex items-center space-x-4">
+        <div className="flex items-center border rounded px-4 py-2 dark:bg-dark-bg dark:text-gray-400 dark:border-gray-800 transition-all duration-300 ease-in-out" style={{ width: '323px', borderRadius: '4px' }}>
+          <input
+            type="text"
+            placeholder="Поиск"
+            className="outline-none w-full text-sm dark:bg-dark-bg dark:text-gray-400 focus:outline-none"
+            ref={inputRef}
+          />
+          <Search className="text-gray-500 ml-2" />
+        </div>
+
+        <ThemeToggleButton />
         <Link href="/notification">
           <button
-            className="relative dropdown-toggle flex items-center justify-center text-gray-500 transition-colors bg-white border border-gray-200 rounded-full hover:text-gray-700 w-12 h-12 hover:bg-gray-100 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white"
+            className="relative dropdown-toggle flex items-center justify-center text-gray-500 transition-colors bg-white border border-gray-200 rounded-full hover:text-gray-700 w-12 h-12 hover:bg-gray-100 dark:border-gray-800 dark:bg-dark-bg dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white"
             onClick={() => setNotifying(!notifying)}
           >
             <span
@@ -72,6 +73,7 @@ const AppHeader: React.FC = () => {
             <Bell className="w-6 h-6" />
           </button>
         </Link>
+        <div className="w-px h-6 bg-gray-300"></div>
         <div className="relative flex items-center">
           <UserDropdown />
         </div>

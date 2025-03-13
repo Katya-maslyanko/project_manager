@@ -24,18 +24,18 @@ export default function UserDropdown() {
         onClick={toggleDropdown}
         className="flex items-center text-gray-500 dark:text-gray-400 dropdown-toggle"
       >
-        <span className="flex items-center justify-center w-12 h-12 rounded-full bg-gray-200">
-          <i className="fas fa-user text-gray-500"></i> {/* Круглый элемент */}
+        <span className="flex items-center justify-center w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-700">
+          <i className="fas fa-user text-gray-500 dark:text-gray-400"></i> {/* Круглый элемент */}
         </span>
-        <span className="text-gray-500 ml-2 text-base text-theme-sm">name@domain.ru</span>
+        <span className="text-gray-500 ml-2 text-base text-theme-sm dark:text-gray-400">name@domain.ru</span>
 
-        <ChevronDown className={`ml-1 text-gray-500 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+        <ChevronDown className={`ml-1 text-gray-500 transition-transform ${isOpen ? 'rotate-180' : ''} dark:text-gray-400`} />
       </button>
 
       <Dropdown
         isOpen={isOpen}
         onClose={closeDropdown}
-        className="absolute right-0 mt-[17px] flex w-[260px] flex-col rounded-[12px] border border-gray-200 bg-white p-3 shadow-theme-lg dark:border-gray-800 dark:bg-gray-dark transition-all duration-200 ease-in-out"
+        className="absolute right-0 mt-[17px] flex w-[260px] flex-col rounded-[12px] border border-gray-200 bg-white p-3 shadow-theme-lg dark:border-gray-800 dark:bg-gray-800 transition-all duration-200 ease-in-out"
       >
         <div>
           <span className="block text-gray-500 text-base font-normal dark:text-gray-400 px-5">
@@ -70,7 +70,7 @@ export default function UserDropdown() {
         <Link
           href="/signin"
           className="flex items-center gap-3 px-4 py-2 mt-2 text-gray-500 rounded-lg group text-sm hover:bg-gray-100 hover:text-gray-800 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300 transition-all duration-200 ease-in-out"
-          >
+        >
           <LogOut className="text-gray-500 group-hover:text-gray-800 dark:group-hover:text-gray-300" />
           <span className="ml-2">Выйти</span>
         </Link>
