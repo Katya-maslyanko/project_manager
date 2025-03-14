@@ -211,22 +211,38 @@ const AppSidebar: React.FC = () => {
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <div className={`py-8 flex justify-center`}>
-        {isExpanded ? (
-          <Image
-            src="/icons/Icon_logo_big.svg"
-            alt="TaskApp Logo Open"
-            width={150}
-            height={40}
-          />
-        ) : (
-          <Image
-            src="../../icons/Icon_logo.svg"
-            alt="TaskApp Logo Closed"
-            width={40}
-            height={40}
-          />
-        )}
+      <div
+        className={`py-7 flex  ${
+          !isExpanded && !isHovered ? "lg:justify-center" : "justify-start"
+        }`}
+      >
+        <Link href="/">
+          {isExpanded || isMobileOpen ? (
+            <>
+              <Image
+                className="dark:hidden"
+                src="/images/logo/icon_logo_open.svg"
+                alt="Icon Logo Open"
+                width={160}
+                height={60}
+              />
+              <Image
+                className="hidden dark:block"
+                src="/images/logo/icon_logo_dark.svg"
+                alt="Icon Logo Dark"
+                width={160}
+                height={60}
+              />
+            </>
+          ) : (
+            <Image
+              src="/images/logo/icon_logo_close.svg"
+              alt="Logo"
+              width={40}
+              height={40}
+            />
+          )}
+        </Link>
       </div>
       <div className="flex flex-col overflow-y-auto duration-300 ease-linear no-scrollbar">
         <nav className="mb-6">
