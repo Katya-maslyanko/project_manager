@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useRef, useState, useCallback } from "react";
+import React, { useCallback, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -11,7 +11,7 @@ import {
   FolderKanban,
   Users,
   ChevronDown,
-  PlusCircle,
+  Plus,
 } from "lucide-react";
 
 type NavItem = {
@@ -55,8 +55,11 @@ const navItems: NavItem[] = [
   },
 ];
 
+const projectColors = ["bg-red-200", "bg-green-200"]; // Цвета для проектов
+const groupColors = ["bg-pink-200", "bg-yellow-200"]; // Цвета для групп
+
 const AppSidebar: React.FC = () => {
-  const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
+  const { isExpanded, isMobileOpen } = useSidebar();
   const pathname = usePathname();
 
   const [openProjects, setOpenProjects] = useState(false);
@@ -106,47 +109,50 @@ const AppSidebar: React.FC = () => {
               <li key={nav.name}>
                 <Link
                   href={nav.path!}
-                  className={`flex items-center px-4 py-3 text-gray-600 rounded-lg hover:bg-gray-200 transition-all duration-200 ease-in-out ${
-                    isActive(nav.path!) ? "bg-gray-300" : ""
+                  className={`flex items-center px-4 py-3 rounded-lg hover:bg-gray-200 transition-all duration-200 ease-in-out ${
+                    isActive(nav.path!) ? "bg-blue-600 text-white" : "text-gray-600"
                   }`}
                 >
-                  <span className="mr-2 text-lg">{nav.icon}</span>
+                  <span className={`mr-2 ${isActive(nav.path!) ? "text-white" : "text-gray-500"}`}>
+                    {nav.icon}
+                  </span>
                   {isExpanded && <span className="text-lg">{nav.name}</span>}
                 </Link>
               </li>
             ))}
           </ul>
-          <div className="border-t border-gray-300 my-4" />
+          <div className="border-t border-gray-200 my-4" />
 
           {/* Мои Проекты */}
           <div>
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between mb-3">
               <h2 className={`text-gray-400 text-sm font-semibold uppercase flex items-center ${!isExpanded ? "justify-center w-full" : ""}`}>
                 {isExpanded ? "Мои Проекты" : "..."}
               </h2>
               {isExpanded && (
-                <button className="bg-light-blue-200 rounded-lg p-1">
-                  <PlusCircle className="text-blue-600" />
+                <button className="bg-blue-100 rounded-lg p-1 w-8 h-8 flex items-center justify-center">
+                  <Plus className="text-blue-600 w-4 h-4" />
                 </button>
               )}
             </div>
-            <button onClick={toggleProjects} className={`flex items-center justify-between w-full px-4 py-3 text-gray-600 rounded-lg hover:bg-gray-200 transition-all duration-200 ease-in-out ${openProjects ? "bg-gray-200" : ""}`}>
+            <button onClick={toggleProjects} className={`flex items-center justify-between w-full px-4 py-3 rounded-lg hover:bg-gray-200 transition-all duration-200 ease-in-out ${openProjects ? "bg-gray-200" : ""}`}>
               <span className="flex items-center">
-                <FolderKanban className="mr-2" />
-                {isExpanded && <span className="text-lg">Проекты</span>}
+                <FolderKanban className={`mr-2 ${openProjects ? "text-blue-600" : "text-gray-500"}`} />
+                {isExpanded && <span className={`text-lg ${openProjects ? "text-blue-600" : "text-gray-600"}`}>Проекты</span>}
               </span>
-              <ChevronDown className={`transition-transform duration-200 ${openProjects ? "rotate-180" : ""}`} />
+              <ChevronDown className={`transition-transform duration-200 ${openProjects ? "rotate-180" : ""} text-gray-500`} />
             </button>
             {openProjects && (
               <ul className="ml-4 mt-2 space-y-1">
-                {navItems[3].subItems?.map((subItem) => (
+                {navItems[3].subItems?.map((subItem, index) => (
                   <li key={subItem.name} className="flex items-center">
                     <Link
                       href={subItem.path!}
-                      className={`flex items-center w-full px-4 py-3 text-gray-600 rounded-lg hover:bg-gray-200 transition-all duration-200 ease-in-out ${
-                        isActive(subItem.path!) ? "bg-gray-300" : ""
+                      className={`flex items-center w-full px-4 py-3 rounded-lg hover:bg-gray-200 transition-all duration-200 ease-in-out ${
+                        isActive(subItem.path!) ? "bg-blue-600 text-white" : "text-gray-600"
                       }`}
                     >
+                      <span className={`mr-2 w-4 h-4 rounded ${isActive(subItem.path!) ? "bg-white" : projectColors[index % projectColors.length]}`} />
                       {subItem.name}
                     </Link>
                   </li>
@@ -155,37 +161,38 @@ const AppSidebar: React.FC = () => {
             )}
           </div>
 
-          <div className="border-t border-gray-300 my-4" />
+          <div className="border-t border-gray-200 my-4" />
 
           {/* Мои Группы */}
           <div>
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between mb-3">
               <h2 className={`text-gray-400 text-sm font-semibold uppercase flex items-center ${!isExpanded ? "justify-center w-full" : ""}`}>
                 {isExpanded ? "Мои Группы" : "..."}
               </h2>
               {isExpanded && (
-                <button className="bg-light-blue-200 rounded-lg p-1">
-                  <PlusCircle className="text-blue-600" />
+                <button className="bg-blue-100 rounded-lg p-1 w-8 h-8 flex items-center justify-center">
+                  <Plus className="text-blue-600 w-4 h-4" />
                 </button>
               )}
             </div>
-            <button onClick={toggleGroups} className={`flex items-center justify-between w-full px-4 py-3 text-gray-600 rounded-lg hover:bg-gray-200 transition-all duration-200 ease-in-out ${openGroups ? "bg-gray-200" : ""}`}>
+            <button onClick={toggleGroups} className={`flex items-center justify-between w-full px-4 py-3 rounded-lg hover:bg-gray-200 transition-all duration-200 ease-in-out ${openGroups ? "bg-gray-200" : ""}`}>
               <span className="flex items-center">
-                <Users className="mr-2" />
-                {isExpanded && <span className="text-lg">Группы</span>}
+                <Users className={`mr-2 ${openGroups ? "text-blue-600" : "text-gray-500"}`} />
+                {isExpanded && <span className={`text-lg ${openGroups ? "text-blue-600" : "text-gray-600"}`}>Группы</span>}
               </span>
-              <ChevronDown className={`transition-transform duration-200 ${openGroups ? "rotate-180" : ""}`} />
+              <ChevronDown className={`transition-transform duration-200 ${openGroups ? "rotate-180" : ""} text-gray-500`} />
             </button>
             {openGroups && (
               <ul className="ml-4 mt-2 space-y-1">
-                {navItems[4].subItems?.map((subItem) => (
+                {navItems[4].subItems?.map((subItem, index) => (
                   <li key={subItem.name} className="flex items-center">
                     <Link
                       href={subItem.path!}
-                      className={`flex items-center w-full px-4 py-3 text-gray-600 rounded-lg hover:bg-gray-200 transition-all duration-200 ease-in-out ${
-                        isActive(subItem.path!) ? "bg-gray-300" : ""
+                      className={`flex items-center w-full px-4 py-3 rounded-lg hover:bg-gray-200 transition-all duration-200 ease-in-out ${
+                        isActive(subItem.path!) ? "bg-blue-600 text-white" : "text-gray-600"
                       }`}
                     >
+                      <span className={`mr-2 w-4 h-4 rounded ${isActive(subItem.path!) ? "bg-white" : groupColors[index % groupColors.length]}`} />
                       {subItem.name}
                     </Link>
                   </li>
