@@ -1,5 +1,5 @@
 "use client";
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -69,11 +69,25 @@ const AppSidebar: React.FC = () => {
 
   const toggleProjects = () => {
     setOpenProjects((prev) => !prev);
+    if (openGroups) setOpenGroups(false);
   };
 
   const toggleGroups = () => {
     setOpenGroups((prev) => !prev);
+    if (openProjects) setOpenProjects(false);
   };
+
+  const handleSidebarClose = () => {
+    setOpenProjects(false);
+    setOpenGroups(false);
+  };
+
+  useEffect(() => {
+    if (!isExpanded && !isMobileOpen) {
+        setOpenProjects(false);
+        setOpenGroups(false);
+    }
+}, [isExpanded, isMobileOpen]);
 
   // Заполняем subItems для проектов
   navItems[3].subItems = projects.map((project) => ({
@@ -89,20 +103,30 @@ const AppSidebar: React.FC = () => {
         lg:translate-x-0`}
     >
       <div className={`py-7 flex ${!isExpanded ? "lg:justify-center" : "justify-start"}`}>
-        <Link href="/">
+      <Link href="/">
           {isExpanded || isMobileOpen ? (
-            <Image
-              src="/images/logo/icon_logo_open.svg"
-              alt="Icon Logo Open"
-              width={160}
-              height={60}
-            />
+            <>
+              <Image
+                className="dark:hidden"
+                src="/images/logo/icon_logo_open.svg"
+                alt="Logo"
+                width={150}
+                height={40}
+              />
+              <Image
+                className="hidden dark:block"
+                src="/images/logo/icon_logo_dark.svg"
+                alt="Logo"
+                width={150}
+                height={40}
+              />
+            </>
           ) : (
             <Image
               src="/images/logo/icon_logo_close.svg"
               alt="Logo"
-              width={40}
-              height={40}
+              width={32}
+              height={32}
             />
           )}
         </Link>
@@ -176,7 +200,7 @@ const AppSidebar: React.FC = () => {
                 {isExpanded ? "Мои Группы" : "..."}
               </h2>
               {isExpanded && (
-                <button className=" bg-blue-100 rounded-lg p-1 w-8 h-8 flex items-center justify-center">
+                <button className="bg-blue-100 rounded-lg p-1 w-8 h-8 flex items-center justify-center">
                   <Plus className="text-blue-600 w-4 h-4" />
                 </button>
               )}
