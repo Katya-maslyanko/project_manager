@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useSidebar } from "@/context/SidebarContext";
+import { useGetProjectsQuery } from "@/state/api"; // Импортируйте хук для получения проектов
 import {
   LayoutDashboard,
   CircleCheckBig,
@@ -40,10 +41,7 @@ const navItems: NavItem[] = [
   {
     name: "Проекты",
     icon: <FolderKanban />,
-    subItems: [
-      { name: "Проект 1", path: "/project-1" },
-      { name: "Проект 2", path: "/project-2" },
-    ],
+    subItems: [], // Изначально пустой массив, мы будем заполнять его позже
   },
   {
     name: "Группа",
@@ -65,6 +63,8 @@ const AppSidebar: React.FC = () => {
   const [openProjects, setOpenProjects] = useState(false);
   const [openGroups, setOpenGroups] = useState(false);
 
+  const { data: projects = [], error, isLoading } = useGetProjectsQuery(); // Получаем проекты
+
   const isActive = useCallback((path: string) => path === pathname, [pathname]);
 
   const toggleProjects = () => {
@@ -75,9 +75,15 @@ const AppSidebar: React.FC = () => {
     setOpenGroups((prev) => !prev);
   };
 
+  // Заполняем subItems для проектов
+  navItems[3].subItems = projects.map((project) => ({
+    name: project.name,
+    path: `/projects/${project.id}`, // Предполагается, что у вас есть страница для каждого проекта
+  }));
+
   return (
     <aside
-      className={`fixed mt-16 flex flex-col lg:mt-0 top-0 px-5 left-0 bg-white dark:bg-gray-900 dark:border-gray-800 text-gray-900 h-screen transition-all duration-300 ease-in-out z-50 border-r border-gray-200 
+      className={`fixed mt -16 flex flex-col lg:mt-0 top-0 px-5 left-0 bg-white dark:bg-gray-900 dark:border-gray-800 text-gray-900 h-screen transition-all duration-300 ease-in-out z-50 border-r border-gray-200 
         ${isExpanded || isMobileOpen ? "w-[290px]" : "w-[90px]"}
         ${isMobileOpen ? "translate-x-0" : "-translate-x-full"}
         lg:translate-x-0`}
@@ -144,7 +150,7 @@ const AppSidebar: React.FC = () => {
             </button>
             {openProjects && (
               <ul className="ml-4 mt-2 space-y-1">
-                {navItems[3].subItems?.map((subItem, index) => (
+                {navItems[3].subItems?.map((subItem) => (
                   <li key={subItem.name} className="flex items-center">
                     <Link
                       href={subItem.path!}
@@ -152,7 +158,7 @@ const AppSidebar: React.FC = () => {
                         isActive(subItem.path!) ? "bg-blue-600 text-white" : "text-gray-600"
                       }`}
                     >
-                      <span className={`mr-2 w-4 h-4 rounded ${isActive(subItem.path!) ? "bg-white" : projectColors[index % projectColors.length]}`} />
+                      <span className={`mr-2 w-4 h-4 rounded ${projectColors[0]}`} />
                       {subItem.name}
                     </Link>
                   </li>
@@ -170,7 +176,7 @@ const AppSidebar: React.FC = () => {
                 {isExpanded ? "Мои Группы" : "..."}
               </h2>
               {isExpanded && (
-                <button className="bg-blue-100 rounded-lg p-1 w-8 h-8 flex items-center justify-center">
+                <button className=" bg-blue-100 rounded-lg p-1 w-8 h-8 flex items-center justify-center">
                   <Plus className="text-blue-600 w-4 h-4" />
                 </button>
               )}

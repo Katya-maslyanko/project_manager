@@ -6,11 +6,15 @@ class Team(models.Model):
     description = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    productOwnerUserId = models.IntegerField(null=True, blank=True)  # Поле для идентификатора владельца продукта
+    projectManagerUserId = models.IntegerField(null=True, blank=True)  # Поле для идентификатора менеджера проекта
 
 class Project(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField()
     team = models.ForeignKey(Team, related_name='projects', on_delete=models.CASCADE)
+    startDate = models.DateTimeField(null=True, blank=True)  # Дата начала проекта
+    endDate = models.DateTimeField(null=True, blank=True)  # Дата окончания проекта
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -40,6 +44,8 @@ class Task(models.Model):
     due_date = models.DateTimeField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    tags = models.CharField(max_length=255, null=True, blank=True)  # Теги для задач
+    points = models.IntegerField(null=True, blank=True)  # Очки для задач
 
 class Subtask(models.Model):
     task = models.ForeignKey(Task, related_name='subtasks', on_delete=models.CASCADE)
@@ -74,6 +80,7 @@ class Notification(models.Model):
     message = models.TextField()
     is_read = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
 class File(models.Model):
     task = models.ForeignKey(Task, related_name='files', on_delete=models.CASCADE)
@@ -105,3 +112,15 @@ class ProjectMember(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     role = models.CharField(max_length=50)
     added_at = models.DateTimeField(auto_now_add=True)
+
+class TaskAssignment(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    task = models.ForeignKey(Task, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+class ProjectTeam(models.Model):
+    team = models.ForeignKey(Team, on_delete=models.CASCADE)
+    project = models.ForeignKey(Project, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
