@@ -60,6 +60,13 @@ class TaskViewSet(viewsets.ModelViewSet):
     queryset = Task.objects.all()
     serializer_class = TaskSerializer
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        project_id = self.request.query_params.get('projectId', None)
+        if project_id is not None:
+            queryset = queryset.filter(project_id=project_id)
+        return queryset
+
 class SubtaskViewSet(viewsets.ModelViewSet):
     queryset = Subtask.objects.all()
     serializer_class = SubtaskSerializer

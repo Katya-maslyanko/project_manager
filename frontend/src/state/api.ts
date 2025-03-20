@@ -38,6 +38,12 @@ export const api = createApi({
       query: (id) => `tasks/${id}/`, // Эндпоинт для получения задачи по ID
       providesTags: ["Tasks"],
     }),
+    // Новый эндпоинт для получения всех задач по ID проекта
+    getTasks: build.query<Task[], { projectId: number }>({
+      query: ({ projectId }) => `tasks?projectId=${projectId}`, // Эндпоинт для получения задач по проекту
+      providesTags: (result) =>
+        result ? result.map(({ id }) => ({ type: "Tasks", id })) : [{ type: "Tasks", id: "LIST" }],
+    }),
   }),
 });
 
@@ -46,4 +52,5 @@ export const {
   useGetProjectsQuery,
   useCreateProjectMutation,
   useGetTaskByIdQuery, // Экспортируем хук для получения задачи по ID
+  useGetTasksQuery, // Экспортируем хук для получения всех задач по ID проекта
 } = api;

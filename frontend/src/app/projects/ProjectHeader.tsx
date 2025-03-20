@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React from "react";
 import {
   Clock,
   ListFilter,
@@ -17,11 +17,11 @@ type BreadcrumbItem = {
 
 type Props = {
   projectName: string; // Название проекта
+  activeTab: string; // Активная вкладка
+  setActiveTab: (tabName: string) => void; // Функция для установки активной вкладки
 };
 
-const ProjectHeader: React.FC<Props> = ({ projectName }) => {
-  const [activeTab, setActiveTab] = useState("Список"); // Установите "Список" по умолчанию
-
+const ProjectHeader: React.FC<Props> = ({ projectName, activeTab, setActiveTab }) => {
   const breadcrumbsItems: BreadcrumbItem[] = [
     { label: "Главная", href: "/" },
     { label: projectName, href: `/projects/${projectName}` }, // Измените на правильный путь
