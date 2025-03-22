@@ -3,21 +3,22 @@
 import React from "react";
 import { useGetTasksQuery } from "@/state/api"; // Импортируем хук для получения задач
 
-type Props = {
+interface Props {
   projectId: number; // Убедитесь, что projectId имеет тип number
-};
+}
 
 const TaskList: React.FC<Props> = ({ projectId }) => {
+    const query = { projectId };
     console.log(`Запрос к API для projectId: ${projectId}`); // Логируем projectId
-    const { data: tasks = [], error, isLoading } = useGetTasksQuery({ projectId });
+    const { data: tasks = [], error, isLoading } = useGetTasksQuery(query);
   
     if (isLoading) {
       return <p>Загрузка задач...</p>;
     }
   
     if (error) {
-      console.error("Ошибка при загрузке задач:", error);
-      return <p>Ошибка при загрузке задач: {JSON.stringify(error)}</p>;
+      console.error("Ошибка при загрузке задач:", error); // Логируем ошибку
+      return <p>Ошибка при загрузке задач: {JSON.stringify(error)}</p>; // Сообщение об ошибке
     }
   
     return (
@@ -31,6 +32,6 @@ const TaskList: React.FC<Props> = ({ projectId }) => {
         ))}
       </div>
     );
-  };
-
+};
+  
 export default TaskList;

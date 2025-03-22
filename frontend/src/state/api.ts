@@ -1,5 +1,6 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
+// Определяем интерфейсы для проекта и задачи
 export interface Project {
   id: number;
   name: string;
@@ -26,6 +27,7 @@ export const api = createApi({
       query: () => "projects/",
       providesTags: ["Projects"],
     }),
+    // Эндпоинт для создания нового проекта
     createProject: build.mutation<Project, Partial<Project>>({
       query: (project) => ({
         url: "projects/",
@@ -34,23 +36,23 @@ export const api = createApi({
       }),
       invalidatesTags: ["Projects"],
     }),
+    // Эндпоинт для получения задачи по ID
     getTaskById: build.query<Task, number>({
-      query: (id) => `tasks/${id}/`, // Эндпоинт для получения задачи по ID
+      query: (id) => `tasks/${id}/`,
       providesTags: ["Tasks"],
     }),
-    // Новый эндпоинт для получения всех задач по ID проекта
+    // Эндпоинт для получения задач по projectId
     getTasks: build.query<Task[], { projectId: number }>({
-      query: ({ projectId }) => `tasks?projectId=${projectId}`, // Эндпоинт для получения задач по проекту
+      query: ({ projectId }) => `tasks/?projectId=${projectId}`, // Убедитесь, что этот путь соответствует вашему API
       providesTags: (result) =>
         result ? result.map(({ id }) => ({ type: "Tasks", id })) : [{ type: "Tasks", id: "LIST" }],
     }),
   }),
 });
 
-// Экспортируем хуки для использования в компонентах
 export const {
   useGetProjectsQuery,
   useCreateProjectMutation,
-  useGetTaskByIdQuery, // Экспортируем хук для получения задачи по ID
-  useGetTasksQuery, // Экспортируем хук для получения всех задач по ID проекта
+  useGetTaskByIdQuery,
+  useGetTasksQuery,
 } = api;

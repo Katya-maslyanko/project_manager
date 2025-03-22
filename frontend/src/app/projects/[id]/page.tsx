@@ -11,43 +11,38 @@ import { useParams } from 'next/navigation';
 const Projects = () => {
     const { id } = useParams(); 
     const [activeTab, setActiveTab] = useState<string>("Список");
-    const [isModalNewTaskOpen, setIsModalNewTaskOpen] = useState<boolean>(false);
-
-    // Получаем проекты
     const { data: projects = [], error, isLoading } = useGetProjectsQuery();
 
-    // Находим проект по ID
     const project = projects.find(project => project.id.toString() === id);
+    const projectId = project ? project.id : null; // Получаем projectId
 
     return (
         <div>
-            {/* Модальное окно задач */}
             {isLoading ? (
                 <p>Загрузка проектов...</p>
             ) : error ? (
-                <p>Ошибка при загрузке проектов</p>
+                <p>Ошибка при загрузке проектов: {JSON.stringify(error)}</p>
             ) : (
-                project ? ( // Проверяем, найден ли проект
+                project ? (
                     <>
                         <ProjectHeader
                             activeTab={activeTab}
                             setActiveTab={setActiveTab}
-                            projectName={project.name} // Передаем название проекта
-                            projectId={project.id} // Передаем projectId
+                            projectName={project.name}
+                            projectId={projectId}
                         />
-                        {/* Отображаем список задач для текущего проекта */}
-                        {activeTab === "Список" && (
-                            <TaskList projectId={project.id} /> // Передаем projectId в TaskList
+                        {activeTab === "Список" && projectId && (
+                            <TaskList projectId={projectId} />
                         )}
-                        {activeTab === "Доска" && (
-                            <KanbanBoard projectId={project.id} /> // Передаем projectId в KanbanBoard
+                        {activeTab === "Доска" && projectId && (
+                            <KanbanBoard projectId={projectId} />
                         )}
-                        {activeTab === "Хронология" && (
-                            <TimeLine projectId={project.id} /> // Передаем projectId в KanbanBoard
+                        {activeTab === "Хронология" && projectId && (
+                            <TimeLine projectId={projectId} />
                         )}
                     </>
                 ) : (
-                    <p>Проект не найден</p> // Сообщение, если проект не найден
+                    <p>Проект не найден</p>
                 )
             )}
         </div>
