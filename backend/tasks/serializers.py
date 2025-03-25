@@ -19,6 +19,7 @@ from .models import (
 )
 
 class UserSerializer(serializers.ModelSerializer):
+    profile_image = serializers.ImageField(source='userprofile.profile_image', required=False)
     class Meta:
         model = User
         fields = '__all__'

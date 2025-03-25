@@ -1,6 +1,13 @@
 from django.db import models
 from django.contrib.auth.models import User
 
+class UserProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    profile_image = models.ImageField(upload_to='profile_images/', null=True, blank=True)  # Поле для изображения профиля
+
+    def __str__(self):
+        return self.user.username
+
 class Team(models.Model):
     name = models.CharField(max_length=100, unique=True)
     description = models.TextField()
@@ -35,9 +42,15 @@ class Subgoal(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
 class Task(models.Model):
+    STATUS_CHOICES = [
+        ('Новая', 'Новая'),
+        ('В процессе', 'В процессе'),
+        ('Завершено', 'Завершено'),
+    ]
+
     title = models.CharField(max_length=200)
     description = models.TextField()
-    status = models.CharField(max_length=50)
+    status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='Новая')
     priority = models.CharField(max_length=50)
     assignee = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     project = models.ForeignKey(Project, related_name='tasks', on_delete=models.CASCADE)

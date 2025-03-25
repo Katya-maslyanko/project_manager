@@ -14,6 +14,12 @@ export interface Task {
   status: string;
   priority: string;
   projectId: number;
+  due_date: string;
+  created_at: string;
+  updated_at: string;
+  tags?: string;
+  points?: number;
+  assignee?: number;
 }
 
 export const api = createApi({
@@ -47,6 +53,14 @@ export const api = createApi({
       providesTags: (result) =>
         result ? result.map(({ id }) => ({ type: "Tasks", id })) : [{ type: "Tasks", id: "LIST" }],
     }),
+    updateTaskStatus: build.mutation<Task, { id: number; status: string }>({
+      query: ({ id, status }) => ({
+        url: `tasks/${id}/`,
+        method: "PATCH",
+        body: { status },
+      }),
+      invalidatesTags: ["Tasks"],
+    }),
   }),
 });
 
@@ -55,4 +69,5 @@ export const {
   useCreateProjectMutation,
   useGetTaskByIdQuery,
   useGetTasksQuery,
+  useUpdateTaskStatusMutation,
 } = api;

@@ -7,6 +7,7 @@ import {
   Grid2x2Check,
   ListTodo,
   ArrowDownUp,
+  SquareArrowOutUpRight,
 } from "lucide-react";
 import Breadcrumbs from "@/components/ui/breadcrumbs/Breadcrumbs";
 
@@ -34,6 +35,14 @@ const ProjectHeader: React.FC<Props> = ({ projectName, activeTab, setActiveTab }
         <h1 className="text-3xl font-semibold text-gray-800 dark:text-white">
           {projectName}
         </h1>
+        {/* Тут необходимо добавить иконки user тип котоорые учавствуют в проекте */}
+        <button
+            className="flex items-center px-4 py-2 text-base border bg-blue-100 rounded-lg text-blue-700 hover:text-white hover:bg-blue-600 duration-200 transition-colors dark:border-gray-800 dark:bg-dark-bg dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white"
+            onClick={() => console.log("Share clicked")}
+          >
+            <SquareArrowOutUpRight className="h-5 w-5 mr-2" />
+            Делиться
+        </button>
       </div>
 
       <div className="flex items-center mb-4">
