@@ -8,7 +8,6 @@ from .models import (
     Task,
     Subtask,
     Tag,
-    TaskTag,
     Comment,
     Notification,
     File,
@@ -26,7 +25,6 @@ from .serializers import (
     TaskSerializer,
     SubtaskSerializer,
     TagSerializer,
-    TaskTagSerializer,
     CommentSerializer,
     NotificationSerializer,
     FileSerializer,
@@ -74,10 +72,6 @@ class SubtaskViewSet(viewsets.ModelViewSet):
 class TagViewSet(viewsets.ModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
-
-class TaskTagViewSet(viewsets.ModelViewSet):
-    queryset = TaskTag.objects.all()
-    serializer_class = TaskTagSerializer
 
 class CommentViewSet(viewsets.ModelViewSet):
     queryset = Comment.objects.all()

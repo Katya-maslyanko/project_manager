@@ -41,6 +41,12 @@ class Subgoal(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+class Tag(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+    description = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
 class Task(models.Model):
     STATUS_CHOICES = [
         ('Новая', 'Новая'),
@@ -55,6 +61,7 @@ class Task(models.Model):
     assignee = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     project = models.ForeignKey(Project, related_name='tasks', on_delete=models.CASCADE)
     due_date = models.DateTimeField()
+    tag = models.ForeignKey(Tag, related_name='task_tags', on_delete=models.CASCADE, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     points = models.IntegerField(null=True, blank=True)
@@ -69,16 +76,6 @@ class Subtask(models.Model):
     due_date = models.DateTimeField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
-class Tag(models.Model):
-    name = models.CharField(max_length=100, unique=True)
-    description = models.TextField()
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-class TaskTag(models.Model):
-    task = models.ForeignKey(Task, related_name='task_tags', on_delete=models.CASCADE)
-    tag = models.ForeignKey(Tag, related_name='task_tags', on_delete=models.CASCADE)
 
 class Comment(models.Model):
     task = models.ForeignKey(Task, related_name='comments', on_delete=models.CASCADE)

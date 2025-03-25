@@ -9,7 +9,6 @@ from .views import (
     TaskViewSet,
     SubtaskViewSet,
     TagViewSet,
-    TaskTagViewSet,
     CommentViewSet,
     NotificationViewSet,
     FileViewSet,
@@ -28,7 +27,6 @@ router.register(r'subgoals', SubgoalViewSet)
 router.register(r'tasks', TaskViewSet)
 router.register(r'subtasks', SubtaskViewSet)
 router.register(r'tags', TagViewSet)
-router.register(r'task_tags', TaskTagViewSet)
 router.register(r'comments', CommentViewSet)
 router.register(r'notifications', NotificationViewSet)
 router.register(r'files', FileViewSet)

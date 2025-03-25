@@ -8,7 +8,6 @@ from .models import (
     Task,
     Subtask,
     Tag,
-    TaskTag,
     Comment,
     Notification,
     File,
@@ -45,10 +44,6 @@ class SubtaskAdmin(admin.ModelAdmin):
 @admin.register(Tag)
 class TagAdmin(admin.ModelAdmin):
     list_display = ('name', 'created_at', 'updated_at')
-
-@admin.register(TaskTag)
-class TaskTagAdmin(admin.ModelAdmin):
-    list_display = ('task', 'tag')
 
 @admin.register(Comment)
 class CommentAdmin(admin.ModelAdmin):

@@ -8,7 +8,6 @@ from .models import (
     Task,
     Subtask,
     Tag,
-    TaskTag,
     Comment,
     Notification,
     File,
@@ -57,11 +56,6 @@ class SubtaskSerializer(serializers.ModelSerializer):
 class TagSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tag
-        fields = '__all__'
-
-class TaskTagSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = TaskTag
         fields = '__all__'
 
 class CommentSerializer(serializers.ModelSerializer):
