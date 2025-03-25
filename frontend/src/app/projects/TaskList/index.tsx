@@ -2,9 +2,10 @@
 
 import React, { useEffect, useState } from "react";
 import TaskCard from "@/components/Task/TaskCard"; // Импортируем компонент TaskCard
-import { useGetTasksQuery, useUpdateTaskStatusMutation } from "@/state/api"; // Импортируем хук для получения задач и обновления статуса
+import { useGetTasksQuery, useUpdateTaskStatusMutation } from "@/state/api"; // Импортируем хуки для получения задач и обновления статуса
 import { useParams } from "next/navigation";
 import { Task } from "@/state/api";
+import { LoaderCircle, CircleCheck, BookCheck } from "lucide-react";
 
 const TaskList: React.FC = () => {
   const { id } = useParams(); // Получаем ID проекта из параметров
@@ -36,47 +37,119 @@ const TaskList: React.FC = () => {
   }
 
   return (
-    <div className="mx-auto max-w-5xl">
-      {/* <!-- To Do list --> */}
-      <div
-        className="swim-lane flex flex-col gap-5.5"
+    <div style={{ borderLeft: 'none' }} className="border border-gray-200 rounded-md p-4">
+{/* <!-- К исполнению --> */}
+<div
+        className="p-4 mb-6 overflow-x-auto"
         onDragOver={(e) => e.preventDefault()}
         onDrop={(e) => handleDrop(e, 'Новая')}
       >
-        <h4 className="text-xl font-semibold text-black dark:text-white">
-          To Do&apos;s ({tasks.filter(task => task.status === 'Новая').length})
-        </h4>
-        {tasks.filter(task => task.status === 'Новая').map(task => (
-          <TaskCard key={task.id} task={task} onDragStart={handleDragStart} />
-        ))}
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center">
+            <span className="flex items-center px-2 py-1 text-sm border font-semibold border-yellow-200 bg-yellow-100 rounded-lg text-yellow-700 duration-200 transition-colors">
+              <CircleCheck className="h-4 w-4 mr-2" />
+              К исполнению
+            </span>
+            <span className="text-sm bg-gray-200 border text-gray-600 ml-2 px-2 py-1 rounded">
+              {tasks.filter(task => task.status === 'Новая').length}
+            </span>
+          </div>
+        </div>
+        <div className="overflow-x-auto sm:rounded-lg">
+          <table className="w-full text-left">
+            <thead>
+            <tr className="text-gray-600 text-sm bg-gray-100 border rounded-md">
+                <th className="py-3 px-4">Задача</th>
+                <th className="py-3 px-4">Описание</th>
+                <th className="py-3 px-4">Исполнители</th>
+                <th className="py-3 px-4">Срок выполнения</th>
+                <th className="py-3 px-4">Приоритет</th>
+                <th className="py-3 px-4">Прогресс</th>
+              </tr>
+            </thead>
+            <tbody className="text-gray-700 text-sm">
+              {tasks.filter(task => task.status === 'Новая').map(task => (
+                <TaskCard key={task.id} task={task} onDragStart={handleDragStart} />
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
-      {/* <!-- In Progress list --> */}
+      {/* <!-- В процессе --> */}
       <div
-        className="swim-lane flex flex-col gap-5.5"
+        className="p-4 mb-6"
         onDragOver={(e) => e.preventDefault()}
         onDrop={(e) => handleDrop(e, 'В процессе')}
       >
-        <h4 className="text-xl font-semibold text-black dark:text-white">
-          In Progress ({tasks.filter(task => task.status === 'В процессе').length})
-        </h4>
-        {tasks.filter(task => task.status === 'В процессе').map(task => (
-          <TaskCard key={task.id} task={task} onDragStart={handleDragStart} />
-        ))}
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center">
+            <span className="flex items-center px-2 py-1 text-sm border font-semibold border-purple-200 bg-purple-100 rounded-lg text-purple-700 duration-200 transition-colors">
+              <LoaderCircle className="h-4 w-4 mr-2" />
+              В процессе
+            </span>
+            <span className="text-sm bg-gray-200 border text-gray-600 ml-2 px-2 py-1 rounded">
+              {tasks.filter(task => task.status === 'В процессе').length}
+            </span>
+          </div>
+        </div>
+        <div className="overflow-x-auto sm:rounded-lg">
+          <table className="w-full text-left">
+            <thead>
+              <tr className="text-gray-600 text-sm bg-gray-100 border">
+                <th className="py-3 px-4">Задача</th>
+                <th className="py-3 px-4">Описание</th>
+                <th className="py-3 px-4">Исполнители</th>
+                <th className="py-3 px-4">Срок выполнения</th>
+                <th className="py-3 px-4">Приоритет</th>
+                <th className="py-3 px-4">Прогресс</th>
+              </tr>
+            </thead>
+            <tbody className="text-gray-700 text-sm">
+              {tasks.filter(task => task.status === 'В процессе').map(task => (
+                <TaskCard key={task.id} task={task} onDragStart={handleDragStart} />
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
-      {/* <!-- Completed list --> */}
+      {/* <!-- Завершено --> */}
       <div
-        className="swim-lane flex flex-col gap-5.5"
+        className="p-4 mb-6"
         onDragOver={(e) => e.preventDefault()}
         onDrop={(e) => handleDrop(e, 'Завершено')}
       >
-        <h4 className="text-xl font-semibold text-black dark:text-white">
-          Completed ({tasks.filter(task => task.status === 'Завершено').length})
-        </h4>
-        {tasks.filter(task => task.status === 'Завершено').map(task => (
-          <TaskCard key={task.id} task={task} onDragStart={handleDragStart} />
-        ))}
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center">
+            <span className="flex items-center px-2 py-1 text-sm border font-semibold border-green-200 bg-green-100 rounded-lg text-green-700 duration-200 transition-colors">
+              <BookCheck className="h-4 w-4 mr-2" />
+              Завершено
+            </span>
+            <span className="text-sm bg-gray-200 border text-gray-600 ml-2 px-2 py-1 rounded">
+              {tasks.filter(task => task.status === 'Завершено').length}
+            </span>
+          </div>
+        </div>
+        <div className="overflow-x-auto sm:rounded-lg">
+          <table className="min-w-full text-left">
+            <thead>
+              <tr className="text-gray-600 text-sm bg-gray-100 border">
+                <th className="py-3 px-4">Задача</th>
+                <th className="py-3 px-4">Описание</th>
+                <th className="py-3 px-4">Исполнители</th>
+                <th className="py-3 px-4">Срок выполнения</th>
+                <th className="py-3 px-4">Приоритет</th>
+                <th className="py-3 px-4">Прогресс</th>
+              </tr>
+            </thead>
+            <tbody className="text-gray-700 text-sm">
+              {tasks.filter(task => task.status === 'Завершено').map(task => (
+                <TaskCard key={task.id} task={task} onDragStart={handleDragStart} />
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

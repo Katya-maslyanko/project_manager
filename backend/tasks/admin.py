@@ -15,7 +15,7 @@ from .models import (
     Setting,
     ActivityLog,
     UserTeamRelation,
-    ProjectMember
+    ProjectMember,
 )
 
 @admin.register(Team)

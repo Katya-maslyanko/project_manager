@@ -57,8 +57,7 @@ class Task(models.Model):
     due_date = models.DateTimeField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    tags = models.CharField(max_length=255, null=True, blank=True)  # Теги для задач
-    points = models.IntegerField(null=True, blank=True)  # Очки для задач
+    points = models.IntegerField(null=True, blank=True)
 
 class Subtask(models.Model):
     task = models.ForeignKey(Task, related_name='subtasks', on_delete=models.CASCADE)

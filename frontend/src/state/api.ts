@@ -7,6 +7,12 @@ export interface Project {
   description?: string;
 }
 
+export interface Assignee{
+  id: number;
+  name: string;
+  avatarURL: string;
+}
+
 export interface Task {
   id: number;
   title: string;
@@ -19,7 +25,7 @@ export interface Task {
   updated_at: string;
   tags?: string;
   points?: number;
-  assignee?: number;
+  assignees: Assignee[];
 }
 
 export const api = createApi({
