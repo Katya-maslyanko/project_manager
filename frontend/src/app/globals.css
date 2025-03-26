@@ -16,3 +16,23 @@ body,
   width: 100%;
   @apply text-sm bg-gray-500 text-gray-900; /* Применение классов здесь */
 }
+
+::-webkit-scrollbar {
+  height: 4px;
+  width: 0px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f9fafb;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+  background: #e5e7eb;
+  border-radius: 5px;
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}

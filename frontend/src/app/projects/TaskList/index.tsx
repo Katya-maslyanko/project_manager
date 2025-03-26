@@ -3,7 +3,7 @@ import TaskCard from "@/components/Task/TaskCard"; // Импортируем к�
 import { useGetTasksQuery, useUpdateTaskStatusMutation } from "@/state/api"; // Импортируем хуки для получения задач и обновления статуса
 import { useParams } from "next/navigation";
 import { Task } from "@/state/api";
-import { LoaderCircle, CircleCheck, BookCheck } from "lucide-react";
+import { LoaderCircle, CircleCheck, BookCheck, Plus } from "lucide-react";
 import { useSidebar } from "@/context/SidebarContext"; // Импортируем контекст сайдбара
 
 const TaskList: React.FC = () => {
@@ -35,11 +35,8 @@ const TaskList: React.FC = () => {
     return <p>Ошибка при загрузке задач: {JSON.stringify(error)}</p>;
   }
 
-  // Устанавливаем ширину таблицы в зависимости от состояния сайдбара
-  const tableWidth = isExpanded || isHovered || isMobileOpen ? "min-w-full" : "min-w-[450px]";
-
   return (
-    <div style={{ borderLeft: 'none' }} className="border border-gray-200 rounded-md p-4">
+    <div style={{ borderLeft: 'none' }} className="border border-gray-200 rounded-md p-4 grid grid-cols-1">
       {/* <!-- К исполнению --> */}
       <div
         className="p-4 mb-6"
@@ -57,17 +54,17 @@ const TaskList: React.FC = () => {
             </span>
           </div>
         </div>
-        <div className="overflow-x-auto">
-          <table className={`${tableWidth} text-left`}>
+        <div className="overflow-x-auto sm:rounded-lg">
+          <table className={`w-full text-left`}>
             <thead>
               <tr className="text-gray-600 text-sm bg-gray-100 border rounded-md">
                 <th className="py-3 px-4">Задача</th>
                 <th className="py-3 px-4">Описание</th>
                 <th className="py-3 px-4">Исполнители</th>
-                <th className="py-3 px-4">Срок выполнения</th>
+                <th className="py-3 px-4 max-w-xs overflow-hidden text-ellipsis whitespace-nowrap">Срок выполнения</th>
                 <th className="py-3 px-4">Приоритет</th>
+                <th className="py-3 px-4">Тэг</th>
                 <th className="py-3 px-4">Прогресс</th>
-                <th className="py-3 px-4">Теги</th>
               </tr>
             </thead>
             <tbody className="text-gray-700 text-sm">
@@ -76,6 +73,9 @@ const TaskList: React.FC = () => {
               ))}
             </tbody>
           </table>
+          <button className=" text-gray-600 font-semibold mt-2 mb-2 p-1 flex items-center justify-center">
+                <Plus className="text-gray-600 w-5 h-5" /> Добавить задачу
+           </button>
         </div>
       </div>
 
@@ -96,17 +96,17 @@ const TaskList: React.FC = () => {
             </span>
           </div>
         </div>
-        <div className="overflow-x-auto">
-          <table className={`${tableWidth} text-left`}>
+        <div className="overflow-x-auto sm:rounded-lg">
+          <table className={`w-full text-left`}>
             <thead>
               <tr className="text-gray-600 text-sm bg-gray-100 border">
                 <th className="py-3 px-4">Задача</th>
                 <th className="py-3 px-4">Описание</th>
                 <th className="py-3 px-4">Исполнители</th>
-                <th className="py-3 px-4">Срок выполнения</th>
+                <th className="py-3 px-4 max-w-xs overflow-hidden text-ellipsis whitespace-nowrap">Срок выполнения</th>
                 <th className="py-3 px-4">Приоритет</th>
+                <th className="py-3 px-4">Тэг</th>
                 <th className="py-3 px-4">Прогресс</th>
-                <th className="py-3 px-4">Теги</th>
               </tr>
             </thead>
             <tbody className="text-gray-700 text-sm">
@@ -115,6 +115,9 @@ const TaskList: React.FC = () => {
               ))}
             </tbody>
           </table>
+          <button className=" text-gray-600 font-semibold mt-2 mb-2 p-1 flex items-center justify-center">
+                <Plus className="text-gray-600 w-5 h-5" /> Добавить задачу
+           </button>
         </div>
       </div>
 
@@ -135,17 +138,17 @@ const TaskList: React.FC = () => {
             </span>
           </div>
         </div>
-        <div className="overflow-x-auto">
-          <table className={`${tableWidth} text-left`}>
+        <div className="overflow-x-auto sm:rounded-lg">
+          <table className={`w-full text-left`}>
             <thead>
               <tr className="text-gray-600 text-sm bg-gray-100 border">
                 <th className="py-3 px-4">Задача</th>
                 <th className="py-3 px-4">Описание</th>
                 <th className="py-3 px-4">Исполнители</th>
-                <th className="py-3 px-4">Срок выполнения</th>
+                <th className="py-3 px-4 max-w-xs overflow-hidden text-ellipsis whitespace-nowrap">Срок выполнения</th>
                 <th className="py-3 px-4">Приоритет</th>
+                <th className="py-3 px-4">Тэг</th>
                 <th className="py-3 px-4">Прогресс</th>
-                <th className="py-3 px-4">Теги</th>
               </tr>
             </thead>
             <tbody className="text-gray-700 text-sm">
@@ -154,6 +157,9 @@ const TaskList: React.FC = () => {
               ))}
             </tbody>
           </table>
+          <button className=" text-gray-600 font-semibold mt-2 mb-2 p-1 flex items-center justify-center">
+                <Plus className="text-gray-600 w-5 h-5" /> Добавить задачу
+           </button>
         </div>
       </div>
     </div>

@@ -69,7 +69,7 @@ export default function UserDropdown() {
         </ul>
         <Link
           href="/signin"
-          className="flex items-center gap-3 px-4 py-2 mt-2 text-gray-500 rounded-lg group text-sm hover:bg-gray-100 hover:text-gray-800 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300 transition-all duration-200 ease-in-out"
+          className="flex items-center gap-3 px-4 py-2 mt-2 border-gray-200 dark:border-gray-500 rounded-lg group text-sm hover:bg-gray-100 hover:text-gray-800 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300 transition-all duration-200 ease-in-out"
         >
           <LogOut className="text-gray-500 group-hover:text-gray-800 dark:group-hover:text-gray-300" />
           <span className="ml-2">Выйти</span>

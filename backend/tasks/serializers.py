@@ -43,19 +43,39 @@ class SubgoalSerializer(serializers.ModelSerializer):
         model = Subgoal
         fields = '__all__'
 
+class TagSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Tag
+        fields = '__all__'
+
 class TaskSerializer(serializers.ModelSerializer):
+    assignee = serializers.SerializerMethodField()
+    project = serializers.SerializerMethodField()
+    tag = serializers.SerializerMethodField()
     class Meta:
         model = Task
         fields = '__all__'
 
+    def get_assignee(self, obj):
+        if obj.assignee and hasattr(obj.assignee, 'userprofile'):
+            return {
+                'profile_image': obj.assignee.userprofile.profile_image.url if obj.assignee.userprofile.profile_image else None
+            }
+        return {'profile_image': None}
+
+    def get_project(self, obj):
+        return {
+            'title': obj.project.name
+        }
+
+    def get_tag(self, obj):
+        return {
+            'name': obj.tag.name
+        }
+
 class SubtaskSerializer(serializers.ModelSerializer):
     class Meta:
         model = Subtask
-        fields = '__all__'
-
-class TagSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Tag
         fields = '__all__'
 
 class CommentSerializer(serializers.ModelSerializer):
