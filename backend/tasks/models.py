@@ -3,7 +3,13 @@ from django.contrib.auth.models import User
 
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    profile_image = models.ImageField(upload_to='profile_images/', null=True, blank=True)  # Поле для изображения профиля
+    profile_image = models.ImageField(upload_to='profile_images/', null=True, blank=True)
+    role = models.CharField(max_length=50, choices=[
+        ('admin', 'Администратор'),
+        ('project_manager', 'Куратор проекта'),
+        ('team_leader', 'Лидер подгруппы'),
+        ('team_member', 'Участник команды'),
+    ], default='team_member')
 
     def __str__(self):
         return self.user.username
@@ -60,7 +66,8 @@ class Task(models.Model):
     priority = models.CharField(max_length=50)
     assignee = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     project = models.ForeignKey(Project, related_name='tasks', on_delete=models.CASCADE)
-    due_date = models.DateTimeField()
+    start_date = models.DateTimeField(null=True, blank=True)
+    due_date = models.DateTimeField(null=True, blank=True)
     tag = models.ForeignKey(Tag, related_name='task_tags', on_delete=models.CASCADE, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

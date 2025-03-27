@@ -37,4 +37,6 @@ router.register(r'project_members', ProjectMemberViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),
+    path('users/register/', UserViewSet.as_view({'post': 'register'}), name='register'),
+    path('users/login/', UserViewSet.as_view({'post': 'login_view'}), name='login'),
 ]

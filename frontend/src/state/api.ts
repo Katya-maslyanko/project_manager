@@ -28,12 +28,23 @@ export interface Task {
   assignees: Assignee[];
 }
 
+export interface RegisterUser  {
+  username: string;
+  email: string;
+  password: string;
+}
+
+export interface LoginUser  {
+  email: string;
+  password: string;
+}
+
 export const api = createApi({
   baseQuery: fetchBaseQuery({
     baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL,
   }),
   reducerPath: "api",
-  tagTypes: ["Projects", "Tasks"],
+  tagTypes: ["Projects", "Tasks", "Users"],
   endpoints: (build) => ({
     getProjects: build.query<Project[], void>({
       query: () => "projects/",
@@ -67,6 +78,22 @@ export const api = createApi({
       }),
       invalidatesTags: ["Tasks"],
     }),
+    register: build.mutation<void, RegisterUser >({
+      query: (userData) => ({
+        url: "users/register/",
+        method: "POST",
+        body: userData,
+      }),
+      invalidatesTags: ["Users"],
+    }),
+    login: build.mutation<void, LoginUser >({
+      query: (credentials) => ({
+        url: "users/login/",
+        method: "POST",
+        body: credentials,
+      }),
+      invalidatesTags: ["Users"],
+    }),
   }),
 });
 
@@ -76,4 +103,6 @@ export const {
   useGetTaskByIdQuery,
   useGetTasksQuery,
   useUpdateTaskStatusMutation,
+  useRegisterMutation,
+  useLoginMutation,
 } = api;
