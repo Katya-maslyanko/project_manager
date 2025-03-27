@@ -7,7 +7,7 @@ export interface Project {
   description?: string;
 }
 
-export interface Assignee{
+export interface Assignee {
   id: number;
   name: string;
   avatarURL: string;
@@ -39,6 +39,10 @@ export interface LoginUser  {
   password: string;
 }
 
+export interface AuthResponse {
+  token: string; // или другие поля, которые вы хотите вернуть
+}
+
 export const api = createApi({
   baseQuery: fetchBaseQuery({
     baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL,
@@ -50,7 +54,6 @@ export const api = createApi({
       query: () => "projects/",
       providesTags: ["Projects"],
     }),
-    // Эндпоинт для создания нового проекта
     createProject: build.mutation<Project, Partial<Project>>({
       query: (project) => ({
         url: "projects/",
@@ -59,14 +62,12 @@ export const api = createApi({
       }),
       invalidatesTags: ["Projects"],
     }),
-    // Эндпоинт для получения задачи по ID
     getTaskById: build.query<Task, number>({
       query: (id) => `tasks/${id}/`,
       providesTags: ["Tasks"],
     }),
-    // Эндпоинт для получения задач по projectId
     getTasks: build.query<Task[], { projectId: number }>({
-      query: ({ projectId }) => `tasks/?projectId=${projectId}`, // Убедитесь, что этот путь соответствует вашему API
+      query: ({ projectId }) => `tasks/?projectId=${projectId}`,
       providesTags: (result) =>
         result ? result.map(({ id }) => ({ type: "Tasks", id })) : [{ type: "Tasks", id: "LIST" }],
     }),
@@ -78,21 +79,21 @@ export const api = createApi({
       }),
       invalidatesTags: ["Tasks"],
     }),
+    // Эндпоинт для регистрации пользователя
     register: build.mutation<void, RegisterUser >({
-      query: (userData) => ({
+      query: (user) => ({
         url: "users/register/",
         method: "POST",
-        body: userData,
+        body: user,
       }),
-      invalidatesTags: ["Users"],
     }),
-    login: build.mutation<void, LoginUser >({
-      query: (credentials) => ({
+    // Эндпоинт для входа пользователя
+    login: build.mutation<AuthResponse, LoginUser >({
+      query: (user) => ({
         url: "users/login/",
         method: "POST",
-        body: credentials,
+        body: user,
       }),
-      invalidatesTags: ["Users"],
     }),
   }),
 });
@@ -103,6 +104,6 @@ export const {
   useGetTaskByIdQuery,
   useGetTasksQuery,
   useUpdateTaskStatusMutation,
-  useRegisterMutation,
-  useLoginMutation,
+  useRegisterMutation, // Хук для регистрации
+  useLoginMutation, // Хук для входа
 } = api;

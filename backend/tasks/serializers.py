@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
+from django.core.exceptions import ValidationError
 from .models import (
     UserProfile,
     Team,
@@ -20,40 +21,21 @@ from .models import (
 )
 
 class UserSerializer(serializers.ModelSerializer):
-    profile_image = serializers.ImageField(source='userprofile.profile_image', required=False)
-
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'password']
+        fields = ('id', 'username', 'email', 'first_name', 'last_name')
+
+
+class RegisterSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('username', 'email', 'password')
         extra_kwargs = {'password': {'write_only': True}}
 
     def create(self, validated_data):
-        user = User(
-            username=validated_data['username'],
-            email=validated_data['email']
-        )
-        user.set_password(validated_data['password'])  # Хешируем пароль
+        user = User(**validated_data)
+        user.set_password(validated_data['password'])  # Хеширование пароля
         user.save()
-        UserProfile.objects.create(user=user, role='team_member')  # Устанавливаем роль по умолчанию
-        return user
-
-class LoginSerializer(serializers.Serializer):
-    username_or_email = serializers.CharField()
-    password = serializers.CharField()
-
-    def validate(self, attrs):
-        username_or_email = attrs['username_or_email']
-        password = attrs['password']
-
-        # Проверяем, является ли введенное значение email
-        if '@' in username_or_email:
-            user = User.objects.filter(email=username_or_email).first()
-        else:
-            user = User.objects.filter(username=username_or_email).first()
-
-        if user is None or not user.check_password(password):
-            raise serializers.ValidationError("Invalid credentials")
-        
         return user
 
 class TeamSerializer(serializers.ModelSerializer):
