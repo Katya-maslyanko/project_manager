@@ -1,11 +1,12 @@
+// app/inboxWrapper.tsx
 "use client";
 
 import { useSidebar } from "@/context/SidebarContext";
 import Navbar from "@/components/Navbar/Navbar";
 import Sidebar from "@/components/Sidebar/Sidebar";
-import StoreProvider, { useAppSelector } from "./redux";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { SidebarProvider } from "@/context/SidebarContext";
+import StoreProvider from "./redux";
 
 const InboxLayout = ({ children }: { children: React.ReactNode }) => {
   const { isExpanded, isHovered, isMobileOpen } = useSidebar();
@@ -32,7 +33,9 @@ const InboxWrapper = ({ children }: { children: React.ReactNode }) => {
     <StoreProvider>
       <ThemeProvider>
         <SidebarProvider>
-          <InboxLayout>{children}</InboxLayout>
+          {/* <AuthProvider> */}
+            <InboxLayout>{children}</InboxLayout>
+          {/* </AuthProvider> */}
         </SidebarProvider>
       </ThemeProvider>
     </StoreProvider>

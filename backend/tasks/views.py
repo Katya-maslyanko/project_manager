@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.authtoken.models import Token
 from .models import (
     UserProfile,
@@ -56,14 +56,42 @@ class UserViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['post'], url_path='login', permission_classes=[AllowAny])
     def login_view(self, request):
-        username = request.data.get('username')
+        email = request.data.get('email')
         password = request.data.get('password')
-        user = authenticate(username=username, password=password)
+        print(f"Attempting to log in with email: {email} and password: {password}")  # Логируем входные данные
 
-        if user is not None:
-            token, created = Token.objects.get_or_create(user=user)
-            return Response({"token": token.key}, status=status.HTTP_200_OK)
-        return Response({"error": "Invalid credentials."}, status=status.HTTP_401_UNAUTHORIZED)
+        try:
+            user = User.objects.get(email=email)  # Получаем пользователя по email
+            if user.check_password(password):  # Проверяем пароль
+                token, created = Token.objects.get_or_create(user=user)
+                return Response({"token": token.key}, status=status.HTTP_200_OK)
+            else:
+                print("Authentication failed: Incorrect password")  # Логируем неудачу
+                return Response({"error": "Invalid credentials."}, status=status.HTTP_401_UNAUTHORIZED)
+        except User.DoesNotExist:
+            print("Authentication failed: User not found")  # Логируем неудачу
+            return Response({"error": "Invalid credentials."}, status=status.HTTP_401_UNAUTHORIZED)
+
+    @action(detail=False, methods=['post'], url_path='logout', permission_classes=[IsAuthenticated])
+    def logout_view(self, request):
+        request.user.auth_token.delete()
+        return Response({"message": "Logged out successfully."}, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods =['get'], url_path='profile', permission_classes=[IsAuthenticated])
+    def get_profile(self, request):
+        user = request.user
+        try:
+            profile = UserProfile.objects.get(user=user)
+            return Response({
+                "username": user.username,
+                "email": user.email,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+                "profile_image": profile.profile_image.url if profile.profile_image else None,
+                "role": profile.role
+            }, status=status.HTTP_200_OK)
+        except UserProfile.DoesNotExist:
+            return Response({"error": "Profile not found."}, status=status.HTTP_404_NOT_FOUND)
 
 class TeamViewSet(viewsets.ModelViewSet):
     queryset = Team.objects.all()

@@ -1,86 +1,44 @@
+// app/redux.tsx
+"use client";
+
 import { useRef } from "react";
 import { combineReducers, configureStore } from "@reduxjs/toolkit";
-import {
-  TypedUseSelectorHook,
-  useDispatch,
-  useSelector,
-  Provider,
-} from "react-redux";
-import globalReducer from "@/state";
-import { api } from "@/state/api";
-import { setupListeners } from "@reduxjs/toolkit/query";
-
-import {
-  persistStore,
-  persistReducer,
-  FLUSH,
-  REHYDRATE,
-  PAUSE,
-  PERSIST,
-  PURGE,
-  REGISTER,
-} from "redux-persist";
+import { Provider } from "react-redux";
+import { api } from "@/state/api"; // Импортируйте ваш API
+import { persistStore, persistReducer } from "redux-persist";
+import storage from "redux-persist/lib/storage"; // Используйте локальное хранилище
 import { PersistGate } from "redux-persist/integration/react";
-import createWebStorage from "redux-persist/lib/storage/createWebStorage";
 
-const createNoopStorage = () => {
-  return {
-    getItem(_key: any) {
-      return Promise.resolve(null);
-    },
-    setItem(_key: any, value: any) {
-      return Promise.resolve(value);
-    },
-    removeItem(_key: any) {
-      return Promise.resolve();
-    },
-  };
-};
-
-const storage =
-  typeof window === "undefined"
-    ? createNoopStorage()
-    : createWebStorage("local");
-
+// Конфигурация для redux-persist
 const persistConfig = {
   key: "root",
   storage,
-  whitelist: ["global"],
 };
+
+// Объединение редьюсеров
 const rootReducer = combineReducers({
-  global: globalReducer,
   [api.reducerPath]: api.reducer,
 });
+
+// Создание персистентного редьюсера
 const persistedReducer = persistReducer(persistConfig, rootReducer);
 
+// Функция для создания хранилища
 export const makeStore = () => {
   return configureStore({
     reducer: persistedReducer,
-    middleware: (getDefault) =>
-      getDefault({
+    middleware: (getDefaultMiddleware) =>
+      getDefaultMiddleware({
         serializableCheck: {
-          ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
+          ignoredActions: ['persist/PERSIST', 'persist/REHYDRATE'], // Игнорируем действия, связанные с persist
         },
-      }).concat(api.middleware),
+      }).concat(api.middleware), // Добавляем middleware для API
   });
 };
 
-export type AppStore = ReturnType<typeof makeStore>;
-export type RootState = ReturnType<AppStore["getState"]>;
-export type AppDispatch = AppStore["dispatch"];
-export const useAppDispatch = () => useDispatch<AppDispatch>();
-export const useAppSelector: TypedUseSelectorHook<RootState> = useSelector;
-
-export default function StoreProvider({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  const storeRef = useRef<AppStore>();
-  if (!storeRef.current) {
-    storeRef.current = makeStore();
-    setupListeners(storeRef.current.dispatch);
-  }
+// Компонент StoreProvider
+export default function StoreProvider({ children }: { children: React.ReactNode }) {
+  const storeRef = useRef(makeStore());
   const persistor = persistStore(storeRef.current);
 
   return (

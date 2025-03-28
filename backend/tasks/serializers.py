@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
+from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from .models import (
     UserProfile,
@@ -20,22 +21,28 @@ from .models import (
     ProjectMember,
 )
 
+User  = get_user_model()
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('id', 'username', 'email', 'first_name', 'last_name')
 
-
 class RegisterSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True)
+    profile_image = serializers.ImageField(required=False)
+
     class Meta:
         model = User
-        fields = ('username', 'email', 'password')
-        extra_kwargs = {'password': {'write_only': True}}
+        fields = ('username', 'email', 'password', 'first_name', 'last_name', 'profile_image')
 
     def create(self, validated_data):
+        profile_image = validated_data.pop('profile_image', None)
         user = User(**validated_data)
         user.set_password(validated_data['password'])  # Хеширование пароля
         user.save()
+
+        # Создание экземпляра UserProfile
+        UserProfile.objects.create(user=user, profile_image=profile_image)
         return user
 
 class TeamSerializer(serializers.ModelSerializer):

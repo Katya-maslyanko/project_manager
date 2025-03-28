@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import TaskCard from "@/components/Task/TaskCard"; // Импортируем компонент TaskCard
+import TaskCard from "@/components/Task/TaskCardList"; // Импортируем компонент TaskCard
 import { useGetTasksQuery, useUpdateTaskStatusMutation } from "@/state/api"; // Импортируем хуки для получения задач и обновления статуса
 import { useParams } from "next/navigation";
 import { Task } from "@/state/api";
