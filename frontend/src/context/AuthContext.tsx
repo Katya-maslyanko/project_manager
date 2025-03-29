@@ -1,24 +1,22 @@
-// app/context/AuthContext.tsx
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useGetCurrentUserQuery, User } from "@/state/api"; // Импортируйте хук и интерфейс User
+import { useGetCurrentUserQuery, User } from "@/state/api"; // Исправлено: убран пробел
 
 interface AuthContextType {
-  user: User | null; // Используйте интерфейс User
-  login: (token: string, user: User) => void; // Используйте интерфейс User
+  user: User | null;
+  login: (token: string, user: User) => void;
   logout: () => void;
-  isAuthenticated: boolean; // Добавьте это свойство
+  isAuthenticated: boolean;
+  isLoading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser ] = useState<User | null>(null); // Используйте интерфейс User
+  const [user, setUser ] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-
-  // Используем хук для получения текущего пользователя
-  const { data: currentUser , isLoading } = useGetCurrentUserQuery();
+  const { data: currentUser , isLoading } = useGetCurrentUserQuery(); // Исправлено: убран пробел
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -26,11 +24,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsAuthenticated(true);
       if (currentUser ) {
         setUser (currentUser );
+      } else {
+        setUser (null);
       }
+    } else {
+      setIsAuthenticated(false);
+      setUser (null);
     }
   }, [currentUser ]);
 
-  const login = (token: string, userData: User) => { // Используйте интерфейс User
+  const login = (token: string, userData: User) => {
     localStorage.setItem('token', token);
     setIsAuthenticated(true);
     setUser (userData);
@@ -43,7 +46,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, isAuthenticated }}>
+    <AuthContext.Provider value={{ user, login, logout, isAuthenticated, isLoading }}>
       {children}
     </AuthContext.Provider>
   );

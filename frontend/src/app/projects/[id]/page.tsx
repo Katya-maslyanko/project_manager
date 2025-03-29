@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import InboxWrapper from "@/app/inboxWrapper";
 import ProjectHeader from "@/app/projects/ProjectHeader";
 import TaskList from "../TaskList";
 import KanbanBoard from "../KanbanBoard";
@@ -17,6 +18,7 @@ const Projects = () => {
   const projectId = project ? project.id : null; // Получаем projectId
 
   return (
+    <InboxWrapper>
     <div>
       {isLoading ? (
         <p>Загрузка проектов...</p>
@@ -38,6 +40,7 @@ const Projects = () => {
         )
       )}
     </div>
+    </InboxWrapper>
   );
 };
 
