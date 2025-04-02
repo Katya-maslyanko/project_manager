@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { Task } from "@/state/api";
-import { useUpdateTaskMutation, useUpdateTaskStatusMutation } from "@/state/api"; // Импортируем хуки для обновления задачи
+import { useUpdateTaskMutation, useDeleteTaskMutation } from "@/state/api"; // Импортируем хуки для обновления и удаления задачи
 import { Ellipsis, X } from "lucide-react";
 
 interface EditTaskModalProps {
   isOpen: boolean;
   onClose: () => void;
-  task: Task | null; // Задача, которую нужно редактировать
-  tags: { id: number; name: string }[]; // Список тегов
-  users: { id: number; username: string; profile_image: string | null }[]; // Список пользователей
+  task: Task | null;
+  tags: { id: number; name: string }[]; // Добавьте список тегов, если он у вас есть
+  users: { id: number; username: string; profile_image: string | null }[]; // Добавьте список пользователей
 }
 
 const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, task, tags = [], users = [] }) => {
@@ -17,9 +17,10 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, task, ta
   const [priority, setPriority] = useState("Новая");
   const [points, setPoints] = useState(0);
   const [tag, setTag] = useState<number | null>(null); // Состояние для тега
-  const [selectedAssignees, setSelectedAssignees] = useState<number[]>([]); // Состояние для выбранных исполнителей
+  const [selectedAssignees, setSelectedAssignees] = useState<number[]>([]);
   const [updateTask] = useUpdateTaskMutation(); // Хук для обновления задачи
-  const [updateTaskStatus] = useUpdateTaskStatusMutation(); // Хук для обновления статуса задачи
+  const [deleteTask] = useDeleteTaskMutation(); // Хук для удаления задачи
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false); // Состояние для выпадающего меню
   const [status, setStatus] = useState("Новая"); // Состояние для статуса
   const [startDate, setStartDate] = useState(""); // Состояние для даты начала
   const [dueDate, setDueDate] = useState(""); // Состояние для даты завершения
@@ -39,18 +40,6 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, task, ta
     }
   }, [task]);
 
-  // Обработка изменения статуса
-  const handleStatusChange = async (newStatus: string) => {
-    if (task) {
-      try {
-        await updateTaskStatus({ id: task.id, status: newStatus });
-        setStatus(newStatus); // Обновляем локальное состояние статуса
-      } catch (error) {
-        console.error("Ошибка при обновлении статуса задачи:", error);
-      }
-    }
-  };
-
   // Обработка отправки формы
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -64,10 +53,25 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, task, ta
           points, 
           assignees: selectedAssignees, 
           tag, // Передаем ID тега
+          status, // Добавляем статус в обновление
+          start_date: startDate, // Добавляем дату начала
+          due_date: dueDate // Добавляем дату завершения
         });
         onClose(); // Закрываем модальное окно после обновления
       } catch (error) {
         console.error("Ошибка при обновлении задачи:", error);
+      }
+    }
+  };
+
+  // Обработка удаления задачи
+  const handleDeleteTask = async () => {
+    if (task) {
+      try {
+        await deleteTask(task.id);
+        onClose(); // Закрываем модальное окно после удаления
+      } catch (error) {
+        console.error("Ошибка при удалении задачи:", error);
       }
     }
   };
@@ -81,6 +85,22 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, task, ta
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold">Edit Task</h2>
           <div className="flex items-center">
+            <div className="">
+              <button className="p-1 rounded cursor-pointer hover:bg-gray-200" onClick={() => setIsDropdownOpen(!isDropdownOpen)}>
+                <Ellipsis className="h-5 w-5 text-gray-500" />
+              </button>
+              {/* Выпадающее меню для удаления задачи */}
+              {isDropdownOpen && (
+                <div className="absolute mt-2 mr-4 bg-white shadow-lg rounded-md">
+                  <button 
+                    className="block px-4 py-2 text-red-600 hover:bg-red-100 w-full text-left"
+                    onClick={handleDeleteTask}
+                  >
+                    Удалить
+                  </button>
+                </div>
+              )}
+            </div>
             <button className="ml-2 p-1 rounded cursor-pointer hover:bg-gray-200" onClick={onClose}>
               <X className="h-5 w-5 text-gray-500" />
             </button>
@@ -115,7 +135,7 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, task, ta
                 <select
                   className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
                   value={status}
-                  onChange={(e) => handleStatusChange(e.target.value)} // Обработка изменения статуса
+                  onChange={(e) => setStatus(e.target.value)}
                 >
                   <option value="Новая">Новая</option>
                   <option value="В процессе">В процессе</option>
