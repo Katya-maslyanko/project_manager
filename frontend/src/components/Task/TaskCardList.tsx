@@ -1,20 +1,20 @@
 import React from "react";
 import { Task } from "@/state/api";
-import { GripVertical, Flag } from "lucide-react";
+import { GripVertical, Flag, Pencil } from "lucide-react"; // Импортируем иконку редактирования
 
 interface TaskCardProps {
   task: Task;
   onDragStart: (e: React.DragEvent<HTMLDivElement>, task: Task) => void;
+  onEdit: () => void; // Добавляем обработчик для редактирования
 }
 
-const TaskCard: React.FC<TaskCardProps> = ({ task, onDragStart }) => {
+const TaskCard: React.FC<TaskCardProps> = ({ task, onDragStart, onEdit }) => {
   const [isChecked, setIsChecked] = React.useState(false);
 
   const handleCheckboxChange = () => {
     setIsChecked(!isChecked);
   };
 
-  // Функция для форматирования даты
   const formatDate = (dateString: string) => {
     const options: Intl.DateTimeFormatOptions = { 
       day: 'numeric', 
@@ -34,8 +34,8 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onDragStart }) => {
     'bg-pink-100 text-pink-600',
   ];
 
-  const getTagColor = (index) => {
-    return tagColors[index % tagColors.length]; // Циклический выбор цвета
+  const getTagColor = (index: number) => {
+    return tagColors[index % tagColors.length];
   };
 
   return (
@@ -68,28 +68,33 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onDragStart }) => {
             >
               {task.title}
             </label>
+            <div 
+              className="mr-1 p-1 rounded cursor-pointer hover:bg-gray-200" 
+              onClick={(e) => {
+                e.stopPropagation(); // Останавливаем всплытие события
+                onEdit(); // Вызываем обработчик редактирования
+              }}
+            >
+              <Pencil className="h-4 w-4 text-gray-500" />
+            </div>
           </div>
         </div>
       </td>
       <td className="py-2 px-4 max-w-xs overflow-hidden text-ellipsis whitespace-nowrap border-r">{task.description || " Описание отсутствует"}</td>
       <td className="py-2 px-4 border-r">
         <div className="flex -space-x-4 rtl:space-x-reverse">
-          {task.assignee ? (
-            task.assignee.profile_image ? (
-              <img
-                className="w-10 h-10 border-2 border-white rounded-full dark:border-gray-800"
-                src={task.assignee.profile_image}
-                alt={task.assignee.name}
-              />
-            ) : (
-              <div className="w-10 h-10 border-2 border-white rounded-full dark:border-gray-800 flex items-center justify-center">
-                <span className="text-white">{task.assignee.name ? task.assignee.name.split(' ').map(n => n[0]).join('') : '?'}</span>
+          {task.assignees && task.assignees.length > 0 ? (
+            task.assignees.map((assignee) => (
+              <div key={assignee.id} className="w-10 h-10 border-2 border-white rounded-full dark:border-gray-800 flex items-center justify-center">
+                {assignee.profile_image ? (
+                  <img className="w-10 h-10 rounded-full" src={assignee.profile_image} alt={assignee.name} />
+                ) : (
+                  <span className="text-white">{assignee.name ? assignee.name.split(' ').map(n => n[0]).join('') : '?'}</span>
+                )}
               </div>
-            )
+            ))
           ) : (
-            <div className="w-10 h-10 border-2 border-white rounded-full dark:border-gray-800 flex items-center justify-center">
-              <span className="text-white">?</span>
-            </div>
+            <span>Нет ассигнов</span>
           )}
         </div>
       </td>
@@ -104,17 +109,15 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onDragStart }) => {
       </td>
       <td className="py-2 px-4">
         <div className="flex flex-wrap">
-            {task.tag ? (
-            <span
-                className={`mr-1 px-2.5 py-0.5 rounded ${getTagColor(task.id)}`} // Используем id задачи для выбора цвета
-            >
-                {task.tag.name}
+          {task.tag ? (
+            <span className={`mr-1 px-2.5 py-0.5 rounded ${getTagColor(task.id)}`}>
+              {task.tag.name}
             </span>
-            ) : (
+          ) : (
             <span className="mr-1 px-2.5 py-0.5 rounded bg-gray-200 text-gray-700">Нет тега</span>
-            )}
+          )}
         </div>
-       </td>
+      </td>
       <td className="py-2 px-4 border-r">
         <div className="flex items-center">
           <div className="w-[100px] bg-gray-200 rounded-full h-2 mr-2">

@@ -20,6 +20,7 @@ export interface Task {
   status: string;
   priority: string;
   projectId: number;
+  start_date: string;
   due_date: string;
   created_at: string;
   updated_at: string;
@@ -93,6 +94,21 @@ export const api = createApi({
       }),
       invalidatesTags: ["Tasks"],
     }),
+    updateTask: build.mutation<Task, { id: number; title: string; description?: string; priority: string; points?: number; assignees: number[], tags?: string; }>({
+      query: ({ id, title, description, priority, points, tags, assignees }) => ({
+        url: `tasks/${id}/`,
+        method: "PATCH",
+        body: { title, description, priority, points, tags, assignees },
+      }),
+      invalidatesTags: ["Tasks"],
+    }),
+    deleteTask: build.mutation<void, number>({
+      query: (id) => ({
+        url: `tasks/${id}/`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Tasks"],
+    }),
 
     // Эндпоинты для работы с пользователями
     register: build.mutation<AuthResponse, RegisterUser >({
@@ -126,4 +142,6 @@ export const {
   useRegisterMutation, // Хук для регистрации
   useLoginMutation, // Хук для входа
   useGetCurrentUserQuery, // Хук для получения текущего пользователя
+  useUpdateTaskMutation,
+  useDeleteTaskMutation,
 } = api;

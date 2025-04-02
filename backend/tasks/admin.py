@@ -35,7 +35,11 @@ class SubgoalAdmin(admin.ModelAdmin):
 
 @admin.register(Task)
 class TaskAdmin(admin.ModelAdmin):
-    list_display = ('title', 'project', 'assignee', 'status', 'created_at', 'updated_at')
+    list_display = ('title', 'project', 'get_assignees', 'status', 'created_at', 'updated_at')
+    def get_assignees(self, obj):
+        return ", ".join([user.username for user in obj.assignees.all()])
+
+    get_assignees.short_description = 'Assignee'
 
 @admin.register(Subtask)
 class SubtaskAdmin(admin.ModelAdmin):

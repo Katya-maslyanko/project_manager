@@ -23,9 +23,11 @@ from .models import (
 
 User  = get_user_model()
 class UserSerializer(serializers.ModelSerializer):
+    profile_image = serializers.ImageField(required=False)
+
     class Meta:
         model = User
-        fields = ('id', 'username', 'email', 'first_name', 'last_name')
+        fields = ('id', 'username', 'email', 'first_name', 'last_name', 'profile_image')
 
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
@@ -68,33 +70,39 @@ class SubgoalSerializer(serializers.ModelSerializer):
 class TagSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tag
-        fields = '__all__'
+        fields = ['id', 'name']
 
 class TaskSerializer(serializers.ModelSerializer):
-    assignee = serializers.SerializerMethodField()
-    project = serializers.SerializerMethodField()
-    tag = serializers.SerializerMethodField()
+    assignees = UserSerializer(many=True, read_only=True)
+    tag = TagSerializer(read_only=True)
+
     class Meta:
         model = Task
         fields = '__all__'
 
-    def get_assignee(self, obj):
-        if obj.assignee and hasattr(obj.assignee, 'userprofile'):
-            return {
-                'profile_image': obj.assignee.userprofile.profile_image.url if obj.assignee.userprofile.profile_image else None
-            }
-        return {'profile_image': None}
+    def update(self, instance, validated_data):
+        # Обновляем поля задачи
+        instance.title = validated_data.get('title', instance.title)
+        instance.description = validated_data.get('description', instance.description)
+        instance.status = validated_data.get('status', instance.status)
+        instance.priority = validated_data.get('priority', instance.priority)
+        instance.points = validated_data.get('points', instance.points)
+        instance.start_date = validated_data.get('start_date', instance.start_date)
+        instance.due_date = validated_data.get('due_date', instance.due_date)
 
-    def get_project(self, obj):
-        return {
-            'title': obj.project.name
-        }
+        # Обновляем assignees
+        assignees = validated_data.pop('assignees', None)
+        if assignees is not None:
+            instance.assignees.set(assignees)  # Устанавливаем новых assignees
 
-    def get_tag(self, obj):
-        return {
-            'name': obj.tag.name
-        }
+        # Обновляем tag
+        tag = validated_data.pop('tag', None)
+        if tag is not None:
+            instance.tag = tag  # Устанавливаем новый tag
 
+        instance.save()  # Сохраняем изменения
+        return instance
+    
 class SubtaskSerializer(serializers.ModelSerializer):
     class Meta:
         model = Subtask

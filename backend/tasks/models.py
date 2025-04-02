@@ -64,7 +64,7 @@ class Task(models.Model):
     description = models.TextField()
     status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='Новая')
     priority = models.CharField(max_length=50)
-    assignee = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    assignees = models.ManyToManyField(User, related_name='tasks', blank=True)
     project = models.ForeignKey(Project, related_name='tasks', on_delete=models.CASCADE)
     start_date = models.DateTimeField(null=True, blank=True)
     due_date = models.DateTimeField(null=True, blank=True)

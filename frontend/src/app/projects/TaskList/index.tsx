@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { Task } from "@/state/api";
 import { LoaderCircle, CircleCheck, BookCheck, Plus } from "lucide-react";
 import { useSidebar } from "@/context/SidebarContext"; // Импортируем контекст сайдбара
+import EditTaskModal from "@/components/Task/EditTaskModal"; // Импортируем модальное окно редактирования
 
 const TaskList: React.FC = () => {
   const { id } = useParams(); // Получаем ID проекта из параметров
@@ -12,10 +13,17 @@ const TaskList: React.FC = () => {
   const [updateTaskStatus] = useUpdateTaskStatusMutation(); // Хук для обновления статуса задачи
   const { isExpanded, isHovered, isMobileOpen } = useSidebar(); // Получаем состояние сайдбара
 
+  const [isEditModalOpen, setEditModalOpen] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [draggedTask, setDraggedTask] = useState<Task | null>(null);
 
   const handleDragStart = (e: React.DragEvent<HTMLDivElement>, task: Task) => {
     setDraggedTask(task);
+  };
+
+  const handleEditTask = (task: Task) => {
+    setSelectedTask(task);
+    setEditModalOpen(true);
   };
 
   const handleDrop = async (e: React.DragEvent<HTMLDivElement>, status: string) => {
@@ -69,7 +77,12 @@ const TaskList: React.FC = () => {
             </thead>
             <tbody className="text-gray-700 text-sm">
               {tasks.filter(task => task.status === 'Новая').map(task => (
-                <TaskCard key={task.id} task={task} onDragStart={handleDragStart} />
+                <TaskCard 
+                  key={task.id} 
+                  task={task} 
+                  onDragStart={handleDragStart} 
+                  onEdit={() => handleEditTask(task)} // Передаем обработчик редактирования
+                />
               ))}
             </tbody>
           </table>
@@ -111,7 +124,12 @@ const TaskList: React.FC = () => {
             </thead>
             <tbody className="text-gray-700 text-sm">
               {tasks.filter(task => task.status === 'В процессе').map(task => (
-                <TaskCard key={task.id} task={task} onDragStart={handleDragStart} />
+                <TaskCard 
+                  key={task.id} 
+                  task={task} 
+                  onDragStart={handleDragStart} 
+                  onEdit={() => handleEditTask(task)} // Передаем обработчик редактирования
+                />
               ))}
             </tbody>
           </table>
@@ -153,7 +171,12 @@ const TaskList: React.FC = () => {
             </thead>
             <tbody className="text-gray-700 text-sm">
               {tasks.filter(task => task.status === 'Завершено').map(task => (
-                <TaskCard key={task.id} task={task} onDragStart={handleDragStart} />
+                <TaskCard 
+                  key={task.id} 
+                  task={task} 
+                  onDragStart={handleDragStart} 
+                  onEdit={() => handleEditTask(task)} // Передаем обработчик редактирования
+                />
               ))}
             </tbody>
           </table>
@@ -162,6 +185,9 @@ const TaskList: React.FC = () => {
            </button>
         </div>
       </div>
+
+      {/* Модальное окно редактирования */}
+      <EditTaskModal isOpen={isEditModalOpen} onClose={() => setEditModalOpen(false)} task={selectedTask} />
     </div>
   );
 };
