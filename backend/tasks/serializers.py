@@ -1,29 +1,17 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from django.contrib.auth import authenticate
 from django.contrib.auth import get_user_model
-from django.core.exceptions import ValidationError
-from .models import (
-    UserProfile,
-    Team,
-    Project,
-    ProjectGoal,
-    Subgoal,
-    Task,
-    Subtask,
-    Tag,
-    Comment,
-    Notification,
-    File,
-    Setting,
-    ActivityLog,
-    UserTeamRelation,
-    ProjectMember,
-)
+from .models import UserProfile, Team, Project, ProjectGoal, Subgoal, Task, Subtask, Tag, Comment, Notification, File, Setting, ActivityLog, UserTeamRelation, ProjectMember
 
-User  = get_user_model()
+User = get_user_model()
+
+class UserProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserProfile
+        fields = ('profile_image', 'role')
+
 class UserSerializer(serializers.ModelSerializer):
-    profile_image = serializers.ImageField(required=False)
+    profile_image = serializers.ImageField(source='userprofile.profile_image', required=False)
 
     class Meta:
         model = User
@@ -74,14 +62,15 @@ class TagSerializer(serializers.ModelSerializer):
 
 class TaskSerializer(serializers.ModelSerializer):
     assignees = UserSerializer(many=True, read_only=True)
+    assignee_ids = serializers.PrimaryKeyRelatedField(queryset=User .objects.all(), many=True, write_only=True, source='assignees')
     tag = TagSerializer(read_only=True)
+    tag_id = serializers.PrimaryKeyRelatedField(queryset=Tag.objects.all(), write_only=True, source='tag')
 
     class Meta:
         model = Task
-        fields = '__all__'
+        fields = ['id', 'title', 'description', 'status', 'priority', 'points', 'assignees', 'assignee_ids', 'tag', 'tag_id', 'start_date', 'due_date', 'created_at', 'updated_at', 'project']
 
     def update(self, instance, validated_data):
-        # Обновляем поля задачи
         instance.title = validated_data.get('title', instance.title)
         instance.description = validated_data.get('description', instance.description)
         instance.status = validated_data.get('status', instance.status)
@@ -90,17 +79,17 @@ class TaskSerializer(serializers.ModelSerializer):
         instance.start_date = validated_data.get('start_date', instance.start_date)
         instance.due_date = validated_data.get('due_date', instance.due_date)
 
-        # Обновляем assignees
+        # Обновление исполнителей
         assignees = validated_data.pop('assignees', None)
         if assignees is not None:
-            instance.assignees.set(assignees)  # Устанавливаем новых assignees
+            instance.assignees.set(assignees)
 
-        # Обновляем tag
+        # Обновление тега
         tag = validated_data.pop('tag', None)
         if tag is not None:
-            instance.tag = tag  # Устанавливаем новый tag
+            instance.tag = tag
 
-        instance.save()  # Сохраняем изменения
+        instance.save()
         return instance
     
 class SubtaskSerializer(serializers.ModelSerializer):

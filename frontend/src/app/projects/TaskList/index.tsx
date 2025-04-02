@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from "react";
-import TaskCard from "@/components/Task/TaskCardList"; // Импортируем компонент TaskCard
-import { useGetTasksQuery, useUpdateTaskStatusMutation } from "@/state/api"; // Импортируем хуки для получения задач и обновления статуса
+import TaskCard from "@/components/Task/TaskCardList";
+import { useGetTasksQuery, useUpdateTaskStatusMutation } from "@/state/api";
 import { useParams } from "next/navigation";
 import { Task } from "@/state/api";
 import { LoaderCircle, CircleCheck, BookCheck, Plus } from "lucide-react";
-import { useSidebar } from "@/context/SidebarContext"; // Импортируем контекст сайдбара
-import EditTaskModal from "@/components/Task/EditTaskModal"; // Импортируем модальное окно редактирования
+import { useSidebar } from "@/context/SidebarContext";
+import EditTaskModal from "@/components/Task/EditTaskModal";
 
 const TaskList: React.FC = () => {
   const { id } = useParams(); // Получаем ID проекта из параметров
@@ -69,7 +69,7 @@ const TaskList: React.FC = () => {
                 <th className="py-3 px-4">Задача</th>
                 <th className="py-3 px-4">Описание</th>
                 <th className="py-3 px-4">Исполнители</th>
-                <th className="py-3 px-4 max-w-xs overflow-hidden text-ellipsis whitespace-nowrap">Срок выполнения</th>
+                <th className="py-3 px-4 min-w-[260px] overflow-hidden text-ellipsis whitespace-nowrap]">Срок выполнения</th>
                 <th className="py-3 px-4">Приоритет</th>
                 <th className="py-3 px-4">Тэг</th>
                 <th className="py-3 px-4">Прогресс</th>
@@ -116,7 +116,7 @@ const TaskList: React.FC = () => {
                 <th className="py-3 px-4">Задача</th>
                 <th className="py-3 px-4">Описание</th>
                 <th className="py-3 px-4">Исполнители</th>
-                <th className="py-3 px-4 max-w-xs overflow-hidden text-ellipsis whitespace-nowrap">Срок выполнения</th>
+                <th className="py-3 px-4 min-w-[260px] overflow-hidden text-ellipsis whitespace-nowrap">Срок выполнения</th>
                 <th className="py-3 px-4">Приоритет</th>
                 <th className="py-3 px-4">Тэг</th>
                 <th className="py-3 px-4">Прогресс</th>
@@ -163,7 +163,7 @@ const TaskList: React.FC = () => {
                 <th className="py-3 px-4">Задача</th>
                 <th className="py-3 px-4">Описание</th>
                 <th className="py-3 px-4">Исполнители</th>
-                <th className="py-3 px-4 max-w-xs overflow-hidden text-ellipsis whitespace-nowrap">Срок выполнения</th>
+                <th className="py-3 px-4 min-w-[260px] overflow-hidden text-ellipsis whitespace-nowrapp">Срок выполнения</th>
                 <th className="py-3 px-4">Приоритет</th>
                 <th className="py-3 px-4">Тэг</th>
                 <th className="py-3 px-4">Прогресс</th>

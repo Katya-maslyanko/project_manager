@@ -1,6 +1,5 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
-// Определяем интерфейсы для проекта, задачи и пользователя
 export interface Project {
   id: number;
   name: string;
@@ -9,8 +8,13 @@ export interface Project {
 
 export interface Assignee {
   id: number;
+  username: string;
+  profile_image: string | null;
+}
+
+export interface Tag {
+  id: number;
   name: string;
-  avatarURL: string;
 }
 
 export interface Task {
@@ -24,12 +28,20 @@ export interface Task {
   due_date: string;
   created_at: string;
   updated_at: string;
-  tags?: string;
-  points?: number;
+  tag: Tag | null;
+  points: number;
   assignees: Assignee[];
 }
 
-export interface RegisterUser  {
+export interface Comment {
+  id: number;
+  taskId: number;
+  user: Assignee;
+  content: string;
+  created_at: string;
+}
+
+export interface RegisterUser {
   username: string;
   email: string;
   password: string;
@@ -37,7 +49,7 @@ export interface RegisterUser  {
   last_name: string;
 }
 
-export interface LoginUser  {
+export interface LoginUser {
   email: string;
   password: string;
 }
@@ -51,18 +63,16 @@ export interface User {
   id: number;
   username: string;
   email: string;
-  profilePictureUrl?: string;
+  profile_image?: string;
 }
 
-// Создаем API с помощью Redux Toolkit
 export const api = createApi({
   baseQuery: fetchBaseQuery({
-    baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL, // Убедитесь, что эта переменная окружения настроена
+    baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL,
   }),
   reducerPath: "api",
-  tagTypes: ["Projects", "Tasks", "Users"],
+  tagTypes: ["Projects", "Tasks", "Users", "Tags"],
   endpoints: (build) => ({
-    // Эндпоинты для работы с проектами
     getProjects: build.query<Project[], void>({
       query: () => "projects/",
       providesTags: ["Projects"],
@@ -75,8 +85,6 @@ export const api = createApi({
       }),
       invalidatesTags: ["Projects"],
     }),
-
-    // Эндпоинты для работы с задачами
     getTaskById: build.query<Task, number>({
       query: (id) => `tasks/${id}/`,
       providesTags: ["Tasks"],
@@ -86,19 +94,19 @@ export const api = createApi({
       providesTags: (result) =>
         result ? result.map(({ id }) => ({ type: "Tasks", id })) : [{ type: "Tasks", id: "LIST" }],
     }),
+    updateTask: build.mutation<Task, Partial<Task>>({
+      query: ({ id, ...rest }) => ({
+        url: `tasks/${id}/`,
+        method: "PATCH",
+        body: rest,
+      }),
+      invalidatesTags: ["Tasks"],
+    }),
     updateTaskStatus: build.mutation<Task, { id: number; status: string }>({
       query: ({ id, status }) => ({
         url: `tasks/${id}/`,
         method: "PATCH",
         body: { status },
-      }),
-      invalidatesTags: ["Tasks"],
-    }),
-    updateTask: build.mutation<Task, { id: number; title: string; description?: string; priority: string; points?: number; assignees: number[], tags?: string; }>({
-      query: ({ id, title, description, priority, points, tags, assignees }) => ({
-        url: `tasks/${id}/`,
-        method: "PATCH",
-        body: { title, description, priority, points, tags, assignees },
       }),
       invalidatesTags: ["Tasks"],
     }),
@@ -109,39 +117,62 @@ export const api = createApi({
       }),
       invalidatesTags: ["Tasks"],
     }),
-
-    // Эндпоинты для работы с пользователями
-    register: build.mutation<AuthResponse, RegisterUser >({
+    // Эндпоинт для получения тегов
+    getTags: build.query<Tag[], void>({
+      query: () => `tags/`,
+        providesTags: ["Tags"],
+    }),
+    // Эндпоинт для получения пользователей
+    getUsers: build.query<User[], void>({
+      query: () => `users/`,
+        providesTags: ["Users"],
+    }),
+    getCommentsByTaskId: build.query<Comment[], number>({
+      query: (taskId) => `tasks/${taskId}/comments/`,
+      providesTags: ["Tasks"],
+    }),
+    createComment: build.mutation<Comment, Partial<Comment>>({
+      query: (comment) => ({
+        url: `tasks/${comment.taskId}/comments/`,
+        method: "POST",
+        body: comment,
+      }),
+      invalidatesTags: ["Tasks"],
+    }),
+    register: build.mutation<AuthResponse, RegisterUser>({
       query: (userData) => ({
         url: "users/register/",
         method: "POST",
         body: userData,
       }),
     }),
-    login: build.mutation<AuthResponse, LoginUser >({
+    login: build.mutation<AuthResponse, LoginUser>({
       query: (credentials) => ({
         url: "users/login/",
         method: "POST",
         body: credentials,
       }),
     }),
-    getCurrentUser:  build.query<User, void>({
+    getCurrentUser: build.query<User, void>({
       query: () => "users/profile/",
       providesTags: ["Users"],
     }),
   }),
 });
 
-// Экспортируем хуки для использования в компонентах
 export const {
   useGetProjectsQuery,
   useCreateProjectMutation,
   useGetTaskByIdQuery,
   useGetTasksQuery,
-  useUpdateTaskStatusMutation,
-  useRegisterMutation, // Хук для регистрации
-  useLoginMutation, // Хук для входа
-  useGetCurrentUserQuery, // Хук для получения текущего пользователя
   useUpdateTaskMutation,
+  useUpdateTaskStatusMutation,
   useDeleteTaskMutation,
+  useGetCommentsByTaskIdQuery,
+  useCreateCommentMutation,
+  useRegisterMutation,
+  useLoginMutation,
+  useGetCurrentUserQuery,
+  useGetTagsQuery,
+  useGetUsersQuery,
 } = api;

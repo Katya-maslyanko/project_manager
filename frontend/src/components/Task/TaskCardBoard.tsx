@@ -1,39 +1,33 @@
 import React from "react";
-import { Task } from "@/state/api";
 import { GripVertical, Flag } from "lucide-react";
 
-interface TaskCardProps {
-  task: Task;
-  onDragStart: (e: React.DragEvent<HTMLDivElement>, task: Task) => void;
-}
-
-const TaskCardBoard: React.FC<TaskCardProps> = ({ task, onDragStart }) => {
+const TaskCardBoard = ({ task, onDragStart }) => {
   const [isChecked, setIsChecked] = React.useState(false);
 
   const handleCheckboxChange = () => {
     setIsChecked(!isChecked);
   };
 
-  const formatDateRange = (startDateString: string | undefined, endDateString: string | undefined) => {
+  const formatDateRange = (startDateString, endDateString) => {
     if (!startDateString || !endDateString) return "Дата не указана";
-  
+
     const startDate = new Date(startDateString);
     const endDate = new Date(endDateString);
-  
+
     if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
       return "Некорректная дата";
     }
-  
-    const options: Intl.DateTimeFormatOptions = {
+
+    const options = {
       day: "numeric",
       month: "long",
       hour: "numeric",
       minute: "numeric",
     };
-  
+
     const formattedStartDate = startDate.toLocaleString("ru-RU", options);
     const formattedEndDate = endDate.toLocaleString("ru-RU", options);
-  
+
     return `${formattedStartDate} - ${formattedEndDate}`;
   };
 
@@ -106,7 +100,7 @@ const TaskCardBoard: React.FC<TaskCardProps> = ({ task, onDragStart }) => {
       </div>
 
       {/* Tag and Priority */}
-      <div className="flex items-center mb-3 ">
+      <div className="flex items-center mb-3">
         <div
           className={`flex items-center border ${
             task.priority === "Высокий"

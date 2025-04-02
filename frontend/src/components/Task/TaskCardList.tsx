@@ -1,28 +1,16 @@
 import React from "react";
-import { Task } from "@/state/api";
-import { GripVertical, Flag, Pencil } from "lucide-react"; // Импортируем иконку редактирования
+import { GripVertical, Flag, Pencil } from "lucide-react";
 
-interface TaskCardProps {
-  task: Task;
-  onDragStart: (e: React.DragEvent<HTMLDivElement>, task: Task) => void;
-  onEdit: () => void; // Добавляем обработчик для редактирования
-}
-
-const TaskCard: React.FC<TaskCardProps> = ({ task, onDragStart, onEdit }) => {
+const TaskCard = ({ task, onDragStart, onEdit }) => {
   const [isChecked, setIsChecked] = React.useState(false);
 
   const handleCheckboxChange = () => {
     setIsChecked(!isChecked);
   };
 
-  const formatDate = (dateString: string) => {
-    const options: Intl.DateTimeFormatOptions = { 
-      day: 'numeric', 
-      month: 'long', 
-      hour: 'numeric', 
-      minute: 'numeric' 
-    };
-    return new Date(dateString).toLocaleString('ru-RU', options);
+  const formatDate = (dateString) => {
+    const options = { day: 'numeric', month: 'long', year: 'numeric' };
+    return new Date(dateString).toLocaleDateString('ru-RU', options);
   };
 
   const tagColors = [
@@ -34,7 +22,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onDragStart, onEdit }) => {
     'bg-pink-100 text-pink-600',
   ];
 
-  const getTagColor = (index: number) => {
+  const getTagColor = (index) => {
     return tagColors[index % tagColors.length];
   };
 
@@ -71,8 +59,8 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onDragStart, onEdit }) => {
             <div 
               className="mr-1 p-1 rounded cursor-pointer hover:bg-gray-200" 
               onClick={(e) => {
-                e.stopPropagation(); // Останавливаем всплытие события
-                onEdit(); // Вызываем обработчик редактирования
+                e.stopPropagation();
+                onEdit();
               }}
             >
               <Pencil className="h-4 w-4 text-gray-500" />
@@ -80,16 +68,16 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onDragStart, onEdit }) => {
           </div>
         </div>
       </td>
-      <td className="py-2 px-4 max-w-xs overflow-hidden text-ellipsis whitespace-nowrap border-r">{task.description || " Описание отсутствует"}</td>
+      <td className="py-2 px-4 max-w-xs overflow-hidden text-ellipsis whitespace-nowrap border-r">{task.description || "Описание отсутствует"}</td>
       <td className="py-2 px-4 border-r">
         <div className="flex -space-x-4 rtl:space-x-reverse">
           {task.assignees && task.assignees.length > 0 ? (
-            task.assignees.map((assignee) => (
-              <div key={assignee.id} className="w-10 h-10 border-2 border-white rounded-full dark:border-gray-800 flex items-center justify-center">
+            task.assignees.map((assignee, index) => (
+              <div key={assignee.id} className={`w-10 h-10 border-2 border-gray-100 rounded-full dark:border-gray-800 flex items-center justify-center ${getTagColor(index)}`}>
                 {assignee.profile_image ? (
-                  <img className="w-10 h-10 rounded-full" src={assignee.profile_image} alt={assignee.name} />
+                  <img className="w-10 h-10 rounded-full" src={assignee.profile_image} alt={assignee.username} />
                 ) : (
-                  <span className="text-white">{assignee.name ? assignee.name.split(' ').map(n => n[0]).join('') : '?'}</span>
+                  <span>{assignee.username ? assignee.username.split(' ').map(n => n[0]).join('') : '?'}</span>
                 )}
               </div>
             ))
@@ -98,7 +86,9 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onDragStart, onEdit }) => {
           )}
         </div>
       </td>
-      <td className="py-2 px-4 border-r max-w-xs overflow-hidden text-ellipsis whitespace-nowrap">{formatDate(task.due_date)}</td>
+      <td className="py-2 px-4 border-r">
+        {formatDate(task.start_date)} - {formatDate(task.due_date)}
+      </td>
       <td className="py-2 px-4 border-r">
         <div className={`flex items-center border ${task.priority === 'Высокий' ? 'border-red-200' : task.priority === 'Средний' ? 'border-stone-200' : 'border-emerald-200'} rounded-md px-2 py-1`}>
           <Flag className={`h-4 w-4 mr-1 ${task.priority === 'Высокий' ? 'text-red-600' : task.priority === 'Средний' ? 'text-stone-600' : 'text-emerald-600'}`} />
@@ -107,10 +97,10 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onDragStart, onEdit }) => {
           </span>
         </div>
       </td>
-      <td className="py-2 px-4">
+      <td className="py-2 px-4 border-r">
         <div className="flex flex-wrap">
           {task.tag ? (
-            <span className={`mr-1 px-2.5 py-0.5 rounded ${getTagColor(task.id)}`}>
+            <span key={task.tag.id} className={`mr-1 px-2.5 py-0.5 rounded ${getTagColor(task.id)}`}>
               {task.tag.name}
             </span>
           ) : (
@@ -118,7 +108,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onDragStart, onEdit }) => {
           )}
         </div>
       </td>
-      <td className="py-2 px-4 border-r">
+      <td className="py-2 px-4">
         <div className="flex items-center">
           <div className="w-[100px] bg-gray-200 rounded-full h-2 mr-2">
             <div className="bg-blue-600 h-2 rounded-full" style={{ width: `${task.points}%` }}></div>
