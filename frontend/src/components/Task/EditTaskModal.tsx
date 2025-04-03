@@ -1,44 +1,52 @@
 import React, { useEffect, useState } from "react";
-import { Task, useUpdateTaskMutation, useDeleteTaskMutation, useCreateCommentMutation, useGetCommentsByTaskIdQuery, useGetTagsQuery, useGetUsersQuery } from "@/state/api"; // Импортируем хуки для работы с задачами
-import { Ellipsis, X, Plus } from "lucide-react"; // Импортируем иконки
+import { Task, useUpdateTaskMutation, useDeleteTaskMutation, useCreateCommentMutation, useGetCommentsByTaskIdQuery, useGetTagsQuery, useGetUsersQuery, useUpdateCommentMutation, useDeleteCommentMutation } from "@/state/api"; 
+import { Ellipsis, X, Plus } from "lucide-react";
+import DeleteConfirmationModal from "./modal/DeleteConfirmationModal"; 
+import AddAssigneeModal from "./modal/AddAssigneeModal"; 
+import CommentsSection from "./CommentSection"; 
 
 interface EditTaskModalProps {
-  isOpen: boolean; // Открыто ли модальное окно
-  onClose: () => void; // Функция для закрытия модального окна
-  task: Task | null; // Задача, которую нужно редактировать
+  isOpen: boolean;
+  onClose: () => void;
+  task: Task | null;
 }
 
 const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, task }) => {
-  const { data: tags = [] } = useGetTagsQuery(); // Получаем теги
-  const { data: users = [] } = useGetUsersQuery(); // Получаем пользователей
-  const [title, setTitle] = useState(""); // Состояние для названия задачи
-  const [description, setDescription] = useState(""); // Состояние для описания задачи
-  const [priority, setPriority] = useState("Новая"); // Состояние для приоритета
-  const [points, setPoints] = useState(0); // Состояние для очков
-  const [tag, setTag] = useState<number | null>(null); // Состояние для тега
-  const [selectedAssignees, setSelectedAssignees] = useState<number[]>([]); // Состояние для выбранных исполнителей
-  const [updateTask] = useUpdateTaskMutation(); // Хук для обновления задачи
-  const [deleteTask] = useDeleteTaskMutation(); // Хук для удаления задачи
-  const [createComment] = useCreateCommentMutation(); // Хук для создания комментария
-  const { data: comments, refetch: refetchComments } = useGetCommentsByTaskIdQuery(task?.id || 0, { skip: !task }); // Получаем комментарии к задаче
-  const [newComment, setNewComment] = useState(""); // Состояние для нового комментария
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false); // Состояние для управления выпадающим меню
-  const [status, setStatus] = useState(""); // Состояние для статуса задачи
-  const [startDate, setStartDate] = useState(""); // Состояние для даты начала
-  const [dueDate, setDueDate] = useState(""); // Состояние для даты завершения
+  const { data: tags = [] } = useGetTagsQuery();
+  const { data: users = [] } = useGetUsersQuery();
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [priority, setPriority] = useState("Новая");
+  const [points, setPoints] = useState(0);
+  const [tag, setTag] = useState<number | null>(null);
+  const [selectedAssignees, setSelectedAssignees] = useState<number[]>([]);
+  const [updateTask] = useUpdateTaskMutation();
+  const [deleteTask] = useDeleteTaskMutation();
+  const [createComment] = useCreateCommentMutation();
+  const [updateComment] = useUpdateCommentMutation(); // Хук для обновления комментария
+  const [deleteComment] = useDeleteCommentMutation(); // Хук для удаления комментария
+  const { data: comments = [], refetch: refetchComments } = useGetCommentsByTaskIdQuery(
+    task ? { taskId: task.id } : null,
+    { skip: !task }
+  );
+  const [isAssigneeDropdownOpen, setIsAssigneeDropdownOpen] = useState(false);
+  const [isAddAssigneeModalOpen, setIsAddAssigneeModalOpen] = useState(false);
+  const [isDeleteConfirmationOpen, setIsDeleteConfirmationOpen] = useState(false);
+  const [status, setStatus] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [dueDate, setDueDate] = useState("");
 
-  // Заполняем состояние при получении задачи
   useEffect(() => {
     if (task) {
       setTitle(task.title);
       setDescription(task.description || "");
       setPriority(task.priority);
       setPoints(task.points || 0);
-      setTag(task.tag ? task.tag.id : null); // Устанавливаем ID тега
-      setSelectedAssignees(task.assignees.map(assignee => assignee.id)); // Устанавливаем assignees
-      setStatus(task.status); // Устанавливаем статус задачи
-      setStartDate(task.start_date.split('T')[0]); // Устанавливаем дату начала
-      setDueDate(task.due_date.split('T')[0]); // Устанавливаем дату завершения
+      setTag(task.tag ? task.tag.id : null);
+      setSelectedAssignees(task.assignees.map(assignee => assignee.id));
+      setStatus(task.status);
+      setStartDate(task.start_date.split('T')[0]);
+      setDueDate(task.due_date.split('T')[0]);
     }
   }, [task]);
 
@@ -52,54 +60,66 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, task }) 
           description,
           priority,
           points,
-          assignee_ids: selectedAssignees, // Передаем массив ID исполнителей
-          tag_id: tag, // Передаем ID тега
+          assignee_ids: selectedAssignees,
+          tag_id: tag,
           status,
           start_date: startDate,
           due_date: dueDate,
         });
-        onClose(); // Закрываем модальное окно после обновления
+        onClose();
       } catch (error) {
         console.error("Ошибка при обновлении задачи:", error);
       }
     }
   };
 
-  // Обработка удаления задачи
   const handleDeleteTask = async () => {
     if (task) {
       try {
         await deleteTask(task.id);
-        onClose(); // Закрываем модальное окно после удаления
+        onClose(); 
       } catch (error) {
         console.error("Ошибка при удалении задачи:", error);
       }
     }
   };
 
-  // Обработка добавления комментария
-  const handleAddComment = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (task && newComment.trim()) {
+  const handleAddComment = async (content: string) => {
+    if (content.trim()) {
       try {
         await createComment({
-          taskId: task.id,
-          content: newComment,
+          taskId: task.id, // Используем task.id
+          content,
         });
-        setNewComment(""); // Очищаем поле ввода комментария
-        refetchComments(); // Обновляем список комментариев
+        refetchComments(); // Обновляем комментарии после добавления
       } catch (error) {
         console.error("Ошибка при добавлении комментария:", error);
       }
     }
   };
 
-  // Обработчик изменения тега
+  const handleEditComment = async (commentId: number, content: string) => {
+    try {
+      await updateComment({ id: commentId, content }); // Вызов API для обновления комментария
+      refetchComments(); // Обновляем комментарии после редактирования
+    } catch (error) {
+      console.error("Ошибка при редактировании комментария:", error);
+    }
+  };
+
+  const handleDeleteComment = async (commentId: number) => {
+    try {
+      await deleteComment(commentId); // Вызов API для удаления комментария
+      refetchComments(); // Обновляем комментарии после удаления
+    } catch (error) {
+      console.error("Ошибка при удалении комментария:", error);
+    }
+  };
+
   const handleTagChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setTag(Number(e.target.value));
   };
 
-  // Обработчик изменения исполнителей
   const handleAssigneeToggle = (userId: number) => {
     setSelectedAssignees(prev => 
       prev.includes(userId) 
@@ -108,24 +128,36 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, task }) 
     );
   };
 
-  // Проверяем, открыто ли модальное окно
+  const openAddAssigneeModal = () => {
+    setIsAddAssigneeModalOpen(true);
+  };
+
+  const closeAddAssigneeModal = () => {
+    setIsAddAssigneeModalOpen(false);
+  };
+
+  const openDeleteConfirmation = () => {
+    setIsDeleteConfirmationOpen(true);
+    setIsAssigneeDropdownOpen(false);
+  };
+
   if (!isOpen || !task) return null;
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 overflow-y: auto">
       <div className="w-[800px] mx-auto bg-white rounded-lg shadow-lg p-6">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold">Редактировать задачу</h2>
           <div className="flex items-center">
             <div>
-              <button className="p-1 rounded cursor-pointer hover:bg-gray-200" onClick={() => setIsDropdownOpen(!isDropdownOpen)}>
+              <button className="p-1 rounded cursor-pointer hover:bg-gray-200" onClick={() => setIsAssigneeDropdownOpen(!isAssigneeDropdownOpen)}>
                 <Ellipsis className="h-5 w-5 text-gray-500" />
               </button>
-              {isDropdownOpen && (
+              {isAssigneeDropdownOpen && (
                 <div className="absolute mt-2 mr-4 bg-white shadow-lg rounded-md">
                   <button
                     className="block px-4 py-2 text-red-600 shadow-lg rounded-md hover:bg-red-100 w-full text-left"
-                    onClick={handleDeleteTask}
+                    onClick={openDeleteConfirmation}
                   >
                     Удалить
                   </button>
@@ -177,36 +209,34 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, task }) 
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700">Исполнители</label>
-                <div className="flex flex-col mt-1">
-                  <div className="flex flex-wrap border border-gray-200 rounded-md shadow-sm p-2">
-                    {selectedAssignees.map(id => {
-                      const user = users.find(u => u.id === id);
-                      return user ? (
-                        <div key={id} className="flex items-center mr-2 mb-2">
-                          <span className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center mr-1">
-                            {user.username ? user.username.split(' ').map(n => n[0]).join('') : '?'}
-                          </span>
-                          <span>{user.username}</span>
-                          <button onClick={() => handleAssigneeToggle(id)} className="ml-2 text-red-500">×</button>
+                <div className="flex -space-x-2 mt-1">
+                  {selectedAssignees.length > 0 ? (
+                    selectedAssignees.map((id) => {
+                      const assignee = users.find(user => user.id === id);
+                      return assignee ? (
+                        <div key={assignee.id} className="flex items-center">
+                          {assignee.profile_image ? (
+                            <img 
+                              alt={assignee.username} 
+                              className="w-10 h-10 rounded-full border-2 border-white" 
+                              src={assignee.profile_image} 
+                            />
+                          ) : (
+                            <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center border-2 border-white">
+                              <span className="text-gray-700">
+                                {assignee.username ? assignee.username.split(' ').map(n => n[0]).join('') : '?'}
+                              </span>
+                            </div>
+                          )}
                         </div>
                       ) : null;
-                    })}
-                  </div>
-                  <button type="button" onClick={() => setIsDropdownOpen(!isDropdownOpen)} className="mt-2 bg-blue-500 text-white py-1 px-4 rounded">
-                    Добавить исполнителей
-                  </button>
-                  {isDropdownOpen && (
-                    <div className="absolute mt-2 bg-white border border-gray-200 rounded-md shadow-lg z-10">
-                      {users.map(user => (
-                        <div key={user.id} className="flex items-center p-2 hover:bg-gray-100 cursor-pointer" onClick={() => handleAssigneeToggle(user.id)}>
-                          <span className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center mr-2">
-                            {user.username ? user.username.split(' ').map(n => n[0]).join('') : '?'}
-                          </span>
-                          <span>{user.username}</span>
-                        </div>
-                      ))}
-                    </div>
+                    })
+                  ) : (
+                    <span className="text-gray-500">Нет назначенных исполнителей</span>
                   )}
+                  <button type="button" className="pl-4 flex items-center text-blue-500 hover:text-blue-700" onClick ={openAddAssigneeModal}>
+                    <Plus className="h-5 w-5" /> Добавить исполнителя
+                  </button>
                 </div>
               </div>
               <div>
@@ -281,55 +311,37 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, task }) 
             </div>
           </div>
           <div className="flex justify-end mt-6">
-            <button type="button" className="mr-2 bg-gray-300 text-gray-700 py-2 px-4 rounded" onClick={onClose}>
+            <button type="button" className="mr-2 border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-200 py-2 px-4" onClick={onClose}>
               Отмена
             </button>
-            <button type="submit" className="bg-blue-500 text-white py-2 px-4 rounded">
+            <button type="submit" className="mr-2 bg-blue-100 rounded-lg text-blue-700 hover:bg-blue-600 hover:text-white py-2 px-4">
               Сохранить
             </button>
           </div>
         </form>
 
-        <div className="mt-8">
-          <h3 className="text-lg font-semibold mb-4">Комментарии</h3>
-          <form onSubmit={handleAddComment} className="space-y-4">
-            <textarea
-              className="block w-full border border-gray-300 rounded-md shadow-sm p-2 h-20"
-              value={newComment}
-              onChange={(e) => setNewComment(e.target.value)}
-              placeholder="Добавить комментарий"
-            />
-            <button type="submit" className="bg-blue-500 text-white py-2 px-4 rounded">
-              Добавить комментарий
-            </button>
-          </form>
-          <div className="mt-4 space-y-4">
-            {comments && comments.length > 0 ? (
-              comments.map((comment) => (
-                <div key={comment.id} className="border border-gray-300 rounded-md p-4">
-                  <div className="flex items-center mb-2">
-                    {comment.user.profile_image ? (
-                      <img
-                        className="w-8 h-8 rounded-full mr-2"
-                        src={comment.user.profile_image}
-                        alt={comment.user.username}
-                      />
-                    ) : (
-                      <span className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center mr-2">
-                        {comment.user.username[0]}
-                      </span>
-                    )}
-                    <span className="font-semibold">{comment.user.username}</span>
-                  </div>
-                  <p>{comment.content}</p>
-                  <span className="text-gray-500 text-sm">{new Date(comment.created_at).toLocaleString()}</span>
-                </div>
-              ))
-            ) : (
-              <p className="text-gray-500">Нет комментариев</p>
-            )}
-          </div>
-        </div>
+        <DeleteConfirmationModal 
+          isOpen={isDeleteConfirmationOpen} 
+          onClose={() => setIsDeleteConfirmationOpen(false)} 
+          onDelete={handleDeleteTask} 
+        />
+
+        <AddAssigneeModal 
+          isOpen={isAddAssigneeModalOpen} 
+          onClose={closeAddAssigneeModal} 
+          users={users} 
+          selectedAssignees={selectedAssignees} 
+          onAssigneeToggle={handleAssigneeToggle} 
+        />
+
+        <CommentsSection
+          comments={comments}
+          users={users}
+          taskId={task.id}
+          onAddComment={handleAddComment} 
+          onEditComment={handleEditComment} 
+          onDeleteComment={handleDeleteComment} 
+        />
       </div>
     </div>
   );

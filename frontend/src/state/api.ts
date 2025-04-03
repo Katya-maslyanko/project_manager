@@ -71,7 +71,7 @@ export const api = createApi({
     baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL,
   }),
   reducerPath: "api",
-  tagTypes: ["Projects", "Tasks", "Users", "Tags"],
+  tagTypes: ["Projects", "Tasks", "Users", "Tags", "Comments"],
   endpoints: (build) => ({
     getProjects: build.query<Project[], void>({
       query: () => "projects/",
@@ -127,17 +127,36 @@ export const api = createApi({
       query: () => `users/`,
         providesTags: ["Users"],
     }),
-    getCommentsByTaskId: build.query<Comment[], number>({
-      query: (taskId) => `tasks/${taskId}/comments/`,
-      providesTags: ["Tasks"],
+    // Эндпоинт для получения комментариев по ID задачи
+    getCommentsByTaskId: build.query<Comment[], { taskId: number }>({
+      query: ({ taskId }) => `comments/?taskId=${taskId}`, // Изменено на taskId
+      providesTags: ["Comments"],
     }),
-    createComment: build.mutation<Comment, Partial<Comment>>({
-      query: (comment) => ({
-        url: `tasks/${comment.taskId}/comments/`,
+    // Эндпоинт для создания комментария
+    createComment: build.mutation<Comment, { taskId: number; content: string }>({
+      query: ({ taskId, content }) => ({
+        url: "comments/",
         method: "POST",
-        body: comment,
+        body: { taskId, content }, // Изменено на taskId
       }),
-      invalidatesTags: ["Tasks"],
+      invalidatesTags: ["Comments"],
+    }),
+    updateComment: build.mutation<Comment, { id: number; content: string }>({
+      query: ({ id, content }) => ({
+        url: `comments/${id}/`, // Предполагается, что у вас есть такой эндпоинт
+        method: "PATCH",
+        body: { content },
+      }),
+      invalidatesTags: ["Comments"],
+    }),
+
+    // Эндпоинт для удаления комментария
+    deleteComment: build.mutation<void, number>({
+      query: (id) => ({
+        url: `comments/${id}/`, // Предполагается, что у вас есть такой эндпоинт
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Comments"],
     }),
     register: build.mutation<AuthResponse, RegisterUser>({
       query: (userData) => ({
@@ -175,4 +194,6 @@ export const {
   useGetCurrentUserQuery,
   useGetTagsQuery,
   useGetUsersQuery,
+  useUpdateCommentMutation,
+  useDeleteCommentMutation,
 } = api;

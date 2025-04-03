@@ -132,6 +132,13 @@ class CommentViewSet(viewsets.ModelViewSet):
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        task_id = self.request.query_params.get('taskId', None)  # Убедитесь, что используете taskId
+        if task_id is not None:
+            queryset = queryset.filter(task_id=task_id)  # Фильтруем по task_id
+        return queryset
+
 class NotificationViewSet(viewsets.ModelViewSet):
     queryset = Notification.objects.all()
     serializer_class = NotificationSerializer
