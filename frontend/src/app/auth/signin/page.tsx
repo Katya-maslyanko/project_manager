@@ -20,8 +20,8 @@ const SignIn = () => {
     try {
       const response = await login({ email, password }).unwrap();
       // Убедитесь, что токен и пользовательские данные возвращаются
-      if (response.token && response.user) {
-        setAuth(response.token, response.user); // Устанавливаем аутентификацию
+      if (response.access && response.user) {
+        setAuth(response); // Устанавливаем аутентификацию
         router.push("/"); // Перенаправление на главную страницу
       } else {
         setError("Ошибка входа. Пожалуйста, проверьте свои учетные данные.");
@@ -38,12 +38,13 @@ const SignIn = () => {
         {error && <p className="text-red-500">{error}</p>}
         <form onSubmit={handleLogin} className="space-y-4">
           <input
-            type="email"
+            type="email" // Измените тип на email
             placeholder="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
             className="w-full p-2 border border-gray-300 rounded"
+            autoComplete="email"
           />
           <input
             type="password"
@@ -52,6 +53,7 @@ const SignIn = () => {
             onChange={(e) => setPassword(e.target.value)}
             required
             className="w-full p-2 border border-gray-300 rounded"
+            autoComplete="current-password"
           />
           <button
             type="submit"

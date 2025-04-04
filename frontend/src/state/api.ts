@@ -1,4 +1,5 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import Cookies from "js-cookie";
 
 export interface Project {
   id: number;
@@ -55,7 +56,8 @@ export interface LoginUser  {
 }
 
 export interface AuthResponse {
-  token: string;
+  access: string;
+  refresh: string;
   user: User;
 }
 
@@ -65,7 +67,6 @@ export interface User {
   email: string;
   first_name: string;
   last_name: string;
-  password: string;
   profile_image?: string;
 }
 
@@ -73,9 +74,9 @@ export const api = createApi({
   baseQuery: fetchBaseQuery({
     baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL,
     prepareHeaders: (headers) => {
-      const token = localStorage.getItem('token');
+      const token = Cookies.get('accessToken');
       if (token) {
-        headers.set('Authorization', ` Bearer ${token}`);
+        headers.set('Authorization', `Bearer ${token}`);
       }
       return headers;
     },
@@ -164,26 +165,27 @@ export const api = createApi({
     }),
     register: build.mutation<AuthResponse, RegisterUser >({
       query: (userData) => ({
-        url: "users/register/",
+        url: "auth/users/",
         method: "POST",
         body: userData,
       }),
     }),
     login: build.mutation<AuthResponse, LoginUser >({
       query: (credentials) => ({
-        url: "users/login/",
+        url: "auth/jwt/create/",
         method: "POST",
         body: credentials,
       }),
     }),
     getCurrentUser:  build.query<User, void>({
-      query: () => "users/profile/",
+      query: () => "auth/users/me/",
       providesTags: ["Users"],
     }),
     logout: build.mutation<void, void>({
       query: () => ({
-        url: "users/logout/",
+        url: "auth/jwt/blacklist/",
         method: "POST",
+        body: { refresh: Cookies.get('refreshToken') },
       }),
     }),
   }),

@@ -4,20 +4,20 @@ import { SidebarProvider, useSidebar } from "@/context/SidebarContext";
 import Navbar from "@/components/Navbar/Navbar";
 import Sidebar from "@/components/Sidebar/Sidebar";
 import { ThemeProvider } from "@/context/ThemeContext";
-import { useAuth } from "@/context/AuthContext"; // Импортируйте хук для доступа к контексту аутентификации
+import { useAuth } from "@/context/AuthContext"; 
 import { useRouter } from "next/navigation";
 import { useEffect } from 'react';
 
 const InboxLayout = ({ children }: { children: React.ReactNode }) => {
   const { isExpanded, isHovered, isMobileOpen } = useSidebar();
-  const { user, isAuthenticated } = useAuth(); // Получаем информацию о пользователе
+  const { user, isAuthenticated } = useAuth(); 
   const router = useRouter();
 
   useEffect(() => {
-    if (isAuthenticated && !user) {
-      router.push("/auth/signin"); // Перенаправление на регистрацию, если нет профиля
+    if (!isAuthenticated) {
+      router.push("/auth/signin"); // Перенаправление на страницу входа, если пользователь не аутентифицирован
     }
-  }, [isAuthenticated, user, router]);
+  }, [isAuthenticated, router]);
 
   const mainContentMargin = isMobileOpen
     ? "ml-0"

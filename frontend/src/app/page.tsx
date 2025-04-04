@@ -1,10 +1,11 @@
 // HomePage.tsx
 "use client";
 
-import InboxWrapper from "./inboxWrapper";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/context/AuthContext"; // Убедитесь, что путь правильный
+import { useAuth } from "@/context/AuthContext"; 
+import InboxWrapper from "./inboxWrapper";
+
 
 const HomePage = () => {
   const router = useRouter();
@@ -12,9 +13,13 @@ const HomePage = () => {
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
-      router.push("/auth/signin"); // Перенаправление на страницу входа, если пользователь не аутентифицирован
+      router.push("/auth/signin");
     }
   }, [isAuthenticated, isLoading, router]);
+
+  if (isLoading) {
+    return <div>Loading...</div>; // Можно добавить индикатор загрузки
+  }
 
   return (
     <InboxWrapper>

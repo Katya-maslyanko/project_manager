@@ -1,11 +1,13 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useGetCurrentUserQuery, User } from "@/state/api";
+import Cookies from 'js-cookie';
+import { useGetCurrentUserQuery } from "@/state/api";
+import { User, AuthResponse } from "@/state/api";
 
 interface AuthContextType {
   user: User | null;
-  login: (token: string, user: User) => void;
+  login: (token: AuthResponse) => void;
   logout: () => void;
   isAuthenticated: boolean;
   isLoading: boolean;
@@ -17,43 +19,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser ] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const { data: currentUser , isLoading } = useGetCurrentUserQuery(undefined, {
-    skip: !isAuthenticated, // Пропустить запрос, если не аутентифицирован
+    skip: !isAuthenticated,
   });
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
+    const accessToken = Cookies.get('accessToken');
+    if (accessToken) {
       setIsAuthenticated(true);
-      // Запрос текущего пользователя
-      if (currentUser ) {
-        setUser (currentUser );
-      }
     } else {
       setIsAuthenticated(false);
       setUser (null);
     }
-  }, [currentUser ]);
+  }, []);
 
-  // Функция для входа
-  const login = (token: string, userData: User) => {
-    localStorage.setItem('token', token);
-    setIsAuthenticated(true);
-    setUser (userData);
-  };
-
-  // Функция для выхода
-  const logout = () => {
-    localStorage.removeItem('token');
-    setIsAuthenticated(false);
-    setUser (null);
-  };
-
-  // Обновляем пользователя, когда currentUser  изменяется
   useEffect(() => {
     if (isAuthenticated && currentUser ) {
       setUser (currentUser );
+    } else {
+      setUser (null);
     }
   }, [isAuthenticated, currentUser ]);
+
+  const login = (token: AuthResponse) => {
+    Cookies.set('accessToken', token.access);
+    Cookies.set('refreshToken', token.refresh);
+    setIsAuthenticated(true);
+    setUser (token.user);
+  };
+
+  const logout = () => {
+    Cookies.remove('accessToken');
+    Cookies.remove('refreshToken');
+    setIsAuthenticated(false);
+    setUser (null);
+  };
 
   return (
     <AuthContext.Provider value={{ user, login, logout, isAuthenticated, isLoading }}>

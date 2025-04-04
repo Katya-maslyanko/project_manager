@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from django.contrib.auth import get_user_model
+from django.contrib.auth import get_user_model, authenticate
 from .models import UserProfile, Team, Project, ProjectGoal, Subgoal, Task, Subtask, Tag, Comment, Notification, File, Setting, ActivityLog, UserTeamRelation, ProjectMember
 
 User = get_user_model()
@@ -59,12 +59,26 @@ class RegisterSerializer(serializers.ModelSerializer):
         UserProfile.objects.create(user=user, profile_image=profile_image)
         return user
 
-class CurrentUserSerializer(serializers.ModelSerializer):
-    profile_image = serializers.ImageField(source='userprofile.profile_image', required=False)
+class CustomAuthTokenSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    password = serializers.CharField()
 
-    class Meta:
-        model = User
-        fields = ('id', 'username', 'email', 'first_name', 'last_name', 'profile_image')
+    def validate(self, attrs):
+        email = attrs.get('email')
+        password = attrs.get('password')
+
+        try:
+            user = User.objects.get(email=email)  # Получаем пользователя по email
+        except User.DoesNotExist:
+            raise serializers.ValidationError('Неверные учетные данные.')
+
+        user = authenticate(username=user.username, password=password)  # Аутентификация по username
+
+        if user is None:
+            raise serializers.ValidationError('Неверные учетные данные.')
+
+        attrs['user'] = user
+        return attrs
 
 class TeamSerializer(serializers.ModelSerializer):
     class Meta:

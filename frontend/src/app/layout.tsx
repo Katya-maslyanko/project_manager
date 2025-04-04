@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { AuthProvider } from "@/context/AuthContext"; // Импортируйте AuthProvider
+import { AuthProvider } from "@/context/AuthContext"; 
 import StoreProvider from "./redux";
-import { SidebarProvider } from "@/context/SidebarContext"; // Импортируйте SidebarProvider
-import InboxWrapper from "./inboxWrapper"; // Импортируйте InboxWrapper
+import { SidebarProvider } from "@/context/SidebarContext"; 
+import InboxWrapper from "./inboxWrapper"; 
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

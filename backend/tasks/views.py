@@ -2,10 +2,16 @@ from contextvars import Token
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
+from rest_framework.views import APIView
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.exceptions import TokenError
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.authtoken.models import Token
+from django.core.exceptions import ObjectDoesNotExist
+from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from .models import (
     User,
     UserProfile,
@@ -42,8 +48,49 @@ from .serializers import (
     UserTeamRelationSerializer,
     ProjectMemberSerializer,
     LoginSerializer,
+    CustomAuthTokenSerializer,
 )
 
+class LogoutView(APIView):
+    permission_classes = (AllowAny,)
+    authentication_classes = ()
+
+    def post(self, request):
+        try:
+            refresh_token = request.data["refresh"]
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+            return Response(status=status.HTTP_200_OK)
+        except (ObjectDoesNotExist, TokenError):
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        
+class CustomTokenObtainPairView(TokenObtainPairView):
+    serializer_class = CustomAuthTokenSerializer
+
+    def post(self, request, *args, **kwargs):
+        # Сначала валидируем данные
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        # Получаем пользователя
+        user = serializer.validated_data['user']
+
+        # Генерируем токены
+        token_serializer = TokenObtainPairSerializer.get_token(user)
+        access_token = str(token_serializer.access_token)
+        refresh_token = str(token_serializer)
+
+        return Response({
+            'access': access_token,
+            'refresh': refresh_token,
+            'user': {
+                'id': user.id,
+                'username': user.username,
+                'email': user.email,
+                'first_name': user.first_name,
+                'last_name': user.last_name,
+            }
+        }, status=status.HTTP_200_OK)
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()

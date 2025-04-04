@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRegisterMutation } from "@/state/api";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext"; // Импортируйте контекст аутентификации
 
 const SignUp = () => {
   const [username, setUsername] = useState("");
@@ -10,23 +11,30 @@ const SignUp = () => {
   const [password, setPassword] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
-  const [error, setError] = useState("");
+ const [error, setError] = useState("");
   const router = useRouter();
   const [register, { isLoading }] = useRegisterMutation();
+  const { login: setAuth } = useAuth(); // Получите метод login из контекста
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
     try {
-      await register({
+      const response = await register({
         username,
         email,
         password,
         first_name: firstName,
         last_name: lastName,
       }).unwrap();
-      router.push("/auth/signin"); // Перенаправление на страницу входа
+      // Убедитесь, что токен и пользовательские данные возвращаются
+      if (response.access && response.user) { // Измените на response.access
+        setAuth(response); // Устанавливаем аутентификацию
+        router.push("/"); // Перенаправление на главную страницу после регистрации
+      } else {
+        setError("Ошибка регистрации. Пожалуйста, проверьте свои данные.");
+      }
     } catch (err) {
       setError("Ошибка регистрации. Пожалуйста, проверьте свои данные.");
     }
@@ -53,6 +61,7 @@ const SignUp = () => {
             onChange={(e) => setEmail(e.target.value)}
             required
             className="w-full p-2 border border-gray-300 rounded"
+            autoComplete="email"
           />
           <input
             type="password"
@@ -61,6 +70,16 @@ const SignUp = () => {
             onChange={(e) => setPassword(e.target.value)}
             required
             className="w-full p-2 border border-gray-300 rounded"
+            autoComplete="current-password"
+          />
+          <input
+            type="text"
+            placeholder="Логин"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            required
+            className="w-full p-2 border border-gray-300 rounded"
+            autoComplete="username"
           />
           <input
             type="text"
@@ -69,14 +88,16 @@ const SignUp = () => {
             onChange={(e) => setFirstName(e.target.value)}
             required
             className="w-full p-2 border border-gray-300 rounded"
+            autoComplete="firstname"
           />
           <input
             type="text"
-            placeholder="Фамилия "
+            placeholder="Фамилия"
             value={lastName}
             onChange={(e) => setLastName(e.target.value)}
             required
             className="w-full p-2 border border-gray-300 rounded"
+            autoComplete="lastname"
           />
           <button
             type="submit"
