@@ -7,18 +7,20 @@ import { ChevronDown } from "lucide-react";
 import { User, Settings, LogOut } from "lucide-react";
 import { useAuth } from "@/context/AuthContext"; // Импортируйте хук для доступа к контексту аутентификации
 import { useLogoutMutation } from "@/state/api"; // Импортируйте хук для выхода
+import { useRouter } from "next/navigation";
+// const { logout: setLogout } = useAuth();
 
 // Функция для генерации цвета на основе индекса
 const getTagColor = (index) => {
   const colors = [
-    "bg-red-200",
-    "bg-blue-200",
-    "bg-green-200",
-    "bg-yellow-200",
-    "bg-purple-200",
-    "bg-pink-200",
-    "bg-indigo-200",
-    "bg-teal-200",
+    "bg-red-100 text-red-600",
+    "bg-blue-100 text-blue-600",
+    "bg-green-100 text-green-600",
+    "bg-yellow-100 text-yellow-600",
+    "bg-purple-100 text-purple-600",
+    "bg-pink-100 text-pink-600",
+    "bg-indigo-100 text-indigo-600",
+    "bg-teal-100 text-teal-600",
   ];
   return colors[index % colors.length];
 };
@@ -27,6 +29,7 @@ export default function UserDropdown() {
   const [isOpen, setIsOpen] = useState(false);
   const { user, isAuthenticated } = useAuth(); // Получаем информацию о пользователе
   const [logout] = useLogoutMutation(); // Хук для выхода
+  const router = useRouter();
 
   function toggleDropdown(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
     e.stopPropagation();
@@ -50,15 +53,11 @@ export default function UserDropdown() {
         className="flex items-center text-gray-500 dark:text-gray-400 dropdown-toggle"
       >
         <span className="flex items-center justify-center w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-700">
-          {user?.profile_image ? (
-            <img src={user.profile_image} alt="Profile" className="w-full h-full rounded-full" />
-          ) : (
-            <div className={`w-full h-full rounded-full flex items-center justify-center ${getTagColor(user?.id)}`}>
-              <span className="text-gray-500 dark:text-gray-400">
-                {user?.username ? user.username.charAt(0).toUpperCase() : '?'}
-              </span>
-            </div>
-          )}
+          <div className={`w-full h-full rounded-full flex items-center justify-center ${getTagColor(user?.id)}`}>
+            <span className="text-lg dark:text-gray-400">
+              {user?.username ? user.username.split(' ').map(n => n[0]).join('') : '?'}
+            </span>
+          </div>
         </span>
         <span className="text-gray-500 ml-2 text-sm text-theme-sm dark:text-gray-400">
           {user?.email}

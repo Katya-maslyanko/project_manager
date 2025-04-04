@@ -1,19 +1,20 @@
+// HomePage.tsx
 "use client";
 
 import InboxWrapper from "./inboxWrapper";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/context/AuthContext"; // Убедитесь, что путь правильный
 
 const HomePage = () => {
   const router = useRouter();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!isLoading && !isAuthenticated) {
       router.push("/auth/signin"); // Перенаправление на страницу входа, если пользователь не аутентифицирован
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, isLoading, router]);
 
   return (
     <InboxWrapper>

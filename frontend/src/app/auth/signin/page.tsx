@@ -19,8 +19,13 @@ const SignIn = () => {
 
     try {
       const response = await login({ email, password }).unwrap();
-      setAuth(response.token, response.user);
-      router.push("/"); // Перенаправление на главную страницу
+      // Убедитесь, что токен и пользовательские данные возвращаются
+      if (response.token && response.user) {
+        setAuth(response.token, response.user); // Устанавливаем аутентификацию
+        router.push("/"); // Перенаправление на главную страницу
+      } else {
+        setError("Ошибка входа. Пожалуйста, проверьте свои учетные данные.");
+      }
     } catch (err) {
       setError("Ошибка входа. Пожалуйста, проверьте свои учетные данные.");
     }

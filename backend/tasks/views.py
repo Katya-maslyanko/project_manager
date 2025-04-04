@@ -59,10 +59,12 @@ class UserViewSet(viewsets.ModelViewSet):
             return Response({
                 "token": token.key,
                 "user": {
+                    "id": user.id,
+                    "username": user.username,
                     "email": user.email,
                     "first_name": user.first_name,
                     "last_name": user.last_name,
-                    "profile_image": user.userprofile.profile_image.url if user.userprofile.profile_image else None
+                    # "profile_image": user.userprofile.profile_image.url if user.userprofile.profile_image else None
                 }
             }, status=status.HTTP_200_OK)
 
@@ -79,18 +81,15 @@ class UserViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'], url_path='profile', permission_classes=[IsAuthenticated])
     def get_profile(self, request):
         user = request.user
-        if user.is_authenticated:
-            profile = UserProfile.objects.get(user=user)
-            return Response({
-                "username": user.username,
-                "email": user.email,
-                "first_name": user.first_name,
-                "last_name": user.last_name,
-                "profile_image": profile.profile_image.url if profile.profile_image else None,
-                "role": profile.role
-            }, status=status.HTTP_200_OK)
-        else:
-            return Response({"detail": "Учетные данные не были предоставлены."}, status=status.HTTP_401_UNAUTHORIZED)
+        profile = UserProfile.objects.get(user=user)
+        return Response({
+            "username": user.username,
+            "email": user.email,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            # "profile_image": profile.profile_image.url if profile.profile_image else None,
+            "role": profile.role
+        }, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['post'], url_path='logout', permission_classes=[IsAuthenticated])
     def logout(self, request):

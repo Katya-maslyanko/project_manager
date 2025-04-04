@@ -34,17 +34,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [currentUser ]);
 
+  // Функция для входа
   const login = (token: string, userData: User) => {
     localStorage.setItem('token', token);
     setIsAuthenticated(true);
     setUser (userData);
   };
 
+  // Функция для выхода
   const logout = () => {
     localStorage.removeItem('token');
     setIsAuthenticated(false);
     setUser (null);
   };
+
+  // Обновляем пользователя, когда currentUser  изменяется
+  useEffect(() => {
+    if (isAuthenticated && currentUser ) {
+      setUser (currentUser );
+    }
+  }, [isAuthenticated, currentUser ]);
 
   return (
     <AuthContext.Provider value={{ user, login, logout, isAuthenticated, isLoading }}>

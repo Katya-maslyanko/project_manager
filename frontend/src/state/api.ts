@@ -41,7 +41,7 @@ export interface Comment {
   created_at: string;
 }
 
-export interface RegisterUser {
+export interface RegisterUser  {
   username: string;
   email: string;
   password: string;
@@ -49,7 +49,7 @@ export interface RegisterUser {
   last_name: string;
 }
 
-export interface LoginUser {
+export interface LoginUser  {
   email: string;
   password: string;
 }
@@ -72,6 +72,13 @@ export interface User {
 export const api = createApi({
   baseQuery: fetchBaseQuery({
     baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL,
+    prepareHeaders: (headers) => {
+      const token = localStorage.getItem('token');
+      if (token) {
+        headers.set('Authorization', ` Bearer ${token}`);
+      }
+      return headers;
+    },
   }),
   reducerPath: "api",
   tagTypes: ["Projects", "Tasks", "Users", "Tags", "Comments"],
@@ -120,62 +127,56 @@ export const api = createApi({
       }),
       invalidatesTags: ["Tasks"],
     }),
-    // Эндпоинт для получения тегов
     getTags: build.query<Tag[], void>({
       query: () => `tags/`,
-        providesTags: ["Tags"],
+      providesTags: ["Tags"],
     }),
-    // Эндпоинт для получения пользователей
     getUsers: build.query<User[], void>({
       query: () => `users/`,
-        providesTags: ["Users"],
+      providesTags: ["Users"],
     }),
-    // Эндпоинт для получения комментариев по ID задачи
     getCommentsByTaskId: build.query<Comment[], { taskId: number }>({
-      query: ({ taskId }) => `comments/?taskId=${taskId}`, // Изменено на taskId
+      query: ({ taskId }) => `comments/?taskId=${taskId}`,
       providesTags: ["Comments"],
     }),
-    // Эндпоинт для создания комментария
     createComment: build.mutation<Comment, { taskId: number; content: string }>({
       query: ({ taskId, content }) => ({
         url: "comments/",
         method: "POST",
-        body: { taskId, content }, // Изменено на taskId
+        body: { taskId, content },
       }),
       invalidatesTags: ["Comments"],
     }),
     updateComment: build.mutation<Comment, { id: number; content: string }>({
       query: ({ id, content }) => ({
-        url: `comments/${id}/`, // Предполагается, что у вас есть такой эндпоинт
+        url: `comments/${id}/`,
         method: "PATCH",
         body: { content },
       }),
       invalidatesTags: ["Comments"],
     }),
-
-    // Эндпоинт для удаления комментария
     deleteComment: build.mutation<void, number>({
       query: (id) => ({
-        url: `comments/${id}/`, // Предполагается, что у вас есть такой эндпоинт
+        url: `comments/${id}/`,
         method: "DELETE",
       }),
       invalidatesTags: ["Comments"],
     }),
-    register: build.mutation<AuthResponse, RegisterUser>({
+    register: build.mutation<AuthResponse, RegisterUser >({
       query: (userData) => ({
         url: "users/register/",
         method: "POST",
         body: userData,
       }),
     }),
-    login: build.mutation<AuthResponse, LoginUser>({
+    login: build.mutation<AuthResponse, LoginUser >({
       query: (credentials) => ({
         url: "users/login/",
         method: "POST",
         body: credentials,
       }),
     }),
-    getCurrentUser: build.query<User, void>({
+    getCurrentUser:  build.query<User, void>({
       query: () => "users/profile/",
       providesTags: ["Users"],
     }),
