@@ -15,7 +15,7 @@ from .views import (
     SettingViewSet,
     ActivityLogViewSet,
     UserTeamRelationViewSet,
-    ProjectMemberViewSet
+    ProjectMemberViewSet,
 )
 
 router = DefaultRouter()

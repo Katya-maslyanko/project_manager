@@ -1,19 +1,19 @@
-// app/page.tsx
 "use client";
 
-import InboxWrapper from "./inboxWrapper"; // Импортируйте ваш InboxWrapper
+import InboxWrapper from "./inboxWrapper";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 
 const HomePage = () => {
   const router = useRouter();
+  const { isAuthenticated } = useAuth();
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      router.push("/auth/signin"); // Перенаправляем на страницу входа, если пользователь не аутентифицирован
+    if (!isAuthenticated) {
+      router.push("/auth/signin"); // Перенаправление на страницу входа, если пользователь не аутентифицирован
     }
-  }, [router]);
+  }, [isAuthenticated, router]);
 
   return (
     <InboxWrapper>

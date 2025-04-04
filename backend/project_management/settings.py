@@ -141,9 +141,12 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'rest_framework.authentication.TokenAuthentication',
         'rest_framework.authentication.SessionAuthentication',
     ),
+    # 'DEFAULT_PERMISSION_CLASSES': (
+    #     'rest_framework.permissions.IsAuthenticated',
+    # ),
 }
 
 DJOSER = {
@@ -151,7 +154,7 @@ DJOSER = {
     'USER_CREATE_PASSWORD_RETYPE': True,
     'SET_PASSWORD_RETYPE': True,
     'SERIALIZERS': {
-        'user_create': 'your_app.serializers.RegisterSerializer',
-        'user': 'your_app.serializers.UserSerializer',
+        'user_create': 'tasks.serializers.RegisterSerializer',
+        'user': 'tasks.serializers.UserSerializer',
     },
 }

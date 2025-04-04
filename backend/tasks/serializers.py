@@ -17,23 +17,54 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = ('id', 'username', 'email', 'first_name', 'last_name', 'profile_image')
 
+class LoginSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    password = serializers.CharField(write_only=True)
+
+    def validate(self, attrs):
+        email = attrs.get('email')
+        password = attrs.get('password')
+
+        # Проверка существования пользователя
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            raise serializers.ValidationError("Неверные учетные данные.")
+
+        # Проверка пароля
+        if not user.check_password(password):
+            raise serializers.ValidationError("Неверные учетные данные.")
+
+        attrs['user'] = user
+        return attrs
+
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
+    re_password = serializers.CharField(write_only=True)
     profile_image = serializers.ImageField(required=False)
 
     class Meta:
         model = User
-        fields = ('username', 'email', 'password', 'first_name', 'last_name', 'profile_image')
+        fields = ('username', 'email', 'password', 're_password', 'first_name', 'last_name', 'profile_image')
 
     def create(self, validated_data):
         profile_image = validated_data.pop('profile_image', None)
-        user = User(**validated_data)
-        user.set_password(validated_data['password'])  # Хеширование пароля
+        password = validated_data.pop('password')
+        re_password = validated_data.pop('re_password')
+        if password != re_password:
+            raise serializers.ValidationError({"password": "Пароли не совпадают."})
+        user = User.objects.create_user(**validated_data)
+        user.set_password(password)
         user.save()
-
-        # Создание экземпляра UserProfile
         UserProfile.objects.create(user=user, profile_image=profile_image)
         return user
+
+class CurrentUserSerializer(serializers.ModelSerializer):
+    profile_image = serializers.ImageField(source='userprofile.profile_image', required=False)
+
+    class Meta:
+        model = User
+        fields = ('id', 'username', 'email', 'first_name', 'last_name', 'profile_image')
 
 class TeamSerializer(serializers.ModelSerializer):
     class Meta:

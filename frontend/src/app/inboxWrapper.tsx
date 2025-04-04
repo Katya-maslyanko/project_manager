@@ -1,4 +1,3 @@
-// app/inboxWrapper.tsx
 "use client";
 
 import { SidebarProvider, useSidebar } from "@/context/SidebarContext";
@@ -14,11 +13,11 @@ const InboxLayout = ({ children }: { children: React.ReactNode }) => {
   const { user, isAuthenticated } = useAuth(); // Получаем информацию о пользователе
   const router = useRouter();
 
-  // useEffect(() => {
-  //   if (isAuthenticated && !user) {
-  //     router.push("/auth/signin"); // Перенаправление на регистрацию, если нет профиля
-  //   }
-  // }, [isAuthenticated, user, router]);
+  useEffect(() => {
+    if (isAuthenticated && !user) {
+      router.push("/auth/signin"); // Перенаправление на регистрацию, если нет профиля
+    }
+  }, [isAuthenticated, user, router]);
 
   const mainContentMargin = isMobileOpen
     ? "ml-0"
@@ -40,9 +39,7 @@ const InboxLayout = ({ children }: { children: React.ReactNode }) => {
 const InboxWrapper = ({ children }: { children: React.ReactNode }) => {
   return (
     <ThemeProvider>
-      <SidebarProvider>
-        <InboxLayout>{children}</InboxLayout>
-      </SidebarProvider>
+      <InboxLayout>{children}</InboxLayout>
     </ThemeProvider>
   );
 };

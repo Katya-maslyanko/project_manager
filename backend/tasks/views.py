@@ -1,3 +1,4 @@
+from contextvars import Token
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
@@ -6,6 +7,7 @@ from django.contrib.auth import authenticate, login
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.authtoken.models import Token
 from .models import (
+    User,
     UserProfile,
     Team,
     Project,
@@ -38,49 +40,46 @@ from .serializers import (
     SettingSerializer,
     ActivityLogSerializer,
     UserTeamRelationSerializer,
-    ProjectMemberSerializer
+    ProjectMemberSerializer,
+    LoginSerializer,
 )
+
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [AllowAny]
 
+    @action(detail=False, methods=['post'], url_path='login', permission_classes=[AllowAny])
+    def login(self, request):
+        serializer = LoginSerializer(data=request.data)
+        if serializer.is_valid():
+            user = serializer.validated_data['user']
+            token, created = Token.objects.get_or_create(user=user)
+            return Response({
+                "token": token.key,
+                "user": {
+                    "email": user.email,
+                    "first_name": user.first_name,
+                    "last_name": user.last_name,
+                    "profile_image": user.userprofile.profile_image.url if user.userprofile.profile_image else None
+                }
+            }, status=status.HTTP_200_OK)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
     @action(detail=False, methods=['post'], url_path='register', permission_classes=[AllowAny])
     def register(self, request):
         serializer = RegisterSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
-            return Response({"message": "User  registered successfully."}, status=status.HTTP_201_CREATED)
+            return Response({"message": "Пользователь успешно зарегистрирован."}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    @action(detail=False, methods=['post'], url_path='login', permission_classes=[AllowAny])
-    def login_view(self, request):
-        email = request.data.get('email')
-        password = request.data.get('password')
-        print(f"Attempting to log in with email: {email} and password: {password}")  # Логируем входные данные
-
-        try:
-            user = User.objects.get(email=email)  # Получаем пользователя по email
-            if user.check_password(password):  # Проверяем пароль
-                token, created = Token.objects.get_or_create(user=user)
-                return Response({"token": token.key}, status=status.HTTP_200_OK)
-            else:
-                print("Authentication failed: Incorrect password")  # Логируем неудачу
-                return Response({"error": "Invalid credentials."}, status=status.HTTP_401_UNAUTHORIZED)
-        except User.DoesNotExist:
-            print("Authentication failed: User not found")  # Логируем неудачу
-            return Response({"error": "Invalid credentials."}, status=status.HTTP_401_UNAUTHORIZED)
-
-    @action(detail=False, methods=['post'], url_path='logout', permission_classes=[IsAuthenticated])
-    def logout_view(self, request):
-        request.user.auth_token.delete()
-        return Response({"message": "Logged out successfully."}, status=status.HTTP_200_OK)
-
-    @action(detail=False, methods =['get'], url_path='profile', permission_classes=[IsAuthenticated])
+    @action(detail=False, methods=['get'], url_path='profile', permission_classes=[IsAuthenticated])
     def get_profile(self, request):
         user = request.user
-        try:
+        if user.is_authenticated:
             profile = UserProfile.objects.get(user=user)
             return Response({
                 "username": user.username,
@@ -90,8 +89,14 @@ class UserViewSet(viewsets.ModelViewSet):
                 "profile_image": profile.profile_image.url if profile.profile_image else None,
                 "role": profile.role
             }, status=status.HTTP_200_OK)
-        except UserProfile.DoesNotExist:
-            return Response({"error": "Profile not found."}, status=status.HTTP_404_NOT_FOUND)
+        else:
+            return Response({"detail": "Учетные данные не были предоставлены."}, status=status.HTTP_401_UNAUTHORIZED)
+
+    @action(detail=False, methods=['post'], url_path='logout', permission_classes=[IsAuthenticated])
+    def logout(self, request):
+        if hasattr(request.user, 'auth_token'):
+            request.user.auth_token.delete()
+        return Response({"message": "Вы успешно вышли из системы."}, status=status.HTTP_200_OK)
 
 class TeamViewSet(viewsets.ModelViewSet):
     queryset = Team.objects.all()

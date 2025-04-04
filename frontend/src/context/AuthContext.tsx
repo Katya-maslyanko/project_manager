@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useGetCurrentUserQuery, User } from "@/state/api"; // Исправлено: убран пробел
+import { useGetCurrentUserQuery, User } from "@/state/api";
 
 interface AuthContextType {
   user: User | null;
@@ -16,16 +16,17 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser ] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  const { data: currentUser , isLoading } = useGetCurrentUserQuery(); // Исправлено: убран пробел
+  const { data: currentUser , isLoading } = useGetCurrentUserQuery(undefined, {
+    skip: !isAuthenticated, // Пропустить запрос, если не аутентифицирован
+  });
 
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
       setIsAuthenticated(true);
+      // Запрос текущего пользователя
       if (currentUser ) {
         setUser (currentUser );
-      } else {
-        setUser (null);
       }
     } else {
       setIsAuthenticated(false);

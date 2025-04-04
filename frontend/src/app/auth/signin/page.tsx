@@ -1,16 +1,17 @@
-// app/auth/signin/page.tsx
 "use client";
 
 import { useState } from "react";
-import { useLoginMutation } from "@/state/api"; // Импортируйте хук
+import { useLoginMutation } from "@/state/api";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 
 const SignIn = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const router = useRouter();
-  const [login, { isLoading }] = useLoginMutation(); // Используйте хук
+  const [login, { isLoading }] = useLoginMutation();
+  const { login: setAuth } = useAuth();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -18,7 +19,7 @@ const SignIn = () => {
 
     try {
       const response = await login({ email, password }).unwrap();
-      localStorage.setItem("token", response.token); // Сохраните токен
+      setAuth(response.token, response.user);
       router.push("/"); // Перенаправление на главную страницу
     } catch (err) {
       setError("Ошибка входа. Пожалуйста, проверьте свои учетные данные.");

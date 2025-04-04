@@ -1,8 +1,7 @@
-// app/auth/signup/page.tsx
 "use client";
 
 import { useState } from "react";
-import { useRegisterMutation } from "@/state/api"; // Импортируйте хук
+import { useRegisterMutation } from "@/state/api";
 import { useRouter } from "next/navigation";
 
 const SignUp = () => {
@@ -13,7 +12,7 @@ const SignUp = () => {
   const [lastName, setLastName] = useState("");
   const [error, setError] = useState("");
   const router = useRouter();
-  const [register, { isLoading }] = useRegisterMutation(); // Используйте хук
+  const [register, { isLoading }] = useRegisterMutation();
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,7 +25,7 @@ const SignUp = () => {
         password,
         first_name: firstName,
         last_name: lastName,
- }).unwrap();
+      }).unwrap();
       router.push("/auth/signin"); // Перенаправление на страницу входа
     } catch (err) {
       setError("Ошибка регистрации. Пожалуйста, проверьте свои данные.");
@@ -73,7 +72,7 @@ const SignUp = () => {
           />
           <input
             type="text"
-            placeholder="Фамилия"
+            placeholder="Фамилия "
             value={lastName}
             onChange={(e) => setLastName(e.target.value)}
             required

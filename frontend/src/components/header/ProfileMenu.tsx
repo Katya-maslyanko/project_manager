@@ -5,9 +5,28 @@ import { Dropdown } from "../ui/dropdown/Dropdown";
 import { DropdownItem } from "../ui/dropdown/DropdownItem";
 import { ChevronDown } from "lucide-react";
 import { User, Settings, LogOut } from "lucide-react";
+import { useAuth } from "@/context/AuthContext"; // Импортируйте хук для доступа к контексту аутентификации
+import { useLogoutMutation } from "@/state/api"; // Импортируйте хук для выхода
+
+// Функция для генерации цвета на основе индекса
+const getTagColor = (index) => {
+  const colors = [
+    "bg-red-200",
+    "bg-blue-200",
+    "bg-green-200",
+    "bg-yellow-200",
+    "bg-purple-200",
+    "bg-pink-200",
+    "bg-indigo-200",
+    "bg-teal-200",
+  ];
+  return colors[index % colors.length];
+};
 
 export default function UserDropdown() {
   const [isOpen, setIsOpen] = useState(false);
+  const { user, isAuthenticated } = useAuth(); // Получаем информацию о пользователе
+  const [logout] = useLogoutMutation(); // Хук для выхода
 
   function toggleDropdown(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
     e.stopPropagation();
@@ -18,6 +37,12 @@ export default function UserDropdown() {
     setIsOpen(false);
   }
 
+  const handleLogout = async () => {
+    await logout(); // Выход из профиля
+    closeDropdown();
+    // Здесь можно добавить перенаправление на страницу входа, если это необходимо
+  };
+
   return (
     <div className="relative">
       <button
@@ -25,9 +50,19 @@ export default function UserDropdown() {
         className="flex items-center text-gray-500 dark:text-gray-400 dropdown-toggle"
       >
         <span className="flex items-center justify-center w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-700">
-          <i className="fas fa-user text-gray-500 dark:text-gray-400"></i> {/* Круглый элемент */}
+          {user?.profile_image ? (
+            <img src={user.profile_image} alt="Profile" className="w-full h-full rounded-full" />
+          ) : (
+            <div className={`w-full h-full rounded-full flex items-center justify-center ${getTagColor(user?.id)}`}>
+              <span className="text-gray-500 dark:text-gray-400">
+                {user?.username ? user.username.charAt(0).toUpperCase() : '?'}
+              </span>
+            </div>
+          )}
         </span>
-        <span className="text-gray-500 ml-2 text-base text-theme-sm dark:text-gray-400">name@domain.ru</span>
+        <span className="text-gray-500 ml-2 text-sm text-theme-sm dark:text-gray-400">
+          {user?.email}
+        </span>
 
         <ChevronDown className={`ml-1 text-gray-500 transition-transform ${isOpen ? 'rotate-180' : ''} dark:text-gray-400`} />
       </button>
@@ -39,7 +74,7 @@ export default function UserDropdown() {
       >
         <div>
           <span className="block text-gray-500 text-base font-normal dark:text-gray-400 px-5">
-            Katya Maslyanko
+            {user ? `${user.first_name} ${user.last_name}` : "Гость"}
           </span>
         </div>
 
@@ -67,13 +102,13 @@ export default function UserDropdown() {
             </DropdownItem>
           </li>
         </ul>
-        <Link
-          href="auth/signin"
+        <button
+          onClick={handleLogout}
           className="flex items-center gap-3 px-4 py-2 mt-2 border-gray-200 dark:border-gray-500 rounded-lg group text-sm hover:bg-gray-100 hover:text-gray-800 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300 transition-all duration-200 ease-in-out"
         >
           <LogOut className="text-gray-500 group-hover:text-gray-800 dark:group-hover:text-gray-300" />
           <span className="ml-2">Выйти</span>
-        </Link>
+        </button>
       </Dropdown>
     </div>
   );

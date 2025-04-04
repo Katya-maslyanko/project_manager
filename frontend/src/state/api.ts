@@ -63,6 +63,9 @@ export interface User {
   id: number;
   username: string;
   email: string;
+  first_name: string;
+  last_name: string;
+  password: string;
   profile_image?: string;
 }
 
@@ -176,6 +179,12 @@ export const api = createApi({
       query: () => "users/profile/",
       providesTags: ["Users"],
     }),
+    logout: build.mutation<void, void>({
+      query: () => ({
+        url: "users/logout/",
+        method: "POST",
+      }),
+    }),
   }),
 });
 
@@ -196,4 +205,5 @@ export const {
   useGetUsersQuery,
   useUpdateCommentMutation,
   useDeleteCommentMutation,
+  useLogoutMutation,
 } = api;

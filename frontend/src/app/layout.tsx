@@ -5,7 +5,6 @@ import { AuthProvider } from "@/context/AuthContext"; // Импортируйт�
 import StoreProvider from "./redux";
 import { SidebarProvider } from "@/context/SidebarContext"; // Импортируйте SidebarProvider
 import InboxWrapper from "./inboxWrapper"; // Импортируйте InboxWrapper
-import AuthGuard from "@/context/AuthGuard"; // Импортируйте AuthGuard
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -33,7 +32,6 @@ export default function RootLayout({
         <StoreProvider>
           <AuthProvider>
             <SidebarProvider>
-              {/* Используем AuthGuard только для защищенных страниц */}
               {children}
             </SidebarProvider>
           </AuthProvider>
