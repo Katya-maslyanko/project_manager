@@ -1,5 +1,5 @@
 from contextvars import Token
-from rest_framework import viewsets, status
+from rest_framework import viewsets, status, generics, permissions
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.views import APIView
@@ -9,6 +9,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.authtoken.models import Token
+from rest_framework_simplejwt.authentication import JWTAuthentication
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
@@ -91,6 +92,24 @@ class CustomTokenObtainPairView(TokenObtainPairView):
                 'last_name': user.last_name,
             }
         }, status=status.HTTP_200_OK)
+    
+class UserDetailView(generics.RetrieveAPIView):
+    queryset = User.objects.all()  # Получаем всех пользователей
+    serializer_class = UserSerializer  # Указываем сериализатор
+    permission_classes = [permissions.IsAuthenticated]  # Только аутентифицированные пользователи могут получить доступ
+    authentication_classes = [JWTAuthentication]  # Используем JWT для аутентификации
+
+    def get(self, request, *args, **kwargs):
+        # request.user будет автоматически установлен на текущего аутентифицированного пользователя
+        user = request.user  
+        
+        # Если пользователь не аутентифицирован, request.user будет равен AnonymousUser 
+        if user.is_anonymous:
+            return Response({'detail': 'Учетные данные не были предоставлены.'}, status=401)
+
+        # Сериализуем данные пользователя
+        serializer = self.get_serializer(user)  
+        return Response(serializer.data)  # Возвращаем данные в ответе
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()

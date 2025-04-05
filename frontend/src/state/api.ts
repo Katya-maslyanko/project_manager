@@ -77,6 +77,7 @@ export const api = createApi({
       const token = Cookies.get('accessToken');
       if (token) {
         headers.set('Authorization', `Bearer ${token}`);
+        console.log('Token set in headers:', token); // Для отладки
       }
       return headers;
     },

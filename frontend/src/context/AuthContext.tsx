@@ -45,6 +45,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     Cookies.set('refreshToken', token.refresh);
     setIsAuthenticated(true);
     setUser (token.user);
+    console.log('Logged in user:', token.user); // Для отладки
   };
 
   const logout = () => {
