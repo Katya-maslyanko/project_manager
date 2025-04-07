@@ -7,17 +7,19 @@ import InboxWrapper from "./inboxWrapper";
 
 const HomePage = () => {
   const router = useRouter();
-  const { isAuthenticated, isLoading } = useAuth(); // Получаем состояние аутентификации
+  // const { user, isAuthenticated, isLoading } = useAuth(); // Получаем состояние аутентификации
 
-  useEffect(() => {
-    if (!isAuthenticated && !isLoading) {
-      router.push("/auth/signin"); // Перенаправляем на страницу входа, если не аутентифицирован
-    }
-  }, [isAuthenticated, isLoading, router]);
+  // useEffect(() => {
+  //   if (isLoading) return;
 
-  if (isLoading) {
-    return <div>Loading...</div>; // Индикатор загрузки
-  }
+  //   if (!isAuthenticated) {
+  //     router.push("/auth/signin");
+  //   }
+  // }, [isAuthenticated, isLoading, router]);
+
+  // if (isLoading || (isAuthenticated && !user)) {
+  //   return <div className="p-10 text-lg">Загрузка...</div>;
+  // }
 
   return (
     <InboxWrapper>

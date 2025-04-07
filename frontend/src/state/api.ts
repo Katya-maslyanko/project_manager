@@ -190,6 +190,14 @@ export const api = createApi({
       query: () => "auth/users/me/",
       providesTags: ["Users"],
     }),
+    updateProfile: build.mutation<User, Partial<User>>({
+      query: (data) => ({
+        url: "auth/users/me/",
+        method: "PATCH",
+        body: data,
+      }),
+      invalidatesTags: ["Users"],
+    }),
     logout: build.mutation<void, void>({
       query: () => ({
         url: "auth/jwt/blacklist/",
@@ -204,6 +212,7 @@ export const {
   useGetProjectsQuery,
   useCreateProjectMutation,
   useGetTaskByIdQuery,
+  useUpdateProfileMutation,
   useGetTasksQuery,
   useUpdateTaskMutation,
   useCreateTaskMutation,

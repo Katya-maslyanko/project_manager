@@ -71,7 +71,7 @@ const TaskCard = ({ task, onDragStart, onEdit, onStatusChange }) => {
               {task.title}
             </label>
             <div 
-              className="mr-1 p -1 rounded cursor-pointer hover:bg-gray-200" 
+              className="mr-1 p-1 rounded cursor-pointer hover:bg-gray-200" 
               onClick={(e) => {
                 e.stopPropagation();
                 onEdit();

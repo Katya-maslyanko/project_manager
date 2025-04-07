@@ -13,6 +13,7 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework.generics import RetrieveUpdateAPIView
 from .models import (
     User,
     UserProfile,
@@ -101,23 +102,13 @@ class RegisterView(generics.CreateAPIView):
             # Возвращаем конкретные ошибки
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
-class UserDetailView(generics.RetrieveAPIView):
-    queryset = User.objects.all()  # Получаем всех пользователей
-    serializer_class = UserSerializer  # Указываем сериализатор
-    permission_classes = [permissions.IsAuthenticated]  # Только аутентифицированные пользователи могут получить доступ
-    authentication_classes = [JWTAuthentication]  # Используем JWT для аутентификации
+class UserDetailUpdateView(RetrieveUpdateAPIView):
+    serializer_class = UserSerializer
+    permission_classes = [IsAuthenticated]
 
-    def get(self, request, *args, **kwargs):
-        # request.user будет автоматически установлен на текущего аутентифицированного пользователя
-        user = request.user  
-        
-        # Если пользователь не аутентифицирован, request.user будет равен AnonymousUser 
-        if user.is_anonymous:
-            return Response({'detail': 'Учетные данные не были предоставлены.'}, status=401)
-
-        # Сериализуем данные пользователя
-        serializer = self.get_serializer(user)  
-        return Response(serializer.data)  # Возвращаем данные в ответе
+    def get_object(self):
+        # Возвращает текущего аутентифицированного пользователя
+        return self.request.user
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()

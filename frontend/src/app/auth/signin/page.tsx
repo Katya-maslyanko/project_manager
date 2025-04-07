@@ -15,34 +15,25 @@ const SignIn = () => {
   const [error, setError] = useState("");
   const router = useRouter();
   const [login, { isLoading }] = useLoginMutation();
-  const { login: setAuth, user } = useAuth();
+  const { login: setAuth } = useAuth();
 
-  const handleLogin = async (e) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-  
+
     try {
       const response = await login({ email, password }).unwrap();
       if (response.access && response.user) {
         await setAuth(response);
-        
-        // Дождись установки пользователя
-        const waitForUser = async () => {
-          let retries = 10;
-          while (!user && retries > 0) {
-            await new Promise((res) => setTimeout(res, 100));
-            retries--;
-          }
-          router.push("/");
-        };
-        waitForUser();
+        router.push("/");
       } else {
-        setError("Ошибка входа. Пожалуйста, проверьте свои учетные данные.");
+        setError("Ошибка входа. Проверьте логин и пароль.");
       }
     } catch (err) {
-      setError("Ошибка входа. Пожалуйста, проверьте свои учетные данные.");
+      setError("Ошибка входа. Проверьте логин и пароль.");
     }
   };
+  
 
   return (
     <div className="flex min-h-screen">
