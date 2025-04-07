@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     'rest_framework',
     "djoser",
+    'rest_framework_simplejwt',
     "rest_framework_simplejwt.token_blacklist",
     'tasks',
     'corsheaders',
@@ -145,9 +146,6 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
-    'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAuthenticated',
-    ),
 }
 
 SIMPLE_JWT = {
@@ -160,6 +158,9 @@ DJOSER = {
     "PASSWORD_RESET_CONFIRM_URL": "auth/password/reset-password-confirmation/?uid={uid}&token={token}",
     "ACTIVATION_URL": "#/activate/{uid}/{token}",
     "SEND_ACTIVATION_EMAIL": False,
-    "SERIALIZERS": {},
+    "SERIALIZERS": {
+        'user_create': 'tasks.serializers.RegisterSerializer',
+        'user': 'tasks.serializers.UserSerializer',
+    },
     "LOGIN_FIELD": "email",
 }

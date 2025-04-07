@@ -6,19 +6,26 @@ import { Task } from "@/state/api";
 import { LoaderCircle, CircleCheck, BookCheck, Plus } from "lucide-react";
 import { useSidebar } from "@/context/SidebarContext";
 import EditTaskModal from "@/components/Task/EditTaskModal";
+import AddTaskModal from "@/components/Task/AddTaskModal";
 
-const TaskList: React.FC = () => {
+const TaskList: React.FC<{ projectId: number }> = ({ projectId }) =>  {
   const { id } = useParams(); // Получаем ID проекта из параметров
   const { data: tasks = [], error, isLoading } = useGetTasksQuery({ projectId: Number(id) });
   const [updateTaskStatus] = useUpdateTaskStatusMutation(); // Хук для обновления статуса задачи
   const { isExpanded, isHovered, isMobileOpen } = useSidebar(); // Получаем состояние сайдбара
 
   const [isEditModalOpen, setEditModalOpen] = useState(false);
+  const [isAddModalOpen, setAddModalOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [draggedTask, setDraggedTask] = useState<Task | null>(null);
+  const [currentTaskStatus, setCurrentTaskStatus] = useState<string>("Новая"); 
 
   const handleDragStart = (e: React.DragEvent<HTMLDivElement>, task: Task) => {
     setDraggedTask(task);
+  };
+
+  const handleStatusChange = async (taskId, newStatus) => {
+    await updateTaskStatus ({ id: taskId, status: newStatus });
   };
 
   const handleEditTask = (task: Task) => {
@@ -32,6 +39,11 @@ const TaskList: React.FC = () => {
       await updateTaskStatus({ id: draggedTask.id, status }); // Обновляем статус задачи
       setDraggedTask(null); // Сбрасываем перетаскиваемую задачу
     }
+  };
+
+  const openAddTaskModal = (status: string) => {
+    setCurrentTaskStatus(status); // Устанавливаем текущий статус перед открытием модального окна
+    setAddModalOpen(true);
   };
 
   if (isLoading) {
@@ -69,7 +81,7 @@ const TaskList: React.FC = () => {
                 <th className="py-3 px-4">Задача</th>
                 <th className="py-3 px-4">Описание</th>
                 <th className="py-3 px-4">Исполнители</th>
-                <th className="py-3 px-4 min-w-[260px] overflow-hidden text-ellipsis whitespace-nowrap]">Срок выполнения</th>
+                <th className="py-3 px-4 min-w-[270px] overflow-hidden text-ellipsis whitespace-nowrap]">Срок выполнения</th>
                 <th className="py-3 px-4">Приоритет</th>
                 <th className="py-3 px-4">Тэг</th>
                 <th className="py-3 px-4">Прогресс</th>
@@ -82,11 +94,13 @@ const TaskList: React.FC = () => {
                   task={task} 
                   onDragStart={handleDragStart} 
                   onEdit={() => handleEditTask(task)} // Передаем обработчик редактирования
+                  onStatusChange={handleStatusChange}
                 />
               ))}
             </tbody>
           </table>
-          <button className=" text-gray-600 font-semibold mt-2 mb-2 p-1 flex items-center justify-center">
+          <button className=" text-gray-600 font-semibold mt-2 mb-2 p-1 flex items-center justify-center"
+          onClick={() => openAddTaskModal("Новая")}>
                 <Plus className="text-gray-600 w-5 h-5" /> Добавить задачу
            </button>
         </div>
@@ -116,7 +130,7 @@ const TaskList: React.FC = () => {
                 <th className="py-3 px-4">Задача</th>
                 <th className="py-3 px-4">Описание</th>
                 <th className="py-3 px-4">Исполнители</th>
-                <th className="py-3 px-4 min-w-[260px] overflow-hidden text-ellipsis whitespace-nowrap">Срок выполнения</th>
+                <th className="py-3 px-4 min-w-[270px] overflow-hidden text-ellipsis whitespace-nowrap">Срок выполнения</th>
                 <th className="py-3 px-4">Приоритет</th>
                 <th className="py-3 px-4">Тэг</th>
                 <th className="py-3 px-4">Прогресс</th>
@@ -129,11 +143,13 @@ const TaskList: React.FC = () => {
                   task={task} 
                   onDragStart={handleDragStart} 
                   onEdit={() => handleEditTask(task)} // Передаем обработчик редактирования
+                  onStatusChange={handleStatusChange}
                 />
               ))}
             </tbody>
           </table>
-          <button className=" text-gray-600 font-semibold mt-2 mb-2 p-1 flex items-center justify-center">
+          <button className=" text-gray-600 font-semibold mt-2 mb-2 p-1 flex items-center justify-center"
+          onClick={() => openAddTaskModal("В процессе")}>
                 <Plus className="text-gray-600 w-5 h-5" /> Добавить задачу
            </button>
         </div>
@@ -163,7 +179,7 @@ const TaskList: React.FC = () => {
                 <th className="py-3 px-4">Задача</th>
                 <th className="py-3 px-4">Описание</th>
                 <th className="py-3 px-4">Исполнители</th>
-                <th className="py-3 px-4 min-w-[260px] overflow-hidden text-ellipsis whitespace-nowrapp">Срок выполнения</th>
+                <th className="py-3 px-4 min-w-[270px] overflow-hidden text-ellipsis whitespace-nowrapp">Срок выполнения</th>
                 <th className="py-3 px-4">Приоритет</th>
                 <th className="py-3 px-4">Тэг</th>
                 <th className="py-3 px-4">Прогресс</th>
@@ -176,15 +192,24 @@ const TaskList: React.FC = () => {
                   task={task} 
                   onDragStart={handleDragStart} 
                   onEdit={() => handleEditTask(task)} // Передаем обработчик редактирования
+                  onStatusChange={handleStatusChange}
                 />
               ))}
             </tbody>
           </table>
-          <button className=" text-gray-600 font-semibold mt-2 mb-2 p-1 flex items-center justify-center">
+          <button className=" text-gray-600 font-semibold mt-2 mb-2 p-1 flex items-center justify-center"
+          onClick={() => openAddTaskModal("Завершено")}>
                 <Plus className="text-gray-600 w-5 h-5" /> Добавить задачу
            </button>
         </div>
       </div>
+      {/* Модальное окно добавления задачи */}
+      <AddTaskModal 
+        isOpen={isAddModalOpen} 
+        onClose={() => setAddModalOpen(false)} 
+        projectId={projectId}
+        currentStatus={currentTaskStatus}
+      />
 
       {/* Модальное окно редактирования */}
       <EditTaskModal isOpen={isEditModalOpen} onClose={() => setEditModalOpen(false)} task={selectedTask} />

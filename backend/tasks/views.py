@@ -48,7 +48,6 @@ from .serializers import (
     ActivityLogSerializer,
     UserTeamRelationSerializer,
     ProjectMemberSerializer,
-    LoginSerializer,
     CustomAuthTokenSerializer,
 )
 
@@ -69,21 +68,15 @@ class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomAuthTokenSerializer
 
     def post(self, request, *args, **kwargs):
-        # Сначала валидируем данные
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        # Получаем пользователя
         user = serializer.validated_data['user']
-
-        # Генерируем токены
-        token_serializer = TokenObtainPairSerializer.get_token(user)
-        access_token = str(token_serializer.access_token)
-        refresh_token = str(token_serializer)
+        refresh = RefreshToken.for_user(user)
 
         return Response({
-            'access': access_token,
-            'refresh': refresh_token,
+            'refresh': str(refresh),
+            'access': str(refresh.access_token),
             'user': {
                 'id': user.id,
                 'username': user.username,
@@ -92,6 +85,21 @@ class CustomTokenObtainPairView(TokenObtainPairView):
                 'last_name': user.last_name,
             }
         }, status=status.HTTP_200_OK)
+    
+
+class RegisterView(generics.CreateAPIView):
+    queryset = User.objects.all()
+    serializer_class = RegisterSerializer
+    permission_classes = (AllowAny,)
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            self.perform_create(serializer)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            # Возвращаем конкретные ошибки
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 class UserDetailView(generics.RetrieveAPIView):
     queryset = User.objects.all()  # Получаем всех пользователей
@@ -115,53 +123,6 @@ class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [AllowAny]
-
-    @action(detail=False, methods=['post'], url_path='login', permission_classes=[AllowAny])
-    def login(self, request):
-        serializer = LoginSerializer(data=request.data)
-        if serializer.is_valid():
-            user = serializer.validated_data['user']
-            token, created = Token.objects.get_or_create(user=user)
-            return Response({
-                "token": token.key,
-                "user": {
-                    "id": user.id,
-                    "username": user.username,
-                    "email": user.email,
-                    "first_name": user.first_name,
-                    "last_name": user.last_name,
-                    # "profile_image": user.userprofile.profile_image.url if user.userprofile.profile_image else None
-                }
-            }, status=status.HTTP_200_OK)
-
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    @action(detail=False, methods=['post'], url_path='register', permission_classes=[AllowAny])
-    def register(self, request):
-        serializer = RegisterSerializer(data=request.data)
-        if serializer.is_valid():
-            user = serializer.save()
-            return Response({"message": "Пользователь успешно зарегистрирован."}, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    @action(detail=False, methods=['get'], url_path='profile', permission_classes=[IsAuthenticated])
-    def get_profile(self, request):
-        user = request.user
-        profile = UserProfile.objects.get(user=user)
-        return Response({
-            "username": user.username,
-            "email": user.email,
-            "first_name": user.first_name,
-            "last_name": user.last_name,
-            # "profile_image": profile.profile_image.url if profile.profile_image else None,
-            "role": profile.role
-        }, status=status.HTTP_200_OK)
-
-    @action(detail=False, methods=['post'], url_path='logout', permission_classes=[IsAuthenticated])
-    def logout(self, request):
-        if hasattr(request.user, 'auth_token'):
-            request.user.auth_token.delete()
-        return Response({"message": "Вы успешно вышли из системы."}, status=status.HTTP_200_OK)
 
 class TeamViewSet(viewsets.ModelViewSet):
     queryset = Team.objects.all()
@@ -208,6 +169,9 @@ class CommentViewSet(viewsets.ModelViewSet):
         if task_id is not None:
             queryset = queryset.filter(task_id=task_id)  # Фильтруем по task_id
         return queryset
+    
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user) 
 
 class NotificationViewSet(viewsets.ModelViewSet):
     queryset = Notification.objects.all()

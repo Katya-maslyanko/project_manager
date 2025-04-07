@@ -68,6 +68,7 @@ export interface User {
   first_name: string;
   last_name: string;
   profile_image?: string;
+  role?: string;
 }
 
 export const api = createApi({
@@ -77,7 +78,6 @@ export const api = createApi({
       const token = Cookies.get('accessToken');
       if (token) {
         headers.set('Authorization', `Bearer ${token}`);
-        console.log('Token set in headers:', token); // Для отладки
       }
       return headers;
     },
@@ -119,6 +119,14 @@ export const api = createApi({
         url: `tasks/${id}/`,
         method: "PATCH",
         body: { status },
+      }),
+      invalidatesTags: ["Tasks"],
+    }),
+    createTask: build.mutation<Task, Partial<Task>>({
+      query: (task) => ({
+        url: "tasks/",
+        method: "POST",
+        body: task,
       }),
       invalidatesTags: ["Tasks"],
     }),
@@ -198,6 +206,7 @@ export const {
   useGetTaskByIdQuery,
   useGetTasksQuery,
   useUpdateTaskMutation,
+  useCreateTaskMutation,
   useUpdateTaskStatusMutation,
   useDeleteTaskMutation,
   useGetCommentsByTaskIdQuery,

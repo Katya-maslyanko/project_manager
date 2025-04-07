@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import Cookies from 'js-cookie';
-import { useGetCurrentUserQuery } from "@/state/api";
+import { useGetCurrentUserQuery } from "@/state/api"; // Предполагается, что это ваш API для получения текущего пользователя
 import { User, AuthResponse } from "@/state/api";
 
 interface AuthContextType {
@@ -18,8 +18,11 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser ] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  const { data: currentUser , isLoading } = useGetCurrentUserQuery(undefined, {
-    skip: !isAuthenticated,
+  const [isLoading, setIsLoading] = useState<boolean>(true); // Добавляем состояние загрузки
+
+  // Получаем данные текущего пользователя
+  const { data: currentUser , isLoading: userLoading, refetch } = useGetCurrentUserQuery(undefined, {
+    skip: !isAuthenticated, // Пропускаем запрос, если не аутентифицирован
   });
 
   useEffect(() => {
@@ -30,23 +33,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsAuthenticated(false);
       setUser (null);
     }
+    setIsLoading(false); // Устанавливаем состояние загрузки в false после проверки токена
   }, []);
 
   useEffect(() => {
     if (isAuthenticated && currentUser ) {
       setUser (currentUser );
     } else {
-      setUser (null);
+      setUser (null); // Обнуляем пользователя, если не аутентифицирован
     }
   }, [isAuthenticated, currentUser ]);
 
-  const login = (token: AuthResponse) => {
+  const login = async (token: AuthResponse) => {
     Cookies.set('accessToken', token.access);
     Cookies.set('refreshToken', token.refresh);
+  
+    setUser(token.user); // можно сразу временно поставить user
     setIsAuthenticated(true);
-    setUser (token.user);
-    console.log('Logged in user:', token.user); // Для отладки
+      await refetch(); 
   };
+  
 
   const logout = () => {
     Cookies.remove('accessToken');

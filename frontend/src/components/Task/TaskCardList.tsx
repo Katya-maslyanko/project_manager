@@ -1,11 +1,25 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { GripVertical, Flag, Pencil } from "lucide-react";
 
-const TaskCard = ({ task, onDragStart, onEdit }) => {
-  const [isChecked, setIsChecked] = React.useState(false);
+const TaskCard = ({ task, onDragStart, onEdit, onStatusChange }) => {
+  const [isChecked, setIsChecked] = useState(task.status === 'Завершено');
+  const [previousStatus, setPreviousStatus] = useState(task.status);
+
+  useEffect(() => {
+    setPreviousStatus(task.status);
+  }, [task.status]);
 
   const handleCheckboxChange = () => {
-    setIsChecked(!isChecked);
+    const newCheckedState = !isChecked;
+    setIsChecked(newCheckedState);
+
+    if (newCheckedState) {
+      // Если чекбокс отмечен, устанавливаем статус "Завершено"
+      onStatusChange(task.id, 'Завершено');
+    } else {
+      // Если чекбокс снят, возвращаемся к предыдущему статусу
+      onStatusChange(task.id, previousStatus);
+    }
   };
 
   const formatDate = (dateString) => {
@@ -57,7 +71,7 @@ const TaskCard = ({ task, onDragStart, onEdit }) => {
               {task.title}
             </label>
             <div 
-              className="mr-1 p-1 rounded cursor-pointer hover:bg-gray-200" 
+              className="mr-1 p -1 rounded cursor-pointer hover:bg-gray-200" 
               onClick={(e) => {
                 e.stopPropagation();
                 onEdit();
@@ -86,7 +100,7 @@ const TaskCard = ({ task, onDragStart, onEdit }) => {
           )}
         </div>
       </td>
-      <td className="py-2 px-4 border-r">
+      <td className="py-2 px-4 border-r w-full">
         {formatDate(task.start_date)} - {formatDate(task.due_date)}
       </td>
       <td className="py-2 px-4 border-r">

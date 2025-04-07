@@ -41,8 +41,8 @@ router.register(r'project_members', ProjectMemberViewSet)
 urlpatterns = [
     path('', include(router.urls)),
     path('auth/jwt/create/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path('auth/users/profile/', UserDetailView.as_view(), name='user-detail'),
-    path("auth/logout/", LogoutView.as_view()),
-    path("auth/", include("djoser.urls")),
-    path("auth/", include("djoser.urls.jwt")),
+    path('auth/users/me/', UserDetailView.as_view(), name='user-detail'),
+    path('auth/logout/', LogoutView.as_view()),
+    path('auth/', include('djoser.urls')),
+    path('auth/', include('djoser.urls.jwt')),
 ]

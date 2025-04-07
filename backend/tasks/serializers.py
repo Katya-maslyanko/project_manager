@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
 from django.contrib.auth import get_user_model, authenticate
 from .models import UserProfile, Team, Project, ProjectGoal, Subgoal, Task, Subtask, Tag, Comment, Notification, File, Setting, ActivityLog, UserTeamRelation, ProjectMember
 
@@ -11,52 +12,31 @@ class UserProfileSerializer(serializers.ModelSerializer):
         fields = ('profile_image', 'role')
 
 class UserSerializer(serializers.ModelSerializer):
-    profile_image = serializers.ImageField(source='userprofile.profile_image', required=False)
+    role = serializers.CharField(source='userprofile.role', required=False)
 
     class Meta:
         model = User
-        fields = ('id', 'username', 'email', 'first_name', 'last_name', 'profile_image')
-
-class LoginSerializer(serializers.Serializer):
-    email = serializers.EmailField()
-    password = serializers.CharField(write_only=True)
-
-    def validate(self, attrs):
-        email = attrs.get('email')
-        password = attrs.get('password')
-
-        # Проверка существования пользователя
-        try:
-            user = User.objects.get(email=email)
-        except User.DoesNotExist:
-            raise serializers.ValidationError("Неверные учетные данные.")
-
-        # Проверка пароля
-        if not user.check_password(password):
-            raise serializers.ValidationError("Неверные учетные данные.")
-
-        attrs['user'] = user
-        return attrs
+        fields = ('id', 'username', 'email', 'first_name', 'last_name', 'role')
 
 class RegisterSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True)
-    re_password = serializers.CharField(write_only=True)
-    profile_image = serializers.ImageField(required=False)
-
     class Meta:
         model = User
-        fields = ('username', 'email', 'password', 're_password', 'first_name', 'last_name', 'profile_image')
+        fields = ['first_name', 'last_name', 'username', 'email', 'password']
+
+    def validate_username(self, value):
+        if User.objects.filter(username=value).exists():
+            raise ValidationError("Пользователь с таким именем уже существует.")
+        return value
+
+    def validate_email(self, value):
+        if User.objects.filter(email=value).exists():
+            raise ValidationError("Пользователь с таким email уже существует.")
+        return value
 
     def create(self, validated_data):
-        profile_image = validated_data.pop('profile_image', None)
-        password = validated_data.pop('password')
-        re_password = validated_data.pop('re_password')
-        if password != re_password:
-            raise serializers.ValidationError({"password": "Пароли не совпадают."})
-        user = User.objects.create_user(**validated_data)
-        user.set_password(password)
+        user = User(**validated_data)
+        user.set_password(validated_data['password'])
         user.save()
-        UserProfile.objects.create(user=user, profile_image=profile_image)
         return user
 
 class CustomAuthTokenSerializer(serializers.Serializer):

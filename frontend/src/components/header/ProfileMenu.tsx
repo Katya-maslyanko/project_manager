@@ -8,8 +8,7 @@ import { User, Settings, LogOut } from "lucide-react";
 import { useAuth } from "@/context/AuthContext"; // Импортируйте хук для доступа к контексту аутентификации
 import { useRouter } from "next/navigation"; // Импортируйте хук для навигации
 
-// Функция для генерации цвета на основе индекса
-const getTagColor = (index: number) => { // Указываем тип для index
+const getTagColor = (index: number) => {
   const colors = [
     "bg-red-100 text-red-600",
     "bg-blue-100 text-blue-600",
@@ -27,6 +26,7 @@ export default function UserDropdown() {
   const [isOpen, setIsOpen] = useState(false);
   const { user, logout } = useAuth(); // Получаем информацию о пользователе и метод logout
   const router = useRouter();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   function toggleDropdown(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
     e.stopPropagation();
@@ -38,10 +38,12 @@ export default function UserDropdown() {
   }
 
   const handleLogout = async () => {
-    await logout(); // Выход из профиля
+    if (isLoggingOut) return;
+    setIsLoggingOut(true);
+  
+    logout();
     closeDropdown();
-    router.push("/auth/signin"); // Перенаправление на страницу входа
-  };
+  };  
 
   return (
     <div className="relative">
@@ -50,7 +52,7 @@ export default function UserDropdown() {
         className="flex items-center text-gray-500 dark:text-gray-400 dropdown-toggle"
       >
         <span className="flex items-center justify-center w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-700">
-          <div className={`w-full h-full rounded-full flex items-center justify-center ${getTagColor(user?.id || 0)}`}> {/* Используем 0 как запасной вариант */}
+          <div className={`w-full h-full rounded-full flex items-center justify-center ${getTagColor(user?.id || 0)}`}>
             <span className="text-lg dark:text-gray-400">
               {user?.username ? user.username.split(' ').map(n => n[0]).join('') : '?'}
             </span>
@@ -86,7 +88,7 @@ export default function UserDropdown() {
               <span className="ml-2">Редактировать профиль</span>
             </DropdownItem>
           </li>
-          < li>
+          <li>
             <DropdownItem
               onItemClick={closeDropdown}
               tag="a"
@@ -100,7 +102,7 @@ export default function UserDropdown() {
         </ul>
 
         <DropdownItem
-          onItemClick={handleLogout}
+          onItemClick={handleLogout }
           className="flex items-center gap-3 px-3 py-2 text-gray-500 rounded-lg group text-sm hover:bg-gray-100 hover:text-gray-800 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300 transition-all duration-200 ease-in-out"
         >
           <LogOut className="text-gray-500 group-hover:text-gray-800 dark:group-hover:text-gray-300" />

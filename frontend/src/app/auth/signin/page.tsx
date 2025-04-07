@@ -15,17 +15,27 @@ const SignIn = () => {
   const [error, setError] = useState("");
   const router = useRouter();
   const [login, { isLoading }] = useLoginMutation();
-  const { login: setAuth } = useAuth();
+  const { login: setAuth, user } = useAuth();
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     setError("");
-
+  
     try {
       const response = await login({ email, password }).unwrap();
       if (response.access && response.user) {
-        setAuth(response); // Устанавливаем аутентификацию
-        router.push("/"); // Перенаправление на главную страницу
+        await setAuth(response);
+        
+        // Дождись установки пользователя
+        const waitForUser = async () => {
+          let retries = 10;
+          while (!user && retries > 0) {
+            await new Promise((res) => setTimeout(res, 100));
+            retries--;
+          }
+          router.push("/");
+        };
+        waitForUser();
       } else {
         setError("Ошибка входа. Пожалуйста, проверьте свои учетные данные.");
       }

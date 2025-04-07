@@ -14,35 +14,64 @@ const SignUp = () => {
   const [password, setPassword] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  
+  // Состояние для ошибок
   const [error, setError] = useState("");
-  const [showPassword, setShowPassword] = useState(false); // Состояние для отображения пароля
+  const [fieldErrors, setFieldErrors] = useState({}); // Ошибки по полям
+  const [showPassword, setShowPassword] = useState(false); // состояние для показа пароля
   const router = useRouter();
   const [register, { isLoading }] = useRegisterMutation();
-  const { login: setAuth } = useAuth(); // Получите метод login из контекста
+  const { login: setAuth } = useAuth(); // Используем метод login из контекста аутентификации
 
-  const handleRegister = async (e: React.FormEvent) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
     setError("");
+    setFieldErrors({}); // сброс ошибок на поле
+
+    // Простейшая валидация на стороне клиента
+    const errors = {};
+    if (!firstName) errors.firstName = "Поле 'Имя' обязательно для заполнения.";
+    if (!lastName) errors.lastName = "Поле 'Фамилия' обязательно для заполнения.";
+    if (!username) errors.username = "Поле 'Имя пользователя' обязательно для заполнения.";
+    if (!email) {
+      errors.email = "Поле 'Email' обязательно для заполнения.";
+    } else if (!/\S+@\S+\.\S+/.test(email)) {
+      errors.email = "Некорректный формат email.";
+    }
+    if (!password) errors.password = "Поле 'Пароль' обязательно для заполнения.";
+    else if (password.length < 6) {
+      errors.password = "Пароль должен содержать не менее 6 символов.";
+    }
+
+    // Если есть ошибки, отображаем их
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+      return;
+    }
 
     try {
       const response = await register({
-        username,
-        email,
-        password,
-        first_name: firstName,
-        last_name: lastName,
+          first_name: firstName,
+          last_name: lastName,
+          username,
+          email,
+          password,
       }).unwrap();
-      // Убедитесь, что токен и пользовательские данные возвращаются
+  
+      console.log("Ответ от API:", response); // Логируем ответ от API
+      // Проверяем, что возвращаемые значения правильные
       if (response.access && response.user) {
-        setAuth(response); // Устанавливаем аутентификацию
-        router.push("/"); // Перенаправление на главную страницу после регистрации
+          setAuth(response);
+          router.push("/auth/signin");
       } else {
-        setError("Ошибка регистрации. Пожалуйста, проверьте свои данные.");
+          console.error("Недостаточно данных для перенаправления");
       }
-    } catch (err) {
-      setError("Ошибка регистрации. Пожалуйста, проверьте свои данные.");
-    }
+  } catch (err) {
+      console.error("Ошибка регистрации:", err);
+  }
   };
+
+
 
   return (
     <div className="flex min-h-screen">
@@ -54,55 +83,70 @@ const SignUp = () => {
           <form onSubmit={handleRegister} className="space-y-6">
             <div className="flex space-x-4">
               <div className="w-full">
-                <label className="block text-gray-700 font-bold mb-2" htmlFor="firstName">Имя <span className="text-red-500">*</span></label>
+
+                <label className="block text-gray-700 font-bold mb-2" htmlFor="firstName">
+                  Имя <span className="text-red-500">*</span>
+                </label>
                 <input
                   type="text"
                   placeholder="Имя"
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
                   required
-                  className="w-full p-3 border border-gray-200 rounded-md placeholder:text-gray-400 focus:border-blue-300 focus:bg-blue-100"
+                  className={`w-full p-3 border ${fieldErrors.firstName ? 'border-red-500' : 'border-gray-200'} rounded-md placeholder:text-gray-400 focus:border-blue-300 focus:bg-blue-100`}
                   autoComplete="given-name"
                 />
+                {fieldErrors.firstName && <p className="text-red-500 text-sm">{fieldErrors.firstName}</p>}
               </div>
               <div className="w-full">
-                <label className="block text-gray-700 font-bold mb-2" htmlFor="lastName">Фамилия <span className="text-red-500">*</span></label>
+                <label className="block text-gray-700 font-bold mb-2" htmlFor="lastName">
+                  Фамилия <span className="text-red-500">*</span>
+                </label>
                 <input
                   type="text"
                   placeholder="Фамилия"
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
                   required
-                  className="w-full p-3 border border-gray-200 rounded-md placeholder:text-gray-400 focus:border-blue-300 focus:bg-blue-100"
+                  className={`w-full p-3 border ${fieldErrors.lastName ? 'border-red-500' : 'border-gray-200'} rounded-md placeholder:text-gray-400 focus:border-blue-300 focus:bg-blue-100`}
                   autoComplete="family-name"
                 />
+                {fieldErrors.lastName && <p className="text-red-500 text-sm">{fieldErrors.lastName}</p>}
               </div>
             </div>
             <div>
-              <label className="block text-gray-700 font-bold mb-2" htmlFor="username">Имя пользователя <span className="text-red-500">*</span></label>
+              <label className="block text-gray-700 font-bold mb-2" htmlFor="username">
+                Имя пользователя <span className="text-red-500">*</span>
+              </label>
               <input
                 type="text"
                 placeholder="Имя пользователя"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 required
-                className="w-full p-3 border border-gray-200 rounded-md placeholder:text-gray-400 focus:border-blue-300 focus:bg-blue-100"
+                className={`w-full p-3 border ${fieldErrors.username ? 'border-red-500' : 'border-gray-200'} rounded-md placeholder:text-gray-400 focus:border-blue-300 focus:bg-blue-100`}
               />
+              {fieldErrors.username && <p className="text-red-500 text-sm">{fieldErrors.username}</p>}
             </div>
             <div>
-              <label className="block text-gray-700 font-bold mb-2" htmlFor="email">Email <span className="text-red-500">*</span></label>
+              <label className="block text-gray-700 font-bold mb-2" htmlFor="email">
+                Email <span className="text-red-500">*</span>
+              </label>
               <input
                 type="email"
                 placeholder="Email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full p-3 border border-gray-200 rounded-md placeholder:text-gray-400 focus:border-blue-300 focus:bg-blue-100"
+                className={`w-full p-3 border ${fieldErrors.email ? 'border-red-500' : 'border-gray-200'} rounded-md placeholder:text-gray-400 focus:border-blue-300 focus:bg-blue-100`}
                 autoComplete="email"
               />
+              {fieldErrors.email && <p className="text-red-500 text-sm">{fieldErrors.email}</p>}
             </div>
             <div>
-              <label className="block text-gray-700 font-bold mb-2" htmlFor="password">Пароль <span className="text-red-500">*</span></label>
+              <label className="block text-gray-700 font-bold mb-2" htmlFor="password">
+                Пароль <span className="text-red-500">*</span>
+              </label>
               <div className="relative">
                 <input
                   type={showPassword ? "text" : "password"}
@@ -110,7 +154,8 @@ const SignUp = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  className="w-full p-3 border border-gray-200 rounded-md placeholder:text-gray-400 focus:border-blue-300 focus:bg-blue-100"
+
+                  className={`w-full p-3 border ${fieldErrors.password ? 'border-red-500' : 'border-gray-200'} rounded-md placeholder:text-gray-400 focus:border-blue-300 focus:bg-blue-100`}
                   autoComplete="current-password"
                 />
                 <button
@@ -121,6 +166,7 @@ const SignUp = () => {
                   {showPassword ? <EyeOff className="h-5 w-5 text-gray-500" /> : <Eye className="h-5 w-5 text-gray-500" />}
                 </button>
               </div>
+              {fieldErrors.password && <p className="text-red-500 text-sm">{fieldErrors.password}</p>}
             </div>
             <button
               type="submit"

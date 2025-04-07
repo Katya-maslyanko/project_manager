@@ -1,11 +1,13 @@
 import React from "react";
-import { GripVertical, Flag } from "lucide-react";
+import { Pencil, Flag } from "lucide-react";
 
-const TaskCardBoard = ({ task, onDragStart }) => {
-  const [isChecked, setIsChecked] = React.useState(false);
+const TaskCardBoard = ({ task, onDragStart, onEdit, onStatusChange }) => {
+  const [isChecked, setIsChecked] = React.useState(task.status === 'Завершено');
 
   const handleCheckboxChange = () => {
-    setIsChecked(!isChecked);
+    const newCheckedState = !isChecked;
+    setIsChecked(newCheckedState);
+    onStatusChange(task.id, newCheckedState ? 'Завершено' : 'Новая'); // Обновляем статус
   };
 
   const formatDateRange = (startDateString, endDateString) => {
@@ -82,10 +84,19 @@ const TaskCardBoard = ({ task, onDragStart }) => {
           </div>
           <label
             htmlFor={`taskCheckbox-${task.id}`}
-            className={`ml-2 w-[280px] overflow-hidden text-ellipsis whitespace-nowrap font-semibold`}
+            className={`ml-2 w-[270px] overflow-hidden text-ellipsis whitespace-nowrap font-semibold`}
           >
             {task.title}
           </label>
+          <div 
+            className="p-1 rounded cursor-pointer hover:bg-gray-200" 
+            onClick={(e) => {
+            e.stopPropagation();
+            onEdit();
+            }}
+          >
+            <Pencil className="h-4 w-4 text-gray-500" />
+          </div>
         </div>
       </div>
 
@@ -156,26 +167,18 @@ const TaskCardBoard = ({ task, onDragStart }) => {
           <span className="text-sm">{task.points}%</span>
         </div>
         <div className="flex -space-x-2 rtl:space-x-reverse">
-          {task.assignee ? (
-            task.assignee.profile_image ? (
-              <img
-                className="w-8 h-8 border-2 border-white rounded-full dark:border-gray-800"
-                src={task.assignee.profile_image}
-                alt={task.assignee.name}
-              />
-            ) : (
-              <div className="w-8 h-8 border-2 border-white rounded-full dark:border-gray-800 flex items-center justify-center">
-                <span className="text-white">
-                  {task.assignee.name
-                    ? task.assignee.name.split(" ").map((n) => n[0]).join("")
-                    : "?"}
-                </span>
+        {task.assignees && task.assignees.length > 0 ? (
+            task.assignees.map((assignee, index) => (
+              <div key={assignee.id} className={`w-10 h-10 border-2 border-gray-100 rounded-full dark:border-gray-800 flex items-center justify-center ${getTagColor(index)}`}>
+                {assignee.profile_image ? (
+                  <img className="w-10 h-10 rounded-full" src={assignee.profile_image} alt={assignee.username} />
+                ) : (
+                  <span>{assignee.username ? assignee.username.split(' ').map(n => n[0]).join('') : '?'}</span>
+                )}
               </div>
-            )
+            ))
           ) : (
-            <div className="w-8 h-8 border-2 border-white rounded-full dark:border-gray-800 flex items-center justify-center">
-              <span className="text-white">?</span>
-            </div>
+            <span>Нет ассигнов</span>
           )}
         </div>
       </div>

@@ -1,3 +1,4 @@
+// InboxLayout.tsx
 "use client";
 
 import { SidebarProvider, useSidebar } from "@/context/SidebarContext";
@@ -10,14 +11,14 @@ import { useEffect } from 'react';
 
 const InboxLayout = ({ children }: { children: React.ReactNode }) => {
   const { isExpanded, isHovered, isMobileOpen } = useSidebar();
-  const { user, isAuthenticated } = useAuth(); 
-  const router = useRouter();
+  // const { isAuthenticated, isLoading } = useAuth(); 
+  // const router = useRouter();
 
-  useEffect(() => {
-    if (!isAuthenticated) {
-      router.push("/auth/signin"); // Перенаправление на страницу входа, если пользователь не аутентифицирован
-    }
-  }, [isAuthenticated, router]);
+  // useEffect(() => {
+  //   if (!isAuthenticated) {
+  //     router.push("/auth/signin"); // Перенаправление на страницу входа, если пользователь не аутентифицирован
+  //   }
+  // }, [isAuthenticated, router]);
 
   const mainContentMargin = isMobileOpen
     ? "ml-0"

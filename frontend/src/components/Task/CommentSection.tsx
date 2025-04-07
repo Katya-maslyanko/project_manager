@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { Comment, User } from "@/state/api";
 import { Ellipsis } from "lucide-react";
 import { useCreateCommentMutation, useUpdateCommentMutation, useDeleteCommentMutation } from "@/state/api";
+import { useAuth } from "@/context/AuthContext"; // Импортируем хук для доступа к контексту аутентификации
 
 interface CommentsSectionProps {
   comments: Comment[];
@@ -10,6 +11,7 @@ interface CommentsSectionProps {
 }
 
 const CommentsSection: React.FC<CommentsSectionProps> = ({ comments, users, taskId }) => {
+  const { user } = useAuth(); // Получаем информацию о пользователе из контекста
   const [newComment, setNewComment] = useState("");
   const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
   const [editingContent, setEditingContent] = useState("");
@@ -64,19 +66,23 @@ const CommentsSection: React.FC<CommentsSectionProps> = ({ comments, users, task
   return (
     <div>
       <h3 className="text-lg font-semibold">Комментарии</h3>
-      <form onSubmit={handleCommentSubmit} className="mt-4">
-        <textarea
-          className="w-full border border-gray-200 rounded-md shadow-sm p-2"
-          rows={3}
-          value={editingCommentId ? editingContent : newComment}
-          onChange={(e) => editingCommentId ? setEditingContent(e.target.value) : setNewComment(e.target.value)}
-          placeholder="Добавьте комментарий..."
-          required
-        />
-        <button type="submit" className="mt-2 bg-blue-100 rounded-lg text-blue-700 hover:bg-blue-600 hover:text-white py-2 px-4">
-          {editingCommentId ? "Сохранить" : "Отправить"}
-        </button>
-      </form>
+      {user ? ( // Проверяем, авторизован ли пользователь
+        <form onSubmit={handleCommentSubmit} className="mt-4">
+          <textarea
+            className="w-full border border-gray-200 rounded-md shadow-sm p-2"
+            rows={3}
+            value={editingCommentId ? editingContent : newComment}
+            onChange={(e) => editingCommentId ? setEditingContent(e.target.value) : setNewComment(e.target.value)}
+            placeholder="Добавьте комментарий..."
+            required
+          />
+          <button type="submit" className="mt-2 bg-blue-100 rounded-lg text-blue-700 hover:bg-blue-600 hover:text-white py-2 px-4">
+            {editingCommentId ? "Сохранить" : "Отправить"}
+          </button>
+        </form>
+      ) : (
+        <p className="text-gray-500">Пожалуйста, войдите в систему, чтобы оставить комментарий.</p>
+      )}
       <div className="mt-1 space-y-4">
         {comments.length > 0 ? (
           comments.map((comment) => {
