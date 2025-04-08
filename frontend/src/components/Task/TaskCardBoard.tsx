@@ -7,7 +7,7 @@ const TaskCardBoard = ({ task, onDragStart, onEdit, onStatusChange }) => {
   const handleCheckboxChange = () => {
     const newCheckedState = !isChecked;
     setIsChecked(newCheckedState);
-    onStatusChange(task.id, newCheckedState ? 'Завершено' : 'Новая'); // Обновляем статус
+    onStatusChange(task.id, newCheckedState ? 'Завершено' : 'Новая');
   };
 
   const formatDateRange = (startDateString, endDateString) => {
@@ -100,17 +100,14 @@ const TaskCardBoard = ({ task, onDragStart, onEdit, onStatusChange }) => {
         </div>
       </div>
 
-      {/* Description */}
       <p className="text-sm text-gray-600 mb-3 w-[300px] overflow-hidden text-ellipsis whitespace-nowrap">
         {task.description || "Описание отсутствует"}
       </p>
 
-      {/* Date Range */}
       <div className="flex items-center justify-between mb-3">
         <span className="text-xs text-gray-500">{formatDateRange(task.start_date, task.due_date)}</span>
       </div>
 
-      {/* Tag and Priority */}
       <div className="flex items-center mb-3">
         <div
           className={`flex items-center border ${
@@ -155,7 +152,6 @@ const TaskCardBoard = ({ task, onDragStart, onEdit, onStatusChange }) => {
         </div>
       </div>
 
-      {/* Points and Assignee */}
       <div className="flex items-center justify-between">
         <div className="flex items-center">
           <div className="w-[100px] bg-gray-200 rounded-full h-2 mr-2">

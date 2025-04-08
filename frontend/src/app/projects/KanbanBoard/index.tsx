@@ -42,7 +42,7 @@ const KanbanBoard: React.FC<{ projectId: number }> = ({ projectId }) =>  {
   };
 
   const openAddTaskModal = (status: string) => {
-    setCurrentTaskStatus(status); // Устанавливаем текущий статус перед открытием модального окна
+    setCurrentTaskStatus(status);
     setAddModalOpen(true);
   };
 

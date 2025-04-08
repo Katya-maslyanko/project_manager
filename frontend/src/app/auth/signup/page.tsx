@@ -3,10 +3,10 @@
 import { useState } from "react";
 import { useRegisterMutation } from "@/state/api";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/context/AuthContext"; // Импортируйте контекст аутентификации
-import Image from "next/image"; // Импортируем компонент Image
-import Link from "next/link"; // Импортируем компонент Link
-import { Eye, EyeOff } from "lucide-react"; // Импортируем иконки из Lucide
+import { useAuth } from "@/context/AuthContext";
+import Image from "next/image";
+import Link from "next/link";
+import { Eye, EyeOff } from "lucide-react";
 
 const SignUp = () => {
   const [username, setUsername] = useState("");
@@ -14,64 +14,71 @@ const SignUp = () => {
   const [password, setPassword] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
-  
-  // Состояние для ошибок
+
   const [error, setError] = useState("");
-  const [fieldErrors, setFieldErrors] = useState({}); // Ошибки по полям
-  const [showPassword, setShowPassword] = useState(false); // состояние для показа пароля
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
   const [register, { isLoading }] = useRegisterMutation();
-  const { login: setAuth } = useAuth(); // Используем метод login из контекста аутентификации
+  const { login: setAuth } = useAuth();
 
   const handleRegister = async (e) => {
     e.preventDefault();
     setError("");
-    setFieldErrors({}); // сброс ошибок на поле
+    setFieldErrors({});
 
-    // Простейшая валидация на стороне клиента
     const errors = {};
+
     if (!firstName) errors.firstName = "Поле 'Имя' обязательно для заполнения.";
     if (!lastName) errors.lastName = "Поле 'Фамилия' обязательно для заполнения.";
     if (!username) errors.username = "Поле 'Имя пользователя' обязательно для заполнения.";
     if (!email) {
-      errors.email = "Поле 'Email' обязательно для заполнения.";
+        errors.email = "Поле 'Email' обязательно для заполнения.";
     } else if (!/\S+@\S+\.\S+/.test(email)) {
-      errors.email = "Некорректный формат email.";
+        errors.email = "Некорректный формат email.";
     }
     if (!password) errors.password = "Поле 'Пароль' обязательно для заполнения.";
     else if (password.length < 6) {
-      errors.password = "Пароль должен содержать не менее 6 символов.";
+        errors.password = "Пароль должен содержать не менее 6 символов.";
     }
 
-    // Если есть ошибки, отображаем их
     if (Object.keys(errors).length > 0) {
-      setFieldErrors(errors);
-      return;
+        setFieldErrors(errors);
+        return;
     }
 
     try {
-      const response = await register({
-          first_name: firstName,
-          last_name: lastName,
-          username,
-          email,
-          password,
-      }).unwrap();
-  
-      console.log("Ответ от API:", response); // Логируем ответ от API
-      // Проверяем, что возвращаемые значения правильные
-      if (response.access && response.user) {
-          setAuth(response);
+        const response = await register({
+            first_name: firstName,
+            last_name: lastName,
+            username,
+            email,
+            password,
+        }).unwrap();
+
+        console.log("Ответ от API:", response);
+
+        if (response && response.access && response.refresh && response.user) {
+          localStorage.setItem('access_token', response.access);
+          localStorage.setItem('refresh_token', response.refresh);
+          localStorage.setItem('user', JSON.stringify(response.user));
+          setAuth(response.access);
+          sessionStorage.setItem("email", email);
+          sessionStorage.setItem("password", password);
           router.push("/auth/signin");
       } else {
-          console.error("Недостаточно данных для перенаправления");
-      }
-  } catch (err) {
-      console.error("Ошибка регистрации:", err);
-  }
-  };
-
-
+          console.error("Ответ не содержит данных для перенаправления", response);
+          setError("Ошибка: Неверный ответ от сервера.");
+      }      
+    } catch (err) {
+        if (err.data) {
+            setError(err.data.detail || "Произошла ошибка при регистрации");
+            if (err.data.username) setFieldErrors({ username: err.data.username });
+            if (err.data.email) setFieldErrors({ email: err.data.email });
+        }
+        console.error("Ошибка регистрации:", err);
+    }
+};
 
   return (
     <div className="flex min-h-screen">
@@ -83,7 +90,6 @@ const SignUp = () => {
           <form onSubmit={handleRegister} className="space-y-6">
             <div className="flex space-x-4">
               <div className="w-full">
-
                 <label className="block text-gray-700 font-bold mb-2" htmlFor="firstName">
                   Имя <span className="text-red-500">*</span>
                 </label>
@@ -154,7 +160,6 @@ const SignUp = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-
                   className={`w-full p-3 border ${fieldErrors.password ? 'border-red-500' : 'border-gray-200'} rounded-md placeholder:text-gray-400 focus:border-blue-300 focus:bg-blue-100`}
                   autoComplete="current-password"
                 />

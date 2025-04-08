@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useSidebar } from "@/context/SidebarContext";
-import { useGetProjectsQuery } from "@/state/api"; // Импортируйте хук для получения проектов
+import { useGetProjectsQuery } from "@/state/api";
 import {
   LayoutDashboard,
   CircleCheckBig,
@@ -41,7 +41,7 @@ const navItems: NavItem[] = [
   {
     name: "Проекты",
     icon: <FolderKanban />,
-    subItems: [], // Изначально пустой массив, мы будем заполнять его позже
+    subItems: [],
   },
   {
     name: "Группа",
@@ -53,8 +53,8 @@ const navItems: NavItem[] = [
   },
 ];
 
-const projectColors = ["bg-red-200", "bg-green-200"]; // Цвета для проектов
-const groupColors = ["bg-pink-200", "bg-yellow-200"]; // Цвета для групп
+const projectColors = ["bg-red-200", "bg-green-200"];
+const groupColors = ["bg-pink-200", "bg-yellow-200"];
 
 const AppSidebar: React.FC = () => {
   const { isExpanded, isMobileOpen } = useSidebar();
@@ -63,7 +63,7 @@ const AppSidebar: React.FC = () => {
   const [openProjects, setOpenProjects] = useState(false);
   const [openGroups, setOpenGroups] = useState(false);
 
-  const { data: projects = [], error, isLoading } = useGetProjectsQuery(); // Получаем проекты
+  const { data: projects = [], error, isLoading } = useGetProjectsQuery();
 
   const isActive = useCallback((path: string) => path === pathname, [pathname]);
 
@@ -92,7 +92,7 @@ const AppSidebar: React.FC = () => {
   // Заполняем subItems для проектов
   navItems[3].subItems = projects.map((project) => ({
     name: project.name,
-    path: `/projects/${project.id}`, // Предполагается, что у вас есть страница для каждого проекта
+    path: `/projects/${project.id}`,
   }));
 
   return (

@@ -5,8 +5,9 @@ import { Dropdown } from "../ui/dropdown/Dropdown";
 import { DropdownItem } from "../ui/dropdown/DropdownItem";
 import { ChevronDown } from "lucide-react";
 import { User, Settings, LogOut } from "lucide-react";
-import { useAuth } from "@/context/AuthContext"; // Импортируйте хук для доступа к контексту аутентификации
-import { useRouter } from "next/navigation"; // Импортируйте хук для навигации
+import { useAuth } from "@/context/AuthContext";
+import { useRouter } from "next/navigation";
+import { useGetCurrentUserQuery } from "@/state/api";
 
 const getTagColor = (index: number) => {
   const colors = [
@@ -24,9 +25,11 @@ const getTagColor = (index: number) => {
 
 export default function UserDropdown() {
   const [isOpen, setIsOpen] = useState(false);
-  const { user, logout } = useAuth(); // Получаем информацию о пользователе и метод logout
+  const { user, logout } = useAuth();
   const router = useRouter();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const { data: currentUser, isLoading } = useGetCurrentUserQuery();
+  const displayUser = currentUser || user;
 
   function toggleDropdown(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
     e.stopPropagation();
@@ -52,14 +55,14 @@ export default function UserDropdown() {
         className="flex items-center text-gray-500 dark:text-gray-400 dropdown-toggle"
       >
         <span className="flex items-center justify-center w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-700">
-          <div className={`w-full h-full rounded-full flex items-center justify-center ${getTagColor(user?.id || 0)}`}>
+          <div className={`w-full h-full rounded-full flex items-center justify-center ${getTagColor(displayUser?.id || 0)}`}>
             <span className="text-lg dark:text-gray-400">
-              {user?.username ? user.username.split(' ').map(n => n[0]).join('') : '?'}
+              {displayUser?.username ? displayUser.username.split(' ').map(n => n[0]).join('') : '?'}
             </span>
           </div>
         </span>
         <span className="text-gray-500 ml-2 text-sm text-theme-sm dark:text-gray-400">
-          {user?.email}
+          {displayUser?.email}
         </span>
 
         <ChevronDown className={`ml-1 text-gray-500 transition-transform ${isOpen ? 'rotate-180' : ''} dark:text-gray-400`} />
@@ -72,7 +75,7 @@ export default function UserDropdown() {
       >
         <div>
           <span className="block text-gray-500 text-base font-normal dark:text-gray-400 px-5">
-            {user ? `${user.first_name} ${user.last_name}` : "Гость"}
+            {displayUser ? `${displayUser.first_name} ${displayUser.last_name}` : "Гость"}
           </span>
         </div>
 

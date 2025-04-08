@@ -88,18 +88,26 @@ class CustomTokenObtainPairView(TokenObtainPairView):
         }, status=status.HTTP_200_OK)
     
 
-class RegisterView(generics.CreateAPIView):
-    queryset = User.objects.all()
-    serializer_class = RegisterSerializer
+class RegisterView(APIView):
     permission_classes = (AllowAny,)
 
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
+    def post(self, request, *args, **kwargs):
+        serializer = RegisterSerializer(data=request.data)
         if serializer.is_valid():
-            self.perform_create(serializer)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            user = serializer.save()
+            
+            # Генерация токенов для пользователя
+            refresh = RefreshToken.for_user(user)
+            access_token = str(refresh.access_token)
+            refresh_token = str(refresh)
+            
+            # Возвращаем токены и данные пользователя
+            return Response({
+                "access": access_token,
+                "refresh": refresh_token,
+                "user": UserSerializer(user).data
+            }, status=status.HTTP_201_CREATED)
         else:
-            # Возвращаем конкретные ошибки
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 class UserDetailUpdateView(RetrieveUpdateAPIView):

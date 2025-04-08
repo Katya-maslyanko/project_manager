@@ -15,7 +15,7 @@ const Projects = () => {
   const { data: projects = [], error, isLoading } = useGetProjectsQuery();
 
   const project = projects.find((project) => project.id.toString() === id);
-  const projectId = project ? project.id : null; // Получаем projectId
+  const projectId = project ? project.id : null;
 
   return (
     <InboxWrapper>

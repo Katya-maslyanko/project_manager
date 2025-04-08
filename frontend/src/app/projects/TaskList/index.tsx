@@ -9,10 +9,10 @@ import EditTaskModal from "@/components/Task/EditTaskModal";
 import AddTaskModal from "@/components/Task/AddTaskModal";
 
 const TaskList: React.FC<{ projectId: number }> = ({ projectId }) =>  {
-  const { id } = useParams(); // Получаем ID проекта из параметров
+  const { id } = useParams();
   const { data: tasks = [], error, isLoading } = useGetTasksQuery({ projectId: Number(id) });
-  const [updateTaskStatus] = useUpdateTaskStatusMutation(); // Хук для обновления статуса задачи
-  const { isExpanded, isHovered, isMobileOpen } = useSidebar(); // Получаем состояние сайдбара
+  const [updateTaskStatus] = useUpdateTaskStatusMutation();
+  const { isExpanded, isHovered, isMobileOpen } = useSidebar();
 
   const [isEditModalOpen, setEditModalOpen] = useState(false);
   const [isAddModalOpen, setAddModalOpen] = useState(false);
@@ -36,13 +36,13 @@ const TaskList: React.FC<{ projectId: number }> = ({ projectId }) =>  {
   const handleDrop = async (e: React.DragEvent<HTMLDivElement>, status: string) => {
     e.preventDefault();
     if (draggedTask) {
-      await updateTaskStatus({ id: draggedTask.id, status }); // Обновляем статус задачи
-      setDraggedTask(null); // Сбрасываем перетаскиваемую задачу
+      await updateTaskStatus({ id: draggedTask.id, status });
+      setDraggedTask(null);
     }
   };
 
   const openAddTaskModal = (status: string) => {
-    setCurrentTaskStatus(status); // Устанавливаем текущий статус перед открытием модального окна
+    setCurrentTaskStatus(status);
     setAddModalOpen(true);
   };
 
@@ -93,7 +93,7 @@ const TaskList: React.FC<{ projectId: number }> = ({ projectId }) =>  {
                   key={task.id} 
                   task={task} 
                   onDragStart={handleDragStart} 
-                  onEdit={() => handleEditTask(task)} // Передаем обработчик редактирования
+                  onEdit={() => handleEditTask(task)}
                   onStatusChange={handleStatusChange}
                 />
               ))}
@@ -142,7 +142,7 @@ const TaskList: React.FC<{ projectId: number }> = ({ projectId }) =>  {
                   key={task.id} 
                   task={task} 
                   onDragStart={handleDragStart} 
-                  onEdit={() => handleEditTask(task)} // Передаем обработчик редактирования
+                  onEdit={() => handleEditTask(task)}
                   onStatusChange={handleStatusChange}
                 />
               ))}
@@ -191,7 +191,7 @@ const TaskList: React.FC<{ projectId: number }> = ({ projectId }) =>  {
                   key={task.id} 
                   task={task} 
                   onDragStart={handleDragStart} 
-                  onEdit={() => handleEditTask(task)} // Передаем обработчик редактирования
+                  onEdit={() => handleEditTask(task)}
                   onStatusChange={handleStatusChange}
                 />
               ))}

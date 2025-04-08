@@ -14,10 +14,8 @@ const TaskCard = ({ task, onDragStart, onEdit, onStatusChange }) => {
     setIsChecked(newCheckedState);
 
     if (newCheckedState) {
-      // Если чекбокс отмечен, устанавливаем статус "Завершено"
       onStatusChange(task.id, 'Завершено');
     } else {
-      // Если чекбокс снят, возвращаемся к предыдущему статусу
       onStatusChange(task.id, previousStatus);
     }
   };

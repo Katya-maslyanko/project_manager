@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Comment, User } from "@/state/api";
 import { Ellipsis } from "lucide-react";
 import { useCreateCommentMutation, useUpdateCommentMutation, useDeleteCommentMutation } from "@/state/api";
-import { useAuth } from "@/context/AuthContext"; // Импортируем хук для доступа к контексту аутентификации
+import { useAuth } from "@/context/AuthContext";
 
 interface CommentsSectionProps {
   comments: Comment[];
@@ -11,11 +11,11 @@ interface CommentsSectionProps {
 }
 
 const CommentsSection: React.FC<CommentsSectionProps> = ({ comments, users, taskId }) => {
-  const { user } = useAuth(); // Получаем информацию о пользователе из контекста
+  const { user } = useAuth();
   const [newComment, setNewComment] = useState("");
   const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
   const [editingContent, setEditingContent] = useState("");
-  const [dropdownOpen, setDropdownOpen] = useState<number | null>(null); // Для отслеживания открытого дропдауна
+  const [dropdownOpen, setDropdownOpen] = useState<number | null>(null);
 
   const [createComment] = useCreateCommentMutation();
   const [updateComment] = useUpdateCommentMutation();
@@ -30,7 +30,7 @@ const CommentsSection: React.FC<CommentsSectionProps> = ({ comments, users, task
     } else {
       const result = await createComment({ taskId, content: newComment });
       if ('data' in result) {
-        setNewComment(""); // Очистка поля ввода после успешного добавления
+        setNewComment("");
       }
     }
   };
@@ -66,7 +66,7 @@ const CommentsSection: React.FC<CommentsSectionProps> = ({ comments, users, task
   return (
     <div>
       <h3 className="text-lg font-semibold">Комментарии</h3>
-      {user ? ( // Проверяем, авторизован ли пользователь
+      {user ? (
         <form onSubmit={handleCommentSubmit} className="mt-4">
           <textarea
             className="w-full border border-gray-200 rounded-md shadow-sm p-2"

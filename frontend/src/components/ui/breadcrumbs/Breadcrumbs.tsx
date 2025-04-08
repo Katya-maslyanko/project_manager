@@ -7,7 +7,7 @@ interface BreadcrumbItem {
 }
 
 interface BreadcrumbsProps {
-  items: BreadcrumbItem[]; // Массив объектов с label и href
+  items: BreadcrumbItem[];
 }
 
 const Breadcrumbs: React.FC<BreadcrumbsProps> = ({ items }) => {

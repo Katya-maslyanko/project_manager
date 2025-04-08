@@ -31,7 +31,7 @@ const UserProfile = () => {
   const { user } = useAuth();
   const { data: currentUser, isLoading } = useGetCurrentUserQuery();
 
-  const displayUser = currentUser || user; // <--- главное: используем одно значение
+  const displayUser = currentUser || user;
 
   const breadcrumbsItems: BreadcrumbItem[] = [
     { label: "Главная", href: "/" },
@@ -69,7 +69,7 @@ const UserProfile = () => {
                   </h4>
                   <div className="flex flex-col items-center gap-1 text-center xl:flex-row xl:gap-3 xl:text-left">
                     <p className="text-sm text-gray-500 dark:text-gray-400">
-                      {displayUser.role || "Не задано"}
+                      {displayUser.role_display || "Не задано"}
                     </p>
                     <div className="w-px h-4 bg-gray-300"></div>
                     <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -123,7 +123,7 @@ const UserProfile = () => {
                       Роль
                     </p>
                     <p className="text-base font-medium text-gray-800 dark:text-white/90">
-                      {displayUser.role || "Не задано"}
+                      {displayUser.role_display || "Не задано"}
                     </p>
                   </div>
                 </div>

@@ -1,17 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLoginMutation } from "@/state/api";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-import Image from "next/image"; // Импортируем компонент Image
+import Image from "next/image";
 import Link from "next/link";
-import { Eye, EyeOff } from "lucide-react"; // Импортируем иконки из Lucide
+import { Eye, EyeOff } from "lucide-react";
 
 const SignIn = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false); // Состояние для отображения пароля
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const router = useRouter();
   const [login, { isLoading }] = useLoginMutation();
@@ -33,6 +33,17 @@ const SignIn = () => {
       setError("Ошибка входа. Проверьте логин и пароль.");
     }
   };
+
+  useEffect(() => {
+    const savedEmail = sessionStorage.getItem("email");
+    const savedPassword = sessionStorage.getItem("password");
+  
+    if (savedEmail) setEmail(savedEmail);
+    if (savedPassword) setPassword(savedPassword);
+  
+    sessionStorage.removeItem("email");
+    sessionStorage.removeItem("password");
+  }, []);  
   
 
   return (

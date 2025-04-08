@@ -17,15 +17,15 @@ type BreadcrumbItem = {
 };
 
 type Props = {
-  projectName: string; // Название проекта
-  activeTab: string; // Активная вкладка
-  setActiveTab: (tabName: string) => void; // Функция для установки активной вкладки
+  projectName: string;
+  activeTab: string;
+  setActiveTab: (tabName: string) => void;
 };
 
 const ProjectHeader: React.FC<Props> = ({ projectName, activeTab, setActiveTab }) => {
   const breadcrumbsItems: BreadcrumbItem[] = [
     { label: "Главная", href: "/" },
-    { label: projectName, href: `/projects/${projectName}` }, // Измените на правильный путь
+    { label: projectName, href: `/projects/${projectName}` },
   ];
 
   return (

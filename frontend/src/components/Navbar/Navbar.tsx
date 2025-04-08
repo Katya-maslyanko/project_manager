@@ -4,10 +4,10 @@ import React, { useState, useEffect, useRef } from "react";
 import { Search, Bell } from 'lucide-react';
 import Link from "next/link";
 import { ThemeToggleButton } from "@/components/common/ThemeToggleButton";
-import { useSidebar } from "@/context/SidebarContext"; // Импортируем SidebarContext
+import { useSidebar } from "@/context/SidebarContext";
 
 const AppHeader: React.FC = () => {
-  const { isMobileOpen, toggleSidebar, isExpanded } = useSidebar(); // Используем контекст
+  const { isMobileOpen, toggleSidebar, isExpanded } = useSidebar();
   const [notifying, setNotifying] = useState(true);
   const inputRef = useRef<HTMLInputElement>(null);
 

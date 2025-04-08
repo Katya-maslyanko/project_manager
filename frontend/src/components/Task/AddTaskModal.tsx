@@ -6,8 +6,8 @@ import AddAssigneeModal from "./modal/AddAssigneeModal";
 interface AddTaskModalProps {
   isOpen: boolean;
   onClose: () => void;
-  projectId: number; // Добавляем projectId
-  currentStatus: string; // Добавляем текущий статус
+  projectId: number;
+  currentStatus: string;
 }
 
 const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, projectId, currentStatus }) => {
@@ -21,11 +21,10 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, projectId,
   const [selectedAssignees, setSelectedAssignees] = useState<number[]>([]);
   const [startDate, setStartDate] = useState("");
   const [dueDate, setDueDate] = useState("");
-  const [status, setStatus] = useState(currentStatus); // Устанавливаем статус из пропсов
+  const [status, setStatus] = useState(currentStatus);
   const [createTask] = useCreateTaskMutation();
   const [isAddAssigneeModalOpen, setIsAddAssigneeModalOpen] = useState(false);
 
-  // Эффект для обновления статуса при изменении пропса
   useEffect(() => {
     setStatus(currentStatus);
   }, [currentStatus]);
@@ -40,10 +39,10 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, projectId,
         points,
         assignee_ids: selectedAssignees,
         tag_id: tag,
-        status, // Используем состояние статуса
+        status,
         start_date: startDate,
         due_date: dueDate,
-        project: projectId, // Добавляем projectId
+        project: projectId,
       });
       onClose();
     } catch (error) {
@@ -110,8 +109,8 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, projectId,
                 <label className="block text-sm font-medium text-gray-700">Статус</label>
                 <select
                   className="mt-1 block w-full border border-gray-200 rounded-md shadow-sm p-2"
-                  value={status} // Используем состояние статуса
-                  onChange={(e) => setStatus(e.target.value)} // Обновляем состояние статуса
+                  value={status}
+                  onChange={(e) => setStatus(e.target.value)}
                 >
                   <option value="Новая">Новая</option>
                   <option value="В процессе">В процессе</option>

@@ -7,16 +7,27 @@ from .models import UserProfile, Team, Project, ProjectGoal, Subgoal, Task, Subt
 User = get_user_model()
 
 class UserProfileSerializer(serializers.ModelSerializer):
+    role_display = serializers.SerializerMethodField()
     class Meta:
         model = UserProfile
-        fields = ('profile_image', 'role')
+        fields = ('profile_image', 'role', 'role_display')
+    
+    def get_role_display(self, obj):
+        return obj.get_role_display()
 
 class UserSerializer(serializers.ModelSerializer):
     role = serializers.CharField(source='userprofile.role', required=False)
+    role_display = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ('id', 'username', 'email', 'first_name', 'last_name', 'role')
+        fields = ('id', 'username', 'email', 'first_name', 'last_name', 'role', 'role_display')
+
+    def get_role_display(self, obj):
+        try:
+            return obj.userprofile.get_role_display()
+        except UserProfile.DoesNotExist:
+            return None
 
 class RegisterSerializer(serializers.ModelSerializer):
     class Meta:
@@ -25,18 +36,22 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     def validate_username(self, value):
         if User.objects.filter(username=value).exists():
-            raise ValidationError("Пользователь с таким именем уже существует.")
+            raise serializers.ValidationError("Пользователь с таким именем уже существует.")
         return value
 
     def validate_email(self, value):
         if User.objects.filter(email=value).exists():
-            raise ValidationError("Пользователь с таким email уже существует.")
+            raise serializers.ValidationError("Пользователь с таким email уже существует.")
         return value
 
     def create(self, validated_data):
         user = User(**validated_data)
         user.set_password(validated_data['password'])
         user.save()
+        
+        UserProfile.objects.create(user=user, role='team_member')
+        
+        user.refresh_from_db()
         return user
 
 class CustomAuthTokenSerializer(serializers.Serializer):

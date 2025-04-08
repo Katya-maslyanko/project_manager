@@ -23,8 +23,8 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, task }) 
   const [updateTask] = useUpdateTaskMutation();
   const [deleteTask] = useDeleteTaskMutation();
   const [createComment] = useCreateCommentMutation();
-  const [updateComment] = useUpdateCommentMutation(); // Хук для обновления комментария
-  const [deleteComment] = useDeleteCommentMutation(); // Хук для удаления комментария
+  const [updateComment] = useUpdateCommentMutation();
+  const [deleteComment] = useDeleteCommentMutation();
   const { data: comments = [], refetch: refetchComments } = useGetCommentsByTaskIdQuery(
     task ? { taskId: task.id } : null,
     { skip: !task }
@@ -88,10 +88,10 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, task }) 
     if (content.trim()) {
       try {
         await createComment({
-          taskId: task.id, // Используем task.id
+          taskId: task.id,
           content,
         });
-        refetchComments(); // Обновляем комментарии после добавления
+        refetchComments();
       } catch (error) {
         console.error("Ошибка при добавлении комментария:", error);
       }
@@ -100,8 +100,8 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, task }) 
 
   const handleEditComment = async (commentId: number, content: string) => {
     try {
-      await updateComment({ id: commentId, content }); // Вызов API для обновления комментария
-      refetchComments(); // Обновляем комментарии после редактирования
+      await updateComment({ id: commentId, content });
+      refetchComments();
     } catch (error) {
       console.error("Ошибка при редактировании комментария:", error);
     }
@@ -109,8 +109,8 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, task }) 
 
   const handleDeleteComment = async (commentId: number) => {
     try {
-      await deleteComment(commentId); // Вызов API для удаления комментария
-      refetchComments(); // Обновляем комментарии после удаления
+      await deleteComment(commentId);
+      refetchComments();
     } catch (error) {
       console.error("Ошибка при удалении комментария:", error);
     }

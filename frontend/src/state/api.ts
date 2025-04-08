@@ -69,6 +69,7 @@ export interface User {
   last_name: string;
   profile_image?: string;
   role?: string;
+  role_display?: string;
 }
 
 export const api = createApi({
@@ -172,13 +173,13 @@ export const api = createApi({
       }),
       invalidatesTags: ["Comments"],
     }),
-    register: build.mutation<AuthResponse, RegisterUser >({
+    register: build.mutation<AuthResponse, RegisterUser>({
       query: (userData) => ({
-        url: "auth/users/",
+        url: "auth/register/",
         method: "POST",
         body: userData,
       }),
-    }),
+    }),    
     login: build.mutation<AuthResponse, LoginUser >({
       query: (credentials) => ({
         url: "auth/jwt/create/",

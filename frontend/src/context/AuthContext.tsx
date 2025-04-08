@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
 import Cookies from "js-cookie";
-import { useGetCurrentUserQuery } from "@/state/api"; // API для получения текущего пользователя
+import { useGetCurrentUserQuery } from "@/state/api";
 import { User, AuthResponse } from "@/state/api";
 
 interface AuthContextType {
@@ -20,10 +20,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [localLoading, setLocalLoading] = useState<boolean>(true);
 
-  // Запрос всегда выполняется, а не пропускается через skip
   const { data: currentUser, refetch, isLoading: queryLoading } = useGetCurrentUserQuery(undefined);
 
-  // Проверяем наличие токена в куках при маунте
   useEffect(() => {
     const accessToken = Cookies.get("accessToken");
     if (accessToken) {
@@ -35,7 +33,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setLocalLoading(false);
   }, []);
 
-  // Когда изменилось состояние аутентификации, выполняем запрос
   useEffect(() => {
     if (isAuthenticated) {
       refetch().then((result) => {
@@ -53,12 +50,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     Cookies.set("refreshToken", token.refresh);
 
     setIsAuthenticated(true);
-    // Выполняем запрос для обновления данных пользователя
     const result = await refetch();
     if (result.data) {
       setUser(result.data);
     } else {
-      setUser(token.user); // fallback, если запрос не вернул данные
+      setUser(token.user);
     }
   };
 
