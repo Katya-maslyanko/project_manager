@@ -10,27 +10,9 @@ const TaskCardBoard = ({ task, onDragStart, onEdit, onStatusChange }) => {
     onStatusChange(task.id, newCheckedState ? 'Завершено' : 'Новая');
   };
 
-  const formatDateRange = (startDateString, endDateString) => {
-    if (!startDateString || !endDateString) return "Дата не указана";
-
-    const startDate = new Date(startDateString);
-    const endDate = new Date(endDateString);
-
-    if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
-      return "Некорректная дата";
-    }
-
-    const options = {
-      day: "numeric",
-      month: "long",
-      hour: "numeric",
-      minute: "numeric",
-    };
-
-    const formattedStartDate = startDate.toLocaleString("ru-RU", options);
-    const formattedEndDate = endDate.toLocaleString("ru-RU", options);
-
-    return `${formattedStartDate} - ${formattedEndDate}`;
+  const formatDate = (dateString) => {
+    const options = { day: 'numeric', month: 'long', year: 'numeric' };
+    return new Date(dateString).toLocaleDateString('ru-RU', options);
   };
 
   const tagColors = [
@@ -105,7 +87,7 @@ const TaskCardBoard = ({ task, onDragStart, onEdit, onStatusChange }) => {
       </p>
 
       <div className="flex items-center justify-between mb-3">
-        <span className="text-xs text-gray-500">{formatDateRange(task.start_date, task.due_date)}</span>
+        <span className="text-xs text-gray-500">{formatDate(task.start_date)} - {formatDate(task.due_date)}</span>
       </div>
 
       <div className="flex items-center mb-3">

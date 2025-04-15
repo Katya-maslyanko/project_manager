@@ -14,6 +14,7 @@ import {
   ChevronDown,
   Plus,
 } from "lucide-react";
+import { useModal } from "@/context/ModalContext";
 
 type NavItem = {
   name: string;
@@ -34,22 +35,14 @@ const navItems: NavItem[] = [
     path: "/my-tasks",
   },
   {
-    icon: <ChartNoAxesCombined />,
-    name: "Отчет",
-    path: "/report",
+    icon: <Users />,
+    name: "Команда",
+    path: "/team",
   },
   {
     name: "Проекты",
     icon: <FolderKanban />,
     subItems: [],
-  },
-  {
-    name: "Группа",
-    icon: <Users />,
-    subItems: [
-      { name: "Группа 1", path: "/group-1" },
-      { name: "Группа 2", path: "/group-2" },
-    ],
   },
 ];
 
@@ -59,6 +52,7 @@ const groupColors = ["bg-pink-200", "bg-yellow-200"];
 const AppSidebar: React.FC = () => {
   const { isExpanded, isMobileOpen } = useSidebar();
   const pathname = usePathname();
+  const { openModal } = useModal();
 
   const [openProjects, setOpenProjects] = useState(false);
   const [openGroups, setOpenGroups] = useState(false);
@@ -89,7 +83,6 @@ const AppSidebar: React.FC = () => {
     }
 }, [isExpanded, isMobileOpen]);
 
-  // Заполняем subItems для проектов
   navItems[3].subItems = projects.map((project) => ({
     name: project.name,
     path: `/projects/${project.id}`,
@@ -160,7 +153,7 @@ const AppSidebar: React.FC = () => {
                 {isExpanded ? "Мои Проекты" : "..."}
               </h2>
               {isExpanded && (
-                <button className="bg-blue-100 rounded-lg p-1 w-8 h-8 flex items-center justify-center">
+                <button onClick={openModal} className="bg-blue-100 rounded-lg p-1 w-8 h-8 flex items-center justify-center">
                   <Plus className="text-blue-600 w-4 h-4" />
                 </button>
               )}
@@ -183,46 +176,6 @@ const AppSidebar: React.FC = () => {
                       }`}
                     >
                       <span className={`mr-2 w-4 h-4 rounded ${projectColors[0]}`} />
-                      {subItem.name}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-
-          <div className="border-t border-gray-200 my-4" />
-
-          {/* Мои Группы */}
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <h2 className={`text-gray-400 text-sm font-semibold uppercase flex items-center ${!isExpanded ? "justify-center w-full" : ""}`}>
-                {isExpanded ? "Мои Группы" : "..."}
-              </h2>
-              {isExpanded && (
-                <button className="bg-blue-100 rounded-lg p-1 w-8 h-8 flex items-center justify-center">
-                  <Plus className="text-blue-600 w-4 h-4" />
-                </button>
-              )}
-            </div>
-            <button onClick={toggleGroups} className={`flex items-center justify-between w-full px-4 py-3 rounded-lg hover:bg-gray-200 transition-all duration-200 ease-in-out ${openGroups ? "bg-gray-200" : ""}`}>
-              <span className="flex items-center">
-                <Users className={`mr-2 ${openGroups ? "text-blue-600" : "text-gray-500"}`} />
-                {isExpanded && <span className={`text-lg ${openGroups ? "text-blue-600" : "text-gray-600"}`}>Группы</span>}
-              </span>
-              <ChevronDown className={`transition-transform duration-200 ${openGroups ? "rotate-180" : ""} text-gray-500`} />
-            </button>
-            {openGroups && (
-              <ul className="ml-4 mt-2 space-y-1">
-                {navItems[4].subItems?.map((subItem, index) => (
-                  <li key={subItem.name} className="flex items-center">
-                    <Link
-                      href={subItem.path!}
-                      className={`flex items-center w-full px-4 py-3 rounded-lg hover:bg-gray-200 transition-all duration-200 ease-in-out ${
-                        isActive(subItem.path!) ? "bg-blue-600 text-white" : "text-gray-600"
-                      }`}
-                    >
-                      <span className={`mr-2 w-4 h-4 rounded ${isActive(subItem.path!) ? "bg-white" : groupColors[index % groupColors.length]}`} />
                       {subItem.name}
                     </Link>
                   </li>

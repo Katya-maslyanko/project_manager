@@ -9,6 +9,7 @@ interface EditTaskModalProps {
   isOpen: boolean;
   onClose: () => void;
   task: Task | null;
+  onSubmit?: (updatedTask: Task) => void;
 }
 
 const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, task }) => {
@@ -54,7 +55,7 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, task }) 
     e.preventDefault();
     if (task) {
       try {
-        await updateTask({
+        const result = await updateTask({
           id: task.id,
           title,
           description,
@@ -66,11 +67,13 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, task }) 
           start_date: startDate,
           due_date: dueDate,
         });
+    
         onClose();
       } catch (error) {
         console.error("Ошибка при обновлении задачи:", error);
       }
     }
+    
   };
 
   const handleDeleteTask = async () => {

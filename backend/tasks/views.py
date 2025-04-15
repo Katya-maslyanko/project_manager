@@ -14,6 +14,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework.generics import RetrieveUpdateAPIView
+from rest_framework.filters import OrderingFilter
 from .models import (
     User,
     UserProfile,
@@ -142,12 +143,32 @@ class SubgoalViewSet(viewsets.ModelViewSet):
 class TaskViewSet(viewsets.ModelViewSet):
     queryset = Task.objects.all()
     serializer_class = TaskSerializer
+    filter_backends = (OrderingFilter,)
 
     def get_queryset(self):
         queryset = super().get_queryset()
-        project_id = self.request.query_params.get('projectId', None)
-        if project_id is not None:
+        project_id = self.request.query_params.get('projectId')
+        status = self.request.query_params.get('status')
+        assignee_id = self.request.query_params.get('assigneeId')
+        tag_id = self.request.query_params.getlist('tagId')
+        priority = self.request.query_params.get('priority')
+
+        if project_id:
             queryset = queryset.filter(project_id=project_id)
+        if status:
+            queryset = queryset.filter(status=status)
+        if assignee_id:
+            queryset = queryset.filter(assignees__id=assignee_id)
+        if tag_id:
+            queryset = queryset.filter(tag_id=tag_id)
+        if priority:
+            queryset = queryset.filter(priority=priority)
+
+        order_by = self.request.query_params.get('ordering')
+        if order_by:
+            order_fields = order_by.split(',')
+            queryset = queryset.order_by(*order_fields)
+
         return queryset
 
 class SubtaskViewSet(viewsets.ModelViewSet):

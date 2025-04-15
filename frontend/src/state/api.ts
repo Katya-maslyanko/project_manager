@@ -1,10 +1,18 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import Cookies from "js-cookie";
 
+export interface Team {
+  id: number;
+  name: string;
+}
+
 export interface Project {
   id: number;
   name: string;
   description?: string;
+  startDate?: string | null;
+  endDate?: string | null;
+  team: Team | null;
 }
 
 export interface Assignee {
@@ -84,7 +92,7 @@ export const api = createApi({
     },
   }),
   reducerPath: "api",
-  tagTypes: ["Projects", "Tasks", "Users", "Tags", "Comments"],
+  tagTypes: ["Projects", "Tasks", "Users", "Tags", "Comments", "Teams"],
   endpoints: (build) => ({
     getProjects: build.query<Project[], void>({
       query: () => "projects/",
@@ -145,6 +153,10 @@ export const api = createApi({
     getUsers: build.query<User[], void>({
       query: () => `users/`,
       providesTags: ["Users"],
+    }),
+    getTeams: build.query<Team[], void>({
+      query: () => "teams/",
+      providesTags: ["Teams"],
     }),
     getCommentsByTaskId: build.query<Comment[], { taskId: number }>({
       query: ({ taskId }) => `comments/?taskId=${taskId}`,
@@ -226,6 +238,7 @@ export const {
   useGetCurrentUserQuery,
   useGetTagsQuery,
   useGetUsersQuery,
+  useGetTeamsQuery,
   useUpdateCommentMutation,
   useDeleteCommentMutation,
   useLogoutMutation,

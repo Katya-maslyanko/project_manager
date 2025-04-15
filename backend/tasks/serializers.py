@@ -81,9 +81,25 @@ class TeamSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class ProjectSerializer(serializers.ModelSerializer):
+    team = TeamSerializer(read_only=True)
+    team_id = serializers.PrimaryKeyRelatedField(queryset=Team.objects.all(), write_only=True, source='team')
+
     class Meta:
         model = Project
-        fields = '__all__'
+        fields = ['id', 'name', 'description', 'team', 'team_id', 'startDate', 'endDate', 'created_at', 'updated_at']
+
+    def update(self, instance, validated_data):
+        instance.name = validated_data.get('name', instance.name)
+        instance.description = validated_data.get('description', instance.description)
+        instance.startDate = validated_data.get('startDate', instance.startDate)
+        instance.endDate = validated_data.get('endDate', instance.endDate)
+
+        team = validated_data.pop('team', None)
+        if team is not None:
+            instance.team = team
+
+        instance.save()
+        return instance
 
 class ProjectGoalSerializer(serializers.ModelSerializer):
     class Meta:

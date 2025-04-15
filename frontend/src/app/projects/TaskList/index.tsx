@@ -1,36 +1,68 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import TaskCard from "@/components/Task/TaskCardList";
-import { useGetTasksQuery, useUpdateTaskStatusMutation } from "@/state/api";
+import {
+  useGetTasksQuery,
+  useUpdateTaskStatusMutation,
+  useDeleteTaskMutation,
+  useUpdateTaskMutation
+} from "@/state/api";
 import { useParams } from "next/navigation";
 import { Task } from "@/state/api";
-import { LoaderCircle, CircleCheck, BookCheck, Plus } from "lucide-react";
-import { useSidebar } from "@/context/SidebarContext";
+import TaskSidebar from "@/components/Task/TaskSidebar";
 import EditTaskModal from "@/components/Task/EditTaskModal";
+import DeleteConfirmationModal from "@/components/Task/modal/DeleteConfirmationModal";
 import AddTaskModal from "@/components/Task/AddTaskModal";
+import { Plus, CircleCheck, LoaderCircle, BookCheck } from "lucide-react";
 
-const TaskList: React.FC<{ projectId: number }> = ({ projectId }) =>  {
+const TaskList: React.FC<{ projectId: number }> = ({ projectId }) => {
   const { id } = useParams();
-  const { data: tasks = [], error, isLoading } = useGetTasksQuery({ projectId: Number(id) });
+  const {
+    data: tasks = [],
+    error,
+    isLoading,
+    refetch,
+  } = useGetTasksQuery({ projectId: Number(id) });
   const [updateTaskStatus] = useUpdateTaskStatusMutation();
-  const { isExpanded, isHovered, isMobileOpen } = useSidebar();
+  const [deleteTask] = useDeleteTaskMutation();
+  const [updateTask] = useUpdateTaskMutation();
 
+  // const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [isEditModalOpen, setEditModalOpen] = useState(false);
+  const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
   const [isAddModalOpen, setAddModalOpen] = useState(false);
-  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [draggedTask, setDraggedTask] = useState<Task | null>(null);
   const [currentTaskStatus, setCurrentTaskStatus] = useState<string>("Новая"); 
+  const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null);
+  const selectedTask = tasks.find((t) => t.id === selectedTaskId) || null;
 
   const handleDragStart = (e: React.DragEvent<HTMLDivElement>, task: Task) => {
     setDraggedTask(task);
   };
 
-  const handleStatusChange = async (taskId, newStatus) => {
-    await updateTaskStatus ({ id: taskId, status: newStatus });
+  const handleStatusChange = async (taskId: number, newStatus: string) => {
+    await updateTaskStatus({ id: taskId, status: newStatus });
+    refetch();
   };
 
   const handleEditTask = (task: Task) => {
-    setSelectedTask(task);
+    setSelectedTaskId(task.id);
     setEditModalOpen(true);
+  };
+
+  const handleEditTaskSubmit = async (updatedTask: Task) => {
+    try {
+      await updateTask(updatedTask);
+      setEditModalOpen(false);
+      refetch();
+    } catch (error) {
+      console.error("Ошибка при обновлении задачи:", error);
+    }
+  };  
+
+  const handleDeleteTask = (task: Task) => {
+    setSelectedTaskId(task.id);
+    setDeleteModalOpen(true);
   };
 
   const handleDrop = async (e: React.DragEvent<HTMLDivElement>, status: string) => {
@@ -45,6 +77,29 @@ const TaskList: React.FC<{ projectId: number }> = ({ projectId }) =>  {
     setCurrentTaskStatus(status);
     setAddModalOpen(true);
   };
+
+  const openSidebar = (task: Task) => {
+    setSelectedTaskId(task.id);
+    setSidebarOpen(true);
+  };
+
+  const closeSidebar = () => {
+    setSidebarOpen(false);
+    setSelectedTaskId(null);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (selectedTaskId) {
+      try {
+        await deleteTask(selectedTaskId);
+        setDeleteModalOpen(false);
+        closeSidebar();
+        refetch();
+      } catch (error) {
+        console.error("Ошибка при удалении задачи:", error);
+      }
+    }
+  };  
 
   if (isLoading) {
     return <p>Загрузка задач...</p>;
@@ -89,12 +144,14 @@ const TaskList: React.FC<{ projectId: number }> = ({ projectId }) =>  {
             </thead>
             <tbody className="text-gray-700 text-sm">
               {tasks.filter(task => task.status === 'Новая').map(task => (
-                <TaskCard 
-                  key={task.id} 
-                  task={task} 
-                  onDragStart={handleDragStart} 
+                <TaskCard
+                  key={task.id}
+                  task={task}
+                  onDragStart={handleDragStart}
                   onEdit={() => handleEditTask(task)}
+                  onDelete={() => handleDeleteTask(task)}
                   onStatusChange={handleStatusChange}
+                  onOpenSidebar={openSidebar}
                 />
               ))}
             </tbody>
@@ -138,12 +195,14 @@ const TaskList: React.FC<{ projectId: number }> = ({ projectId }) =>  {
             </thead>
             <tbody className="text-gray-700 text-sm">
               {tasks.filter(task => task.status === 'В процессе').map(task => (
-                <TaskCard 
-                  key={task.id} 
-                  task={task} 
-                  onDragStart={handleDragStart} 
+                <TaskCard
+                  key={task.id}
+                  task={task}
+                  onDragStart={handleDragStart}
                   onEdit={() => handleEditTask(task)}
+                  onDelete={() => handleDeleteTask(task)}
                   onStatusChange={handleStatusChange}
+                  onOpenSidebar={openSidebar}
                 />
               ))}
             </tbody>
@@ -187,12 +246,14 @@ const TaskList: React.FC<{ projectId: number }> = ({ projectId }) =>  {
             </thead>
             <tbody className="text-gray-700 text-sm">
               {tasks.filter(task => task.status === 'Завершено').map(task => (
-                <TaskCard 
-                  key={task.id} 
-                  task={task} 
-                  onDragStart={handleDragStart} 
+                <TaskCard
+                  key={task.id}
+                  task={task}
+                  onDragStart={handleDragStart}
                   onEdit={() => handleEditTask(task)}
+                  onDelete={() => handleDeleteTask(task)}
                   onStatusChange={handleStatusChange}
+                  onOpenSidebar={openSidebar}
                 />
               ))}
             </tbody>
@@ -203,16 +264,50 @@ const TaskList: React.FC<{ projectId: number }> = ({ projectId }) =>  {
            </button>
         </div>
       </div>
+      {/* Боковая панель задач */}
+      {isSidebarOpen && selectedTask && (
+        <TaskSidebar
+          task={tasks.find(t => t.id === selectedTaskId) || null}
+          onClose={closeSidebar}
+          onDelete={() => handleDeleteTask(tasks.find(t => t.id === selectedTaskId)!)}
+          onComplete={async () => {
+            await updateTaskStatus({
+              id: selectedTask.id,
+              status: "Завершено",
+            });
+            refetch();
+          }}
+        />
+      )}
+
       {/* Модальное окно добавления задачи */}
-      <AddTaskModal 
-        isOpen={isAddModalOpen} 
-        onClose={() => setAddModalOpen(false)} 
-        projectId={projectId}
-        currentStatus={currentTaskStatus}
-      />
+      {isAddModalOpen && (
+        <AddTaskModal
+          isOpen={isAddModalOpen}
+          onClose={() => setAddModalOpen(false)}
+          projectId={projectId}
+          currentStatus={currentTaskStatus}
+        />
+      )}
 
       {/* Модальное окно редактирования */}
-      <EditTaskModal isOpen={isEditModalOpen} onClose={() => setEditModalOpen(false)} task={selectedTask} />
+      {isEditModalOpen && selectedTask && (
+        <EditTaskModal
+          isOpen={isEditModalOpen}
+          onClose={() => setEditModalOpen(false)}
+          task={selectedTask}
+          onSubmit={handleEditTaskSubmit}
+        />
+      )}
+
+      {isDeleteModalOpen && (
+        <DeleteConfirmationModal
+          isOpen={isDeleteModalOpen}
+          onClose={() => setDeleteModalOpen(false)}
+          onDelete={handleConfirmDelete}
+        />
+      )}
+
     </div>
   );
 };

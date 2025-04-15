@@ -4,7 +4,8 @@ import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext"; 
 import StoreProvider from "./redux";
 import { SidebarProvider } from "@/context/SidebarContext"; 
-import InboxWrapper from "./inboxWrapper"; 
+import { ModalProvider } from "@/context/ModalContext";
+import CreateProjectModal from "@/components/Project/CreateProjectModal";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,7 +33,10 @@ export default function RootLayout({
         <StoreProvider>
           <AuthProvider>
             <SidebarProvider>
-              {children}
+              <ModalProvider>
+                {children}
+                <CreateProjectModal />
+              </ModalProvider>
             </SidebarProvider>
           </AuthProvider>
         </StoreProvider>

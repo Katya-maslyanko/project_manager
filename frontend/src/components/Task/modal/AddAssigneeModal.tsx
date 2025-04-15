@@ -1,5 +1,5 @@
 import React from "react";
-import { User } from "@/state/api"; // Импортируйте тип User из вашего API
+import { User } from "@/state/api";
 import { X} from "lucide-react";
 
 interface AddAssigneeModalProps {

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { GripVertical, Flag, Pencil } from "lucide-react";
 
-const TaskCard = ({ task, onDragStart, onEdit, onStatusChange }) => {
+const TaskCard = ({ task, onDragStart, onEdit, onStatusChange, onOpenSidebar, onDelete }) => {
   const [isChecked, setIsChecked] = useState(task.status === 'Завершено');
   const [previousStatus, setPreviousStatus] = useState(task.status);
 
@@ -39,7 +39,7 @@ const TaskCard = ({ task, onDragStart, onEdit, onStatusChange }) => {
   };
 
   return (
-    <tr className="border-t border-b">
+    <tr className="border-t border-b" onClick={() => onOpenSidebar(task)}>
       <td className="py-3 pl-2 border-r">
         <div className="flex items-center">
           <div className="cursor-pointer" onDragStart={(e) => onDragStart(e, task)} draggable>
@@ -63,7 +63,7 @@ const TaskCard = ({ task, onDragStart, onEdit, onStatusChange }) => {
               </label>
             </div>
             <label
-              htmlFor={`taskCheckbox-${task.id}`}
+              // htmlFor={`taskCheckbox-${task.id}`}
               className={`ml-2 w-[280px] overflow-hidden text-ellipsis whitespace-nowrap`}
             >
               {task.title}
