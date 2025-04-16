@@ -149,9 +149,66 @@ class TaskSerializer(serializers.ModelSerializer):
         return instance
     
 class SubtaskSerializer(serializers.ModelSerializer):
+    assignees = serializers.SerializerMethodField()
+    assigned_to = UserSerializer(many=True, read_only=True)  # для отображения
+    assigned_to_ids = serializers.PrimaryKeyRelatedField(     # для записи
+        queryset=User.objects.all(),
+        many=True,
+        write_only=True,
+        required=False
+    )
+    tag = TagSerializer(read_only=True)
+    tag_id = serializers.PrimaryKeyRelatedField(queryset=Tag.objects.all(), write_only=True, source='tag')
+
     class Meta:
         model = Subtask
-        fields = '__all__'
+        fields = [
+            'id', 'title', 'description', 'status', 'priority',
+            'tag', 'tag_id', 'points', 'start_date', 'due_date',
+            'assignees', 'assigned_to', 'assigned_to_ids', 'task'
+        ]
+
+    def get_assignees(self, obj):
+        return UserSerializer(obj.task.assignees.all(), many=True).data if obj.task else []
+
+    def validate_assigned_to_ids(self, value):
+        task_id = self.context['view'].kwargs.get('task_id')
+        if value and task_id:
+            try:
+                task_obj = Task.objects.get(id=task_id)
+            except Task.DoesNotExist:
+                raise serializers.ValidationError("Основная задача не найдена")
+
+            assigned_user_ids = set(task_obj.assignees.values_list('id', flat=True))
+
+            if not set([user.id for user in value]).issubset(assigned_user_ids):
+                raise serializers.ValidationError("Пользователь не назначен в основной задаче")
+        return value
+
+    def create(self, validated_data):
+        assigned_users = validated_data.pop('assigned_to_ids', [])
+        subtask = Subtask.objects.create(**validated_data)
+        subtask.assigned_to.set(assigned_users)
+        return subtask
+
+    def update(self, instance, validated_data):
+        instance.title = validated_data.get('title', instance.title)
+        instance.description = validated_data.get('description', instance.description)
+        instance.status = validated_data.get('status', instance.status)
+        instance.priority = validated_data.get('priority', instance.priority)
+        instance.points = validated_data.get('points', instance.points)
+        instance.start_date = validated_data.get('start_date', instance.start_date)
+        instance.due_date = validated_data.get('due_date', instance.due_date)
+        tag = validated_data.pop('tag', None)
+        if tag is not None:
+            instance.tag = tag
+        instance.task = validated_data.get('task', instance.task)
+
+        if 'assigned_to_ids' in validated_data:
+            instance.assigned_to.set(validated_data['assigned_to_ids'])
+
+        instance.save()
+        return instance
 
 class CommentSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)

@@ -68,7 +68,7 @@ const TaskCard = ({ task, onDragStart, onEdit, onStatusChange, onOpenSidebar, on
             >
               {task.title}
             </label>
-            <div 
+            {/* <div 
               className="mr-1 p-1 rounded cursor-pointer hover:bg-gray-200" 
               onClick={(e) => {
                 e.stopPropagation();
@@ -76,7 +76,7 @@ const TaskCard = ({ task, onDragStart, onEdit, onStatusChange, onOpenSidebar, on
               }}
             >
               <Pencil className="h-4 w-4 text-gray-500" />
-            </div>
+            </div> */}
           </div>
         </div>
       </td>

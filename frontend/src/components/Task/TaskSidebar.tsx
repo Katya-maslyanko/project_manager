@@ -16,10 +16,13 @@ import {
   useGetTagsQuery,
   useGetUsersQuery,
   useUpdateTaskMutation,
+  useGetSubtasksByTaskIdQuery,
+  useCreateSubtaskMutation,
 } from "@/state/api";
 import AddAssigneeModal from "./modal/AddAssigneeModal";
 import DeleteConfirmationModal from "./modal/DeleteConfirmationModal";
 import CommentsSection from "./CommentSection";
+import SubtaskList from "./SubtaskList";
 
 const formatDate = (dateString: string) => {
   const options = { day: "numeric", month: "long", year: "numeric" } as const;
@@ -44,6 +47,7 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
   const { data: tags = [] } = useGetTagsQuery();
   const { data: users = [] } = useGetUsersQuery();
   const [updateTask] = useUpdateTaskMutation();
+  const { data: subtasks = [] } = useGetSubtasksByTaskIdQuery(task?.id || 0);
 
   const [editingTitle, setEditingTitle] = useState(false);
   const [editingDescription, setEditingDescription] = useState(false);
@@ -99,7 +103,7 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
   };
 
   const commonInputStyle =
-    "px-1 py-1 border rounded-md focus:outline-none focus:border-gray-200 transition-colors";
+    "w-full px-1 py-1 border rounded-md focus:outline-none focus:border-gray-200 transition-colors";
   const commonSelectStyle =
     "px-1 py-1 border rounded-md focus:outline-none focus:border-gray-200 transition-colors";
 
@@ -477,7 +481,9 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
           )}
           </div>
         </div>
-
+        <div className="space-y-4">
+            <SubtaskList subtasks={subtasks} taskId={task?.id || 0}  />
+        </div>
         {/* Комментарии */}
         <CommentsSection
           comments={task.comments || []}

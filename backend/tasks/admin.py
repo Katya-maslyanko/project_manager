@@ -43,7 +43,12 @@ class TaskAdmin(admin.ModelAdmin):
 
 @admin.register(Subtask)
 class SubtaskAdmin(admin.ModelAdmin):
-    list_display = ('title', 'task', 'assignee', 'status', 'created_at', 'updated_at')
+    list_display = ('title', 'task', 'get_assignees', 'status', 'created_at', 'updated_at')
+
+    def get_assignees(self, obj):
+        return ", ".join([user.username for user in obj.task.assignees.all()])
+
+    get_assignees.short_description = 'Assignee'
 
 @admin.register(Tag)
 class TagAdmin(admin.ModelAdmin):

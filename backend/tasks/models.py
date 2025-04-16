@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.conf import settings
 
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
@@ -74,15 +75,28 @@ class Task(models.Model):
     points = models.IntegerField(null=True, blank=True)
 
 class Subtask(models.Model):
+    STATUS_CHOICES = [
+        ('Новая', 'Новая'),
+        ('В процессе', 'В процессе'),
+        ('Завершено', 'Завершено'),
+    ]
+
     task = models.ForeignKey(Task, related_name='subtasks', on_delete=models.CASCADE)
     title = models.CharField(max_length=200)
     description = models.TextField()
-    status = models.CharField(max_length=50)
+    status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='Новая')
     priority = models.CharField(max_length=50)
-    assignee = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
-    due_date = models.DateTimeField()
+    start_date = models.DateTimeField(null=True, blank=True)
+    due_date = models.DateTimeField(null=True, blank=True)
+    tag = models.ForeignKey(Tag, related_name='subtask_tags', on_delete=models.CASCADE, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    points = models.IntegerField(null=True, blank=True)
+
+    assigned_to = models.ManyToManyField(User, related_name='subtasks', blank=True)
+
+    def get_possible_assignees(self):
+        return self.task.assignees.all()
 
 class Comment(models.Model):
     task = models.ForeignKey(Task, related_name='comments', on_delete=models.CASCADE)

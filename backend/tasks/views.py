@@ -175,6 +175,25 @@ class SubtaskViewSet(viewsets.ModelViewSet):
     queryset = Subtask.objects.all()
     serializer_class = SubtaskSerializer
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        task_id = self.request.query_params.get('taskId')
+        if task_id:
+            queryset = queryset.filter(task_id=task_id)
+        return queryset
+
+    def perform_create(self, serializer):
+        serializer.save(task=self.get_task())
+
+    def perform_update(self, serializer):
+        serializer.save(task=self.get_task())
+
+    def get_task(self):
+        task_id = self.request.data.get('task')
+        if task_id:
+            return Task.objects.get(id=task_id)
+        return None
+    
 class TagViewSet(viewsets.ModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer

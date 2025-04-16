@@ -50,6 +50,21 @@ export interface Comment {
   created_at: string;
 }
 
+export interface Subtask {
+  id: number;
+  title: string;
+  description: string;
+  status: string;
+  priority: string;
+  tag: Tag | null;
+  points: number;
+  start_date: string | null;
+  due_date: string | null;
+  assignees: Assignee[];
+  taskId: number;
+  assigned_to: Assignee[];
+}
+
 export interface RegisterUser  {
   username: string;
   email: string;
@@ -92,7 +107,7 @@ export const api = createApi({
     },
   }),
   reducerPath: "api",
-  tagTypes: ["Projects", "Tasks", "Users", "Tags", "Comments", "Teams"],
+  tagTypes: ["Projects", "Tasks", "Users", "Tags", "Comments", "Teams", "Subtasks"],
   endpoints: (build) => ({
     getProjects: build.query<Project[], void>({
       query: () => "projects/",
@@ -157,6 +172,34 @@ export const api = createApi({
     getTeams: build.query<Team[], void>({
       query: () => "teams/",
       providesTags: ["Teams"],
+    }),
+    getSubtasksByTaskId: build.query<Subtask[], number>({
+      query: (taskId) => `subtasks/?taskId=${taskId}`,
+      providesTags: (result) =>
+        result ? result.map(({ id }) => ({ type: "Subtasks", id })) : [{ type: "Subtasks", id: "LIST" }],
+    }),
+    createSubtask: build.mutation<Subtask, Partial<Subtask>>({
+      query: (subtask) => ({
+        url: `subtasks/`,
+        method: "POST",
+        body: subtask,
+      }),
+      invalidatesTags: ["Subtasks"],
+    }),
+    updateSubtask: build.mutation<Subtask, Partial<Subtask>>({
+      query: ({ id, status }) => ({
+        url: `subtasks/${id}/`,
+        method: "PATCH",
+        body: { status },
+      }),
+      invalidatesTags: ["Subtasks"],
+    }),
+    deleteSubtask: build.mutation<void, number>({
+      query: (id) => ({
+        url: `subtasks/${id}/`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Subtasks"],
     }),
     getCommentsByTaskId: build.query<Comment[], { taskId: number }>({
       query: ({ taskId }) => `comments/?taskId=${taskId}`,
@@ -242,4 +285,8 @@ export const {
   useUpdateCommentMutation,
   useDeleteCommentMutation,
   useLogoutMutation,
+  useGetSubtasksByTaskIdQuery,
+  useCreateSubtaskMutation,
+  useUpdateSubtaskMutation,
+  useDeleteSubtaskMutation,
 } = api;
