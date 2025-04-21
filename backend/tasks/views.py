@@ -198,9 +198,12 @@ class CommentViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         queryset = super().get_queryset()
-        task_id = self.request.query_params.get('taskId', None)  # Убедитесь, что используете taskId
+        task_id = self.request.query_params.get('taskId', None)
+        subtask_id = self.request.query_params.get('subtaskId', None)
+        if subtask_id is not None:
+            queryset = queryset.filter(subtask_id=subtask_id)
         if task_id is not None:
-            queryset = queryset.filter(task_id=task_id)  # Фильтруем по task_id
+            queryset = queryset.filter(task_id=task_id)
         return queryset
     
     def perform_create(self, serializer):

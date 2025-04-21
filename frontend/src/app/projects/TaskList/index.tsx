@@ -3,9 +3,13 @@ import TaskCard from "@/components/Task/TaskCardList";
 import {
   useGetTasksQuery,
   useUpdateTaskStatusMutation,
+  useUpdateSubTaskStatusMutation,
   useDeleteTaskMutation,
   useUpdateTaskMutation,
   Subtask,
+  useDeleteSubtaskMutation,
+  useUpdateSubtaskMutation,
+  useGetUsersQuery,
 } from "@/state/api";
 import { useParams } from "next/navigation";
 import { Task } from "@/state/api";
@@ -20,13 +24,18 @@ const TaskList: React.FC<{ projectId: number }> = ({ projectId }) => {
   const { id } = useParams();
   const {
     data: tasks = [],
+    data: subtasks = [],
     error,
     isLoading,
     refetch,
   } = useGetTasksQuery({ projectId: Number(id) });
   const [updateTaskStatus] = useUpdateTaskStatusMutation();
+  const [updateSubTaskStatus] = useUpdateSubTaskStatusMutation();
   const [deleteTask] = useDeleteTaskMutation();
   const [updateTask] = useUpdateTaskMutation();
+  const [deleteSubtask] = useDeleteSubtaskMutation();
+  const [updateSubtask] = useUpdateSubtaskMutation();
+  const { data: taskAssignees = [] } = useGetUsersQuery();
 
   const [isTaskSidebarOpen, setTaskSidebarOpen] = useState(false);
   const [isSubtaskSidebarOpen, setSubtaskSidebarOpen] = useState(false);
@@ -45,6 +54,11 @@ const TaskList: React.FC<{ projectId: number }> = ({ projectId }) => {
 
   const handleStatusChange = async (taskId: number, newStatus: string) => {
     await updateTaskStatus({ id: taskId, status: newStatus });
+    refetch();
+  };
+
+  const handleStatusChangeSub = async (subtaskId: number, newStatus: string) => {
+    await updateSubTaskStatus({ id: subtaskId, status: newStatus });
     refetch();
   };
 
@@ -72,6 +86,7 @@ const TaskList: React.FC<{ projectId: number }> = ({ projectId }) => {
     e.preventDefault();
     if (draggedTask) {
       await updateTaskStatus({ id: draggedTask.id, status });
+      await updateSubTaskStatus({ id: draggedTask.id, status });
       setDraggedTask(null);
     }
   };
@@ -84,21 +99,20 @@ const TaskList: React.FC<{ projectId: number }> = ({ projectId }) => {
   const openTaskSidebar = (task: Task) => {
     setSelectedTaskId(task.id);
     setTaskSidebarOpen(true);
-    setDeleteModalOpen(false);
-    setSelectedSubtask(null);
     setSubtaskSidebarOpen(false);
   };
+  
+  const openSubtaskSidebar = (subtask: Subtask) => {
+    setSelectedSubtask(subtask);
+    setSubtaskSidebarOpen(true);
+    setTaskSidebarOpen(false);
+  };
+  
   const closeTaskSidebar = () => {
     setTaskSidebarOpen(false);
     setSelectedTaskId(null);
   };
-
-  const openSubtaskSidebar = (sub: Subtask) => {
-    setSelectedSubtask(sub);
-    setSubtaskSidebarOpen(true);
-    setTaskSidebarOpen(false);
-    setSelectedTaskId(null);
-  };
+  
   const closeSubtaskSidebar = () => {
     setSubtaskSidebarOpen(false);
     setSelectedSubtask(null);
@@ -116,6 +130,27 @@ const TaskList: React.FC<{ projectId: number }> = ({ projectId }) => {
       }
     }
   };  
+
+  const handleSubtaskEdit = async (fields: Partial<Subtask>) => {
+    if (!selectedSubtask) return;
+      try {
+        await updateSubtask({ id: selectedSubtask.id, ...fields }).unwrap();
+        refetch();
+      } catch (error) {
+        console.error("Ошибка при обновлении подзадачи:", error);
+      }
+  };
+
+  const handleSubtaskDelete = async () => {
+    if (!selectedSubtask) return;
+    try {
+      await deleteSubtask(selectedSubtask.id).unwrap();
+      closeSubtaskSidebar();
+      refetch();
+    } catch (error) {
+      console.error("Ошибка при удалении подзадачи:", error);
+    }
+  };
 
   if (isLoading) {
     return <p>Загрузка задач...</p>;
@@ -293,6 +328,7 @@ const TaskList: React.FC<{ projectId: number }> = ({ projectId }) => {
             });
             refetch();
           }}
+          onOpenSubtask={openSubtaskSidebar}
         />
       )}
 
@@ -300,9 +336,20 @@ const TaskList: React.FC<{ projectId: number }> = ({ projectId }) => {
       {isSubtaskSidebarOpen && selectedSubtask && (
         <SubtaskSidebar
           subtask={selectedSubtask}
+          taskAssignees={taskAssignees.filter((user) => 
+            selectedSubtask.assigned_to?.some(a => a.id === user.id)
+          )}
           onClose={closeSubtaskSidebar}
-          onDelete={() => {/*...*/}}
-          onEdit={fields => {/*...*/}}
+          onDelete={handleSubtaskDelete}
+          onEdit={handleSubtaskEdit}
+          onComplete={async () => {
+            await updateSubTaskStatus({
+              id: selectedSubtask.id,
+              status: "Завершено",
+            });
+            refetch();
+          }}
+          
         />
       )}
 
@@ -333,7 +380,7 @@ const TaskList: React.FC<{ projectId: number }> = ({ projectId }) => {
           onDelete={handleConfirmDelete}
         />
       )}
-
+      
     </div>
   );
 };

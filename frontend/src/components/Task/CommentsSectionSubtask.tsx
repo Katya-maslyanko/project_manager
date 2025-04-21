@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Ellipsis, CornerUpLeft } from "lucide-react";
 import {
-  useGetCommentsByTaskIdQuery,
+useGetCommentsBySubTaskIdQuery,
   useCreateCommentMutation,
   useUpdateCommentMutation,
   useDeleteCommentMutation,
@@ -9,18 +9,17 @@ import {
 } from "@/state/api";
 import { useAuth } from "@/context/AuthContext";
 
-interface CommentsSectionProps {
-  taskId: number;
-  subtaskId?: number | null;
+interface CommentsSectionSubtaskProps {
+  subtaskId: number;
 }
 
-const CommentsSection: React.FC<CommentsSectionProps> = ({ taskId }) => {
+const CommentsSectionSubtask: React.FC<CommentsSectionSubtaskProps> = ({ subtaskId }) => {
   const { user } = useAuth();
   const {
     data: comments = [],
     isLoading,
     isError,
-  } = useGetCommentsByTaskIdQuery({ taskId });
+  } = useGetCommentsBySubTaskIdQuery({ subtaskId });
 
   const [newComment, setNewComment] = useState("");
   const [replyTo, setReplyTo] = useState<Comment | null>(null);
@@ -36,7 +35,7 @@ const CommentsSection: React.FC<CommentsSectionProps> = ({ taskId }) => {
   const handleCommentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     let content = editingCommentId ? editingContent : newComment;
-    const payload = { taskId, content };
+    const payload = { taskId: subtaskId, content };
     if (replyTo && !editingCommentId) {
       // prepend mention
       payload.content = `@${replyTo.user.username} ` + content;
@@ -180,4 +179,4 @@ const CommentsSection: React.FC<CommentsSectionProps> = ({ taskId }) => {
   );
 };
 
-export default CommentsSection;
+export default CommentsSectionSubtask;

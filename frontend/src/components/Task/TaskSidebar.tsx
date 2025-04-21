@@ -17,6 +17,7 @@ import {
   useGetUsersQuery,
   useUpdateTaskMutation,
   useGetSubtasksByTaskIdQuery,
+  Subtask,
 } from "@/state/api";
 import AddAssigneeModal from "./modal/AddAssigneeModal";
 import DeleteConfirmationModal from "./modal/DeleteConfirmationModal";
@@ -34,6 +35,7 @@ interface TaskSidebarProps {
   onComplete: (completed: boolean) => void;
   onDelete: () => void;
   onEdit?: (updatedTask: Partial<Task>) => void;
+  onOpenSubtask: (subtaskId: number) => void;
 }
 
 const TaskSidebar: React.FC<TaskSidebarProps> = ({
@@ -42,6 +44,7 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
   onComplete,
   onDelete,
   onEdit,
+  onOpenSubtask,
 }) => {
   const { data: tags = [] } = useGetTagsQuery();
   const { data: users = [] } = useGetUsersQuery();
@@ -486,6 +489,7 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
           subtasks={subtasks}
           taskId={task.id}
           taskAssignees={users.filter(u => selectedAssignees.includes(u.id))}
+          onOpenSubtask={(sub: Subtask) => onOpenSubtask(sub)}
         />
         </div>
         {/* Комментарии */}

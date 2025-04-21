@@ -46,6 +46,7 @@ export interface Task {
 export interface Comment {
   id: number;
   taskId: number;
+  subtaskId: number | null;
   user: Assignee;
   content: string;
   created_at: string;
@@ -148,6 +149,14 @@ export const api = createApi({
       }),
       invalidatesTags: ["Tasks"],
     }),
+    updateSubTaskStatus: build.mutation<Subtask, { id: number; status: string }>({
+      query: ({ id, status }) => ({
+        url: `subtasks/${id}/`,
+        method: "PATCH",
+        body: { status },
+      }),
+      invalidatesTags: ["Subtasks"],
+    }),
     createTask: build.mutation<Task, Partial<Task>>({
       query: (task) => ({
         url: "tasks/",
@@ -205,6 +214,10 @@ export const api = createApi({
     }),
     getCommentsByTaskId: build.query<Comment[], { taskId: number }>({
       query: ({ taskId }) => `comments/?taskId=${taskId}`,
+      providesTags: ["Comments"],
+    }),
+    getCommentsBySubTaskId: build.query<Comment[], { subtaskId: number }>({
+      query: ({ subtaskId }) => `comments/?subtaskId=${subtaskId}`,
       providesTags: ["Comments"],
     }),
     createComment: build.mutation<Comment, { taskId: number; content: string }>({
@@ -275,8 +288,10 @@ export const {
   useUpdateTaskMutation,
   useCreateTaskMutation,
   useUpdateTaskStatusMutation,
+  useUpdateSubTaskStatusMutation,
   useDeleteTaskMutation,
   useGetCommentsByTaskIdQuery,
+  useGetCommentsBySubTaskIdQuery,
   useCreateCommentMutation,
   useRegisterMutation,
   useLoginMutation,

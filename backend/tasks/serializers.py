@@ -227,6 +227,10 @@ class SubtaskSerializer(serializers.ModelSerializer):
         instance.save()
         if 'assigned_to_ids' in validated_data:
             instance.assigned_to.set(validated_data['assigned_to_ids'])
+        if 'tag_id' in validated_data:
+            tag = validated_data.pop('tag_id', None)
+            if tag:
+                instance.tag = tag
         return instance
 
 class CommentSerializer(serializers.ModelSerializer):
@@ -234,7 +238,7 @@ class CommentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Comment
-        fields = ['id', 'user', 'task', 'content', 'created_at']
+        fields = ['id', 'user', 'task', 'content', 'created_at', 'updated_at', 'subtask']
 
 class NotificationSerializer(serializers.ModelSerializer):
     class Meta:

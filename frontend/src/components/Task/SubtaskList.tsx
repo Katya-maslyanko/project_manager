@@ -229,7 +229,8 @@ const SubtaskList: React.FC<SubtaskListProps> = ({
                     )}
                   </div>
                   <button
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.stopPropagation();
                       setActiveSubtaskForAssignees(subtask);
                       setIsAssigneeModalOpen(true);
                     }}
@@ -241,7 +242,10 @@ const SubtaskList: React.FC<SubtaskListProps> = ({
                 </div>
               </div>
               <button
-                  onClick={() => handleDatesClick(subtask)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDatesClick(subtask);
+                  }}
                   className="p-1 rounded cursor-pointer hover:bg-gray-200 ml-1"
                   title="Изменить сроки"
                 >
@@ -278,7 +282,7 @@ const SubtaskList: React.FC<SubtaskListProps> = ({
       <SubtaskAssigneeModal
         isOpen={isAssigneeModalOpen}
         onClose={() => setIsAssigneeModalOpen(false)}
-        users={taskAssignees}
+        users={taskAssignees || []}
         selectedAssignees={(activeSubtaskForAssignees?.assigned_to || []).map(a => a.id)}
         onAssigneeToggle={async (userId) => {
           if (!activeSubtaskForAssignees) return;
@@ -298,7 +302,7 @@ const SubtaskList: React.FC<SubtaskListProps> = ({
               assigned_to_ids: newAssignees,
             }).unwrap();
 
-            const updatedAssignedTo = taskAssignees.filter(user =>
+            const updatedAssignedTo = (taskAssignees || []).filter(user =>
               newAssignees.includes(user.id)
             );
 
