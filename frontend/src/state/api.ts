@@ -27,6 +27,7 @@ export interface Tag {
 }
 
 export interface Task {
+  comments: never[];
   id: number;
   title: string;
   description?: string;
@@ -61,8 +62,9 @@ export interface Subtask {
   start_date: string | null;
   due_date: string | null;
   assignees: Assignee[];
+  assigned_to: Assignee[]; 
   taskId: number;
-  assigned_to: Assignee[];
+  assigned_to_ids?: number[];
 }
 
 export interface RegisterUser  {
@@ -184,13 +186,13 @@ export const api = createApi({
         method: "POST",
         body: subtask,
       }),
-      invalidatesTags: ["Subtasks"],
+      invalidatesTags: [{ type: "Subtasks", id: "LIST" }],
     }),
     updateSubtask: build.mutation<Subtask, Partial<Subtask>>({
-      query: ({ id, status }) => ({
+      query: ({ id, ...rest }) => ({
         url: `subtasks/${id}/`,
         method: "PATCH",
-        body: { status },
+        body: rest,
       }),
       invalidatesTags: ["Subtasks"],
     }),
@@ -209,7 +211,7 @@ export const api = createApi({
       query: ({ taskId, content }) => ({
         url: "comments/",
         method: "POST",
-        body: { taskId, content },
+        body: { task: taskId, content },
       }),
       invalidatesTags: ["Comments"],
     }),

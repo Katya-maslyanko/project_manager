@@ -4,11 +4,13 @@ import {
   useGetTasksQuery,
   useUpdateTaskStatusMutation,
   useDeleteTaskMutation,
-  useUpdateTaskMutation
+  useUpdateTaskMutation,
+  Subtask,
 } from "@/state/api";
 import { useParams } from "next/navigation";
 import { Task } from "@/state/api";
 import TaskSidebar from "@/components/Task/TaskSidebar";
+import SubtaskSidebar from "@/components/Task/SubtaskSidebar";
 import EditTaskModal from "@/components/Task/EditTaskModal";
 import DeleteConfirmationModal from "@/components/Task/modal/DeleteConfirmationModal";
 import AddTaskModal from "@/components/Task/AddTaskModal";
@@ -26,8 +28,8 @@ const TaskList: React.FC<{ projectId: number }> = ({ projectId }) => {
   const [deleteTask] = useDeleteTaskMutation();
   const [updateTask] = useUpdateTaskMutation();
 
-  // const [selectedTask, setSelectedTask] = useState<Task | null>(null);
-  const [isSidebarOpen, setSidebarOpen] = useState(false);
+  const [isTaskSidebarOpen, setTaskSidebarOpen] = useState(false);
+  const [isSubtaskSidebarOpen, setSubtaskSidebarOpen] = useState(false);
   const [isEditModalOpen, setEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
   const [isAddModalOpen, setAddModalOpen] = useState(false);
@@ -35,6 +37,7 @@ const TaskList: React.FC<{ projectId: number }> = ({ projectId }) => {
   const [currentTaskStatus, setCurrentTaskStatus] = useState<string>("Новая"); 
   const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null);
   const selectedTask = tasks.find((t) => t.id === selectedTaskId) || null;
+  const [selectedSubtask, setSelectedSubtask] = useState<Subtask | null>(null);
 
   const handleDragStart = (e: React.DragEvent<HTMLDivElement>, task: Task) => {
     setDraggedTask(task);
@@ -78,14 +81,27 @@ const TaskList: React.FC<{ projectId: number }> = ({ projectId }) => {
     setAddModalOpen(true);
   };
 
-  const openSidebar = (task: Task) => {
+  const openTaskSidebar = (task: Task) => {
     setSelectedTaskId(task.id);
-    setSidebarOpen(true);
+    setTaskSidebarOpen(true);
+    setDeleteModalOpen(false);
+    setSelectedSubtask(null);
+    setSubtaskSidebarOpen(false);
+  };
+  const closeTaskSidebar = () => {
+    setTaskSidebarOpen(false);
+    setSelectedTaskId(null);
   };
 
-  const closeSidebar = () => {
-    setSidebarOpen(false);
+  const openSubtaskSidebar = (sub: Subtask) => {
+    setSelectedSubtask(sub);
+    setSubtaskSidebarOpen(true);
+    setTaskSidebarOpen(false);
     setSelectedTaskId(null);
+  };
+  const closeSubtaskSidebar = () => {
+    setSubtaskSidebarOpen(false);
+    setSelectedSubtask(null);
   };
 
   const handleConfirmDelete = async () => {
@@ -93,7 +109,7 @@ const TaskList: React.FC<{ projectId: number }> = ({ projectId }) => {
       try {
         await deleteTask(selectedTaskId);
         setDeleteModalOpen(false);
-        closeSidebar();
+        closeTaskSidebar();
         refetch();
       } catch (error) {
         console.error("Ошибка при удалении задачи:", error);
@@ -151,7 +167,7 @@ const TaskList: React.FC<{ projectId: number }> = ({ projectId }) => {
                   onEdit={() => handleEditTask(task)}
                   onDelete={() => handleDeleteTask(task)}
                   onStatusChange={handleStatusChange}
-                  onOpenSidebar={openSidebar}
+                  onOpenSidebar={openTaskSidebar}
                 />
               ))}
             </tbody>
@@ -202,7 +218,7 @@ const TaskList: React.FC<{ projectId: number }> = ({ projectId }) => {
                   onEdit={() => handleEditTask(task)}
                   onDelete={() => handleDeleteTask(task)}
                   onStatusChange={handleStatusChange}
-                  onOpenSidebar={openSidebar}
+                  onOpenSidebar={openTaskSidebar}
                 />
               ))}
             </tbody>
@@ -253,7 +269,7 @@ const TaskList: React.FC<{ projectId: number }> = ({ projectId }) => {
                   onEdit={() => handleEditTask(task)}
                   onDelete={() => handleDeleteTask(task)}
                   onStatusChange={handleStatusChange}
-                  onOpenSidebar={openSidebar}
+                  onOpenSidebar={openTaskSidebar}
                 />
               ))}
             </tbody>
@@ -265,10 +281,10 @@ const TaskList: React.FC<{ projectId: number }> = ({ projectId }) => {
         </div>
       </div>
       {/* Боковая панель задач */}
-      {isSidebarOpen && selectedTask && (
+      {isTaskSidebarOpen && selectedTask && (
         <TaskSidebar
           task={tasks.find(t => t.id === selectedTaskId) || null}
-          onClose={closeSidebar}
+          onClose={closeTaskSidebar}
           onDelete={() => handleDeleteTask(tasks.find(t => t.id === selectedTaskId)!)}
           onComplete={async () => {
             await updateTaskStatus({
@@ -277,6 +293,16 @@ const TaskList: React.FC<{ projectId: number }> = ({ projectId }) => {
             });
             refetch();
           }}
+        />
+      )}
+
+      {/* Боковая панель подзадач */}
+      {isSubtaskSidebarOpen && selectedSubtask && (
+        <SubtaskSidebar
+          subtask={selectedSubtask}
+          onClose={closeSubtaskSidebar}
+          onDelete={() => {/*...*/}}
+          onEdit={fields => {/*...*/}}
         />
       )}
 

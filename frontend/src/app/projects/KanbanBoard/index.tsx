@@ -4,33 +4,64 @@ import { useGetTasksQuery, useUpdateTaskStatusMutation } from "@/state/api";
 import { useParams } from "next/navigation";
 import { Task } from "@/state/api";
 import { LoaderCircle, CircleCheck, BookCheck, Plus } from "lucide-react";
-import { useSidebar } from "@/context/SidebarContext";
 import EditTaskModal from "@/components/Task/EditTaskModal";
 import AddTaskModal from "@/components/Task/AddTaskModal";
+import TaskSidebar from "@/components/Task/TaskSidebar";
+import { useDeleteTaskMutation } from "@/state/api";
 
-const KanbanBoard: React.FC<{ projectId: number }> = ({ projectId }) =>  {
+const KanbanBoard: React.FC<{ projectId: number }> = ({ projectId }) => {
   const { id } = useParams();
-  const { data: tasks = [], error, isLoading } = useGetTasksQuery({ projectId: Number(id) });
+  const { data: tasks = [], error, isLoading, refetch } = useGetTasksQuery({ projectId: Number(id) });
   const [updateTaskStatus] = useUpdateTaskStatusMutation();
-  const { isExpanded, isHovered, isMobileOpen } = useSidebar();
+  const [deleteTask] = useDeleteTaskMutation();
 
+  const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [isEditModalOpen, setEditModalOpen] = useState(false);
   const [isAddModalOpen, setAddModalOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [draggedTask, setDraggedTask] = useState<Task | null>(null);
   const [currentTaskStatus, setCurrentTaskStatus] = useState<string>("Новая"); 
+  const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null);
+  const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
 
   const handleDragStart = (e: React.DragEvent<HTMLDivElement>, task: Task) => {
     setDraggedTask(task);
   };
 
-  const handleStatusChange = async (taskId, newStatus) => {
-    await updateTaskStatus ({ id: taskId, status: newStatus });
+  const handleStatusChange = async (taskId: number, newStatus: string) => {
+    await updateTaskStatus({ id: taskId, status: newStatus });
   };
 
   const handleEditTask = (task: Task) => {
     setSelectedTask(task);
     setEditModalOpen(true);
+  };
+
+  const handleDeleteTask = (task: Task) => {
+    setSelectedTaskId(task.id);
+    setDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (selectedTaskId) {
+      try {
+        await deleteTask(selectedTaskId);
+        setDeleteModalOpen(false);
+        closeSidebar();
+      } catch (error) {
+        console.error("Ошибка при удалении задачи:", error);
+      }
+    }
+  }; 
+
+  const openSidebar = (task: Task) => {
+    setSelectedTask(task);
+    setSidebarOpen(true);
+  };
+  
+  const closeSidebar = () => {
+    setSidebarOpen(false);
+    setSelectedTask(null);
   };
 
   const handleDrop = async (e: React.DragEvent<HTMLDivElement>, status: string) => {
@@ -70,13 +101,13 @@ const KanbanBoard: React.FC<{ projectId: number }> = ({ projectId }) =>  {
               К исполнению
             </span>
             <span className="text-sm bg-gray-200 border text-gray-600 ml-2 px-2 py-1 rounded">
-              {tasks.filter(task => task.status === 'Новая').length}
+              {tasks .filter(task => task.status === 'Новая').length}
             </span>
           </div>
         </div>
         <div className="space-y-2">
           {tasks.filter(task => task.status === 'Новая').map(task => (
-            <TaskCardBoard key={task.id} task={task} onDragStart={handleDragStart} onEdit={() => handleEditTask(task)} onStatusChange={handleStatusChange}/>
+            <TaskCardBoard key={task.id} task={task} onDragStart={handleDragStart} onEdit={() => handleEditTask(task)} onStatusChange={handleStatusChange} onOpenSidebar={openSidebar} onDelete={() => handleDeleteTask(task)}/>
           ))}
           <button className="text-gray-600 font-semibold mt-2 p-3 w-full rounded-md bg-gray-100 flex items-center justify-center"
           onClick={() => openAddTaskModal("Новая")}>
@@ -104,7 +135,7 @@ const KanbanBoard: React.FC<{ projectId: number }> = ({ projectId }) =>  {
         </div>
         <div className="space-y-2">
           {tasks.filter(task => task.status === 'В процессе').map(task => (
-            <TaskCardBoard key={task.id} task={task} onDragStart={handleDragStart} onEdit={() => handleEditTask(task)} onStatusChange={handleStatusChange}/>
+            <TaskCardBoard key={task.id} task={task} onDragStart={handleDragStart} onEdit={() => handleEditTask(task)} onStatusChange={handleStatusChange} onOpenSidebar={openSidebar} onDelete={() => handleDeleteTask(task)}/>
           ))}
           <button className="text-gray-600 font-semibold mt-2 p-3 w-full rounded-md bg-gray-100 flex items-center justify-center"
           onClick={() => openAddTaskModal("В процессе")}>
@@ -132,7 +163,7 @@ const KanbanBoard: React.FC<{ projectId: number }> = ({ projectId }) =>  {
         </div>
         <div className="space-y-2">
           {tasks.filter(task => task.status === 'Завершено').map(task => (
-            <TaskCardBoard key={task.id} task={task} onDragStart={handleDragStart} onEdit={() => handleEditTask(task)} onStatusChange={handleStatusChange}/>
+            <TaskCardBoard key={task.id} task={task} onDragStart={handleDragStart} onEdit={() => handleEditTask(task)} onStatusChange={handleStatusChange} onOpenSidebar={openSidebar} onDelete={() => handleDeleteTask(task)}/>
           ))}
           <button className="text-gray-600 font-semibold mt-2 p-3 w-full rounded-md bg-gray-100 flex items-center justify-center"
           onClick={() => openAddTaskModal("Завершено")}>
@@ -140,6 +171,21 @@ const KanbanBoard: React.FC<{ projectId: number }> = ({ projectId }) =>  {
           </button>
         </div>
       </div>
+      {/* Боковая панель задач */}
+      {isSidebarOpen && selectedTask && (
+        <TaskSidebar
+          task={selectedTask}
+          onClose={closeSidebar}
+          onDelete={() => handleDeleteTask(selectedTask)}
+          onComplete={async () => {
+            await updateTaskStatus({
+              id: selectedTask.id,
+              status: "Завершено",
+            });
+          refetch();
+          }}
+        />
+      )}
       {/* Модальное окно добавления задачи */}
       <AddTaskModal 
         isOpen={isAddModalOpen} 
@@ -147,8 +193,12 @@ const KanbanBoard: React.FC<{ projectId: number }> = ({ projectId }) =>  {
         projectId={projectId}
         currentStatus={currentTaskStatus}
       />
-        {/* Модальное окно редактирования */}
-        <EditTaskModal isOpen={isEditModalOpen} onClose={() => setEditModalOpen(false)} task={selectedTask} />
+      {/* Модальное окно редактирования */}
+      <EditTaskModal 
+        isOpen={isEditModalOpen} 
+        onClose={() => setEditModalOpen(false)} 
+        task={selectedTask} 
+      />
     </div>
   );
 };

@@ -1,7 +1,7 @@
 import React from "react";
 import { Pencil, Flag } from "lucide-react";
 
-const TaskCardBoard = ({ task, onDragStart, onEdit, onStatusChange }) => {
+const TaskCardBoard = ({ task, onDragStart, onEdit, onStatusChange, onOpenSidebar, onDelete }) => {
   const [isChecked, setIsChecked] = React.useState(task.status === 'Завершено');
 
   const handleCheckboxChange = () => {
@@ -33,6 +33,7 @@ const TaskCardBoard = ({ task, onDragStart, onEdit, onStatusChange }) => {
       className="bg-white rounded-md shadow-md p-4 mb-2 cursor-grab"
       draggable
       onDragStart={(e) => onDragStart(e, task)}
+      onClick={() => onOpenSidebar(task)}
     >
       {/* Title */}
       <div className="flex items-start justify-between mb-3">
@@ -144,17 +145,24 @@ const TaskCardBoard = ({ task, onDragStart, onEdit, onStatusChange }) => {
           </div>
           <span className="text-sm">{task.points}%</span>
         </div>
-        <div className="flex -space-x-2 rtl:space-x-reverse">
+        <div className="flex -space-x-3 cursor-pointer">
         {task.assignees && task.assignees.length > 0 ? (
-            task.assignees.map((assignee, index) => (
-              <div key={assignee.id} className={`w-10 h-10 border-2 border-gray-100 rounded-full dark:border-gray-800 flex items-center justify-center ${getTagColor(index)}`}>
-                {assignee.profile_image ? (
-                  <img className="w-10 h-10 rounded-full" src={assignee.profile_image} alt={assignee.username} />
-                ) : (
-                  <span>{assignee.username ? assignee.username.split(' ').map(n => n[0]).join('') : '?'}</span>
-                )}
-              </div>
-            ))
+            <>
+              {task.assignees.slice(0, 3).map((assignee, index) => (
+                <div key={assignee.id} className={`w-10 h-10 border-2 border-gray-100 rounded-full dark:border-gray-800 flex items-center justify-center ${getTagColor(index)}`}>
+                  {assignee.profile_image ? (
+                    <img className="w-10 h-10 rounded-full" src={assignee.profile_image} alt={assignee.username} />
+                  ) : (
+                    <span>{assignee.username ? assignee.username.split(' ').map(n => n[0]).join('') : '?'}</span>
+                  )}
+                </div>
+              ))}
+              {task.assignees.length > 3 && (
+                <div className="w-10 h-10 border-2 border-gray-100 rounded-full flex items-center justify-center bg-gray-200 right-0">
+                  <span className="text-gray-500">+{task.assignees.length - 3}</span>
+                </div>
+              )}
+            </>
           ) : (
             <span>Нет ассигнов</span>
           )}

@@ -150,15 +150,20 @@ class TaskSerializer(serializers.ModelSerializer):
     
 class SubtaskSerializer(serializers.ModelSerializer):
     assignees = serializers.SerializerMethodField()
-    assigned_to = UserSerializer(many=True, read_only=True)  # для отображения
-    assigned_to_ids = serializers.PrimaryKeyRelatedField(     # для записи
-        queryset=User.objects.all(),
+    assigned_to = UserSerializer(many=True, read_only=True)
+    assigned_to_ids = serializers.PrimaryKeyRelatedField(
+        queryset=User .objects.all(),
         many=True,
         write_only=True,
         required=False
     )
     tag = TagSerializer(read_only=True)
-    tag_id = serializers.PrimaryKeyRelatedField(queryset=Tag.objects.all(), write_only=True, source='tag')
+    tag_id = serializers.PrimaryKeyRelatedField(
+        queryset=Tag.objects.all(),
+        source='tag',
+        write_only=True,
+        required=False
+    )
 
     class Meta:
         model = Subtask
@@ -169,45 +174,59 @@ class SubtaskSerializer(serializers.ModelSerializer):
         ]
 
     def get_assignees(self, obj):
-        return UserSerializer(obj.task.assignees.all(), many=True).data if obj.task else []
+        if obj.task:
+            return UserSerializer(obj.task.assignees.all(), many=True).data
+        return []
 
     def validate_assigned_to_ids(self, value):
-        task_id = self.context['view'].kwargs.get('task_id')
-        if value and task_id:
-            try:
-                task_obj = Task.objects.get(id=task_id)
-            except Task.DoesNotExist:
-                raise serializers.ValidationError("Основная задача не найдена")
-
-            assigned_user_ids = set(task_obj.assignees.values_list('id', flat=True))
-
-            if not set([user.id for user in value]).issubset(assigned_user_ids):
-                raise serializers.ValidationError("Пользователь не назначен в основной задаче")
+        task = self.get_task()
+        allowed_ids = set(task.assignees.values_list('id', flat=True))
+        incoming_ids = {user.id for user in value}
+        
+        if not incoming_ids.issubset(allowed_ids):
+            raise serializers.ValidationError(
+                "Нельзя назначить пользователей, не входящих в основную задачу"
+            )
         return value
 
+    def validate(self, attrs):
+        task = self.get_task()
+        start_date = attrs.get('start_date')
+        due_date = attrs.get('due_date')
+
+        if start_date and (start_date < task.start_date):
+            raise serializers.ValidationError("Дата начала подзадачи не может быть раньше даты начала основной задачи.")
+
+        if due_date and (due_date > task.due_date):
+            raise serializers.ValidationError("Дата завершения подзадачи не может быть позже даты завершения основной задачи.")
+
+        return attrs
+
+    def get_task(self):
+        task = getattr(self.instance, 'task', None)
+        if not task:
+            task_id = self.initial_data.get('task') or self.context['request'].data.get('task_id')
+            try:
+                task = Task.objects.get(id=task_id)
+            except (Task.DoesNotExist, ValueError):
+                raise serializers.ValidationError("Основная задача не найдена")
+        return task
+
     def create(self, validated_data):
-        assigned_users = validated_data.pop('assigned_to_ids', [])
+        users = validated_data.pop('assigned_to_ids', [])
         subtask = Subtask.objects.create(**validated_data)
-        subtask.assigned_to.set(assigned_users)
+        if users:
+            subtask.assigned_to.set(users)
         return subtask
 
     def update(self, instance, validated_data):
-        instance.title = validated_data.get('title', instance.title)
-        instance.description = validated_data.get('description', instance.description)
-        instance.status = validated_data.get('status', instance.status)
-        instance.priority = validated_data.get('priority', instance.priority)
-        instance.points = validated_data.get('points', instance.points)
-        instance.start_date = validated_data.get('start_date', instance.start_date)
-        instance.due_date = validated_data.get('due_date', instance.due_date)
-        tag = validated_data.pop('tag', None)
-        if tag is not None:
-            instance.tag = tag
-        instance.task = validated_data.get('task', instance.task)
-
+        for attr, val in validated_data.items():
+            if attr == 'assigned_to_ids':
+                continue
+            setattr(instance, attr, val)
+        instance.save()
         if 'assigned_to_ids' in validated_data:
             instance.assigned_to.set(validated_data['assigned_to_ids'])
-
-        instance.save()
         return instance
 
 class CommentSerializer(serializers.ModelSerializer):

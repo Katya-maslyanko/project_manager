@@ -181,13 +181,7 @@ class SubtaskViewSet(viewsets.ModelViewSet):
         if task_id:
             queryset = queryset.filter(task_id=task_id)
         return queryset
-
-    def perform_create(self, serializer):
-        serializer.save(task=self.get_task())
-
-    def perform_update(self, serializer):
-        serializer.save(task=self.get_task())
-
+    
     def get_task(self):
         task_id = self.request.data.get('task')
         if task_id:

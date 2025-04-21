@@ -17,7 +17,6 @@ import {
   useGetUsersQuery,
   useUpdateTaskMutation,
   useGetSubtasksByTaskIdQuery,
-  useCreateSubtaskMutation,
 } from "@/state/api";
 import AddAssigneeModal from "./modal/AddAssigneeModal";
 import DeleteConfirmationModal from "./modal/DeleteConfirmationModal";
@@ -150,10 +149,11 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
     setDropdownOpen(false);
   };
 
-  if (!task) return null;
+  if (!task) return null; 
 
   return (
-    <div className="fixed right-0 top-0 w-[500px] h-full bg-white shadow-lg p-4 z-40">
+    <div className="fixed right-0 top-0 bottom-0 w-[500px] bg-white shadow-lg z-40 flex flex-col p-4 overflow-y-auto">
+      <div >
       {/* Верхняя панель с кнопками выполнения, удаления, закрытия */}
       <div className="flex items-center justify-between pb-4 border-b border-gray-200 mb-4">
       <button
@@ -216,7 +216,7 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
       </div>
 
       {/* Основной контент */}
-      <div className="space-y-4">
+      <div className="space-y-4 h-full">
         <div>
           {editingTitle ? (
             <input
@@ -482,17 +482,14 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
           </div>
         </div>
         <div className="space-y-4">
-            <SubtaskList subtasks={subtasks} taskId={task?.id || 0}  />
+        <SubtaskList
+          subtasks={subtasks}
+          taskId={task.id}
+          taskAssignees={users.filter(u => selectedAssignees.includes(u.id))}
+        />
         </div>
         {/* Комментарии */}
-        <CommentsSection
-          comments={task.comments || []}
-          users={users}
-          taskId={task.id}
-          onAddComment={() => {}}
-          onEditComment={() => {}}
-          onDeleteComment={() => {}}
-        />
+        <CommentsSection taskId={task.id} />
       </div>
 
       {/* Модальные окна */}
@@ -511,6 +508,7 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
         selectedAssignees={selectedAssignees}
         onAssigneeToggle={handleAssigneeToggle}
       />
+    </div>
     </div>
   );
 };

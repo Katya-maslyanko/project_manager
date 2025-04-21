@@ -39,10 +39,13 @@ const TaskCard = ({ task, onDragStart, onEdit, onStatusChange, onOpenSidebar, on
   };
 
   return (
-    <tr className="border-t border-b" onClick={() => onOpenSidebar(task)}>
+    <tr className="border-t border-b cursor-grab active:cursor-grabbing" 
+    onClick={() => onOpenSidebar(task)}
+    onDragStart={(e) => onDragStart(e, task)}
+    draggable>
       <td className="py-3 pl-2 border-r">
         <div className="flex items-center">
-          <div className="cursor-pointer" onDragStart={(e) => onDragStart(e, task)} draggable>
+          <div className="cursor-pointer">
             <GripVertical className="h-5 w-5 text-gray-500 hover:text-gray-700" />
           </div>
           <div className="flex items-center pl-1">

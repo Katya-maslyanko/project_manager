@@ -1,40 +1,52 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Subtask, User } from "@/state/api";
-import { Plus, Pencil } from "lucide-react";
+import { Plus, CirclePlus, Calendar } from "lucide-react";
 import {
   useCreateSubtaskMutation,
   useUpdateSubtaskMutation,
   useDeleteSubtaskMutation,
+  useGetTaskByIdQuery,
 } from "@/state/api";
 import SubtaskAssigneeModal from "./modal/SubtaskAssigneeModal";
+import DatePickerModal from "./modal/DatePickerModal";
 
 interface SubtaskListProps {
   subtasks: Subtask[];
   taskId: number;
   taskAssignees: User[];
   onEditSubtask?: (subtask: Subtask) => void;
+  onOpenSubtask?: (sub: Subtask) => void;
 }
 
 const SubtaskList: React.FC<SubtaskListProps> = ({
-  subtasks,
+  subtasks: initialSubtasks,
   taskId,
   taskAssignees,
   onEditSubtask,
+  onOpenSubtask,
 }) => {
+  const { data: task } = useGetTaskByIdQuery(taskId);
   const [newSubtaskTitle, setNewSubtaskTitle] = useState("");
+  const [subtasks, setSubtasks] = useState<Subtask[]>(initialSubtasks);
   const [createSubtask] = useCreateSubtaskMutation();
   const [updateSubtask] = useUpdateSubtaskMutation();
   const [deleteSubtask] = useDeleteSubtaskMutation();
 
-  const [editingDatesSubtaskId, setEditingDatesSubtaskId] = useState<number | null>(null);
-  const [tempStartDate, setTempStartDate] = useState("");
-  const [tempDueDate, setTempDueDate] = useState("");
-
   const [isAssigneeModalOpen, setIsAssigneeModalOpen] = useState(false);
   const [activeSubtaskForAssignees, setActiveSubtaskForAssignees] = useState<Subtask | null>(null);
+  
+  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
+  const [tempStartDate, setTempStartDate] = useState("");
+  const [tempDueDate, setTempDueDate] = useState("");
+  const [editingSubtaskId, setEditingSubtaskId] = useState<number | null>(null);
+
+  useEffect(() => {
+    setSubtasks(initialSubtasks);
+  }, [initialSubtasks]);
 
   const handleAddSubtask = async () => {
     if (!newSubtaskTitle.trim()) return;
+
     const newSubtask: Partial<Subtask> = {
       title: newSubtaskTitle,
       description: "",
@@ -44,12 +56,13 @@ const SubtaskList: React.FC<SubtaskListProps> = ({
       points: 0,
       start_date: null,
       due_date: null,
-      assignees: [],
-      taskId: taskId,
+      task: taskId,
       assigned_to: [],
     };
+
     try {
-      await createSubtask(newSubtask).unwrap();
+      const createdSubtask = await createSubtask(newSubtask).unwrap();
+      setSubtasks((prevSubtasks) => [...prevSubtasks, createdSubtask]);
       setNewSubtaskTitle("");
     } catch (error) {
       console.error("Ошибка создания подзадачи:", error);
@@ -67,58 +80,85 @@ const SubtaskList: React.FC<SubtaskListProps> = ({
     }
   };
 
-  const handleDeleteSubtask = async (id: number) => {
-    try {
-      await deleteSubtask(id).unwrap();
-    } catch (error) {
-      console.error("Ошибка удаления подзадачи:", error);
-    }
+  const formatDateForInput = (dateString: string | null): string => {
+    if (!dateString) return new Date().toISOString().split("T")[0];
+    return dateString.split("T")[0];
   };
 
   const handleDatesClick = (subtask: Subtask) => {
-    setEditingDatesSubtaskId(subtask.id);
-    setTempStartDate(subtask.start_date || "");
-    setTempDueDate(subtask.due_date || "");
+    setEditingSubtaskId(subtask.id);
+    setTempStartDate(formatDateForInput(subtask.start_date) || "");
+    setTempDueDate(formatDateForInput(subtask.due_date) || "");
+    setIsDatePickerOpen(true);
   };
 
-  const handleDatesUpdate = async (subtask: Subtask) => {
+  const handleDatesUpdate = async (newStartDate: string, newDueDate: string) => {
+    if (!editingSubtaskId) {
+      throw new Error("ID подзадачи не определен");
+    }
+  
+    if (!newStartDate || !newDueDate) {
+      throw new Error("Даты не могут быть пустыми");
+    }
+  
+    if (task) {
+      const taskStartDate = new Date(task.start_date);
+      const taskDueDate = new Date(task.due_date);
+      const startDate = new Date(newStartDate);
+      const dueDate = new Date(newDueDate);
+  
+      if (startDate < taskStartDate) {
+        throw new Error("Дата начала подзадачи не может быть раньше даты начала основной задачи.");
+      }
+  
+      if (dueDate > taskDueDate) {
+        throw new Error("Дата завершения подзадачи не может быть позже даты завершения основной задачи.");
+      }
+    }
+  
     try {
       await updateSubtask({
-        id: subtask.id,
-        start_date: tempStartDate,
-        due_date: tempDueDate,
+        id: editingSubtaskId,
+        start_date: newStartDate,
+        due_date: newDueDate,
       }).unwrap();
-      setEditingDatesSubtaskId(null);
     } catch (error) {
       console.error("Ошибка обновления дат подзадачи:", error);
+      throw new Error("Не удалось сохранить даты подзадачи.");
     }
-  };
-
-  const formatDate = (dateString: string | null) => {
-    if (!dateString) return "-";
-    return new Date(dateString).toLocaleDateString("ru-RU", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    });
   };
 
   const completedCount = subtasks.filter(sub => sub.status === "Завершено").length;
 
+  const tagColors = [
+    "bg-red-100 text-red-600",
+    "bg-yellow-100 text-yellow-600",
+    "bg-green-100 text-green-600",
+    "bg-blue-100 text-blue-600",
+    "bg-purple-100 text-purple-600",
+    "bg-pink-100 text-pink-600",
+  ];
+  const getTagColor = (index: number) => tagColors[index % tagColors.length];
+
   return (
-    <div className="p-4">
-      <h3 className="text-sm text-gray-500 mb-3">
-        Подзадачи ({completedCount}/{subtasks.length})
-      </h3>
+    <div className="border-b border-gray-200 pb-4">
+      <h2 className="text-lg font-bold cursor-pointer transition-colors mb-1">
+        Подзадачи <span className="text-base text-gray-300">{completedCount}/{subtasks.length}</span>
+      </h2>
+
       {subtasks.length === 0 && (
         <p className="text-sm text-gray-500">Нет подзадач</p>
       )}
-      <ul className="space-y-3">
-        {subtasks.map((subtask) => (
- <li
-            key={subtask.id}
-            className="flex items-center justify-between border-b border-gray-200 pb-2"
-          >
+
+      <ul className="space-y-1 hover:rounded-lg">
+      {subtasks.map((subtask) => (
+        <li
+          key={subtask.id}
+            className="flex items-center justify-between hover:bg-gray-50 p-1.5 cursor-pointer"
+            onClick={() => {
+              if (onOpenSubtask) onOpenSubtask(subtask);
+          }}
+        >
             <div className="flex items-center space-x-3">
               <label className="flex items-center cursor-pointer relative">
                 <input
@@ -144,122 +184,142 @@ const SubtaskList: React.FC<SubtaskListProps> = ({
                   </svg>
                 </span>
               </label>
-              <span className={`${subtask.status === "Завершено" ? "line-through text-gray-500" : "text-gray-800"} text-sm`}>
+              <span
+                className={`${subtask.status === "Завершено"
+                  ? "line-through text-gray-500"
+                  : "text-gray-800"
+                  } text-sm w-[200px] overflow-hidden text-ellipsis whitespace-nowrap`}
+              >
                 {subtask.title}
               </span>
             </div>
-
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={() => onEditSubtask && onEditSubtask(subtask)}
-                className="p-1 hover:bg-gray-200 rounded"
-                title="Редактировать подзадачу"
-              >
-                <Pencil size={16} className="text-gray-600" />
-              </button>
-
-              <div
-                className="text-xs text-gray-600 cursor-pointer"
-                onClick={() => handleDatesClick(subtask)}
-              >
-                {editingDatesSubtaskId === subtask.id ? (
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="date"
-                      value={tempStartDate}
-                      className="border rounded p-1 text-xs"
-                      onChange={(e) => setTempStartDate(e.target.value)}
-                    />
-                    <span>по</span>
-                    <input
-                      type="date"
-                      value={tempDueDate}
-                      className="border rounded p-1 text-xs"
-                      onChange={(e) => setTempDueDate(e.target.value)}
-                      onBlur={() => handleDatesUpdate(subtask)}
-                    />
+            <div className="flex items-center">
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center">
+                  <div className="flex -space-x-3 cursor-pointer">
+                    {(subtask.assigned_to || []).length > 0 ? (
+                      <>
+                        {subtask.assigned_to.slice(0, 2).map((user, idx) => (
+                          <div key={user.id} className="relative">
+                            <div
+                              className={`w-10 h-10 border-2 border-gray-100 rounded-full flex items-center justify-center overflow-hidden ${getTagColor(idx)}`}
+                            >
+                              {user.profile_image ? (
+                                <img
+                                  src={user.profile_image}
+                                  alt={user.username}
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <span className="text-sm font-semibold">
+                                  {user.username ? user.username.charAt(0).toUpperCase() : "?"}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                        {subtask.assigned_to.length > 2 && (
+                          <div className="w-10 h-10 border-2 border-gray-100 rounded-full flex items-center justify-center bg-gray-200 text-gray-500">
+                            +{subtask.assigned_to.length - 2}
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <span className="text-gray-500 text-sm">Нет исполнителей</span>
+                    )}
                   </div>
-                ) : (
-                  <span>
-                    Срок: с {formatDate(subtask.start_date)} по {formatDate(subtask.due_date)}
-                  </span>
-                )}
+                  <button
+                    onClick={() => {
+                      setActiveSubtaskForAssignees(subtask);
+                      setIsAssigneeModalOpen(true);
+                    }}
+                    className="text-gray-500 hover:text-blue-600"
+                    title="Добавить исполнителя"
+                  >
+                    <Plus className="h-5 w-5" />
+                  </ button>
+                </div>
               </div>
-
-              <div className="flex items-center space-x-1">
-                {(subtask.assignees || []).map((userId) => {
-                  const user = (taskAssignees || []).find((u: User) => u.id === userId);
-                  return user ? (
-                    <div key={user.id} className="w-6 h-6 rounded-full overflow-hidden border border-white">
-                      {user.profile_image ? (
-                        <img
-                          src={user.profile_image}
-                          alt={user.username}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-gray-300 text-xs">
-                          {user.username.charAt(0).toUpperCase()}
-                        </div>
-                      )}
-                    </div>
-                  ) : null;
-                })}
-                <button
-                  onClick={() => {
-                    setActiveSubtaskForAssignees(subtask);
-                    setIsAssigneeModalOpen(true);
-                  }}
-                  className="p-1 hover:bg-gray-200 rounded"
-                  title="Добавить исполнителя"
+              <button
+                  onClick={() => handleDatesClick(subtask)}
+                  className="p-1 rounded cursor-pointer hover:bg-gray-200 ml-1"
+                  title="Изменить сроки"
                 >
-                  <Plus size={16} className="text-gray-600" />
-                </button>
-              </div>
+                  <Calendar className="h-5 w-5 text-gray-500" />
+              </button>
             </div>
           </li>
         ))}
       </ul>
+      <DatePickerModal
+        isOpen={isDatePickerOpen}
+        onClose={() => setIsDatePickerOpen(false)}
+        onSave={handleDatesUpdate}
+        currentStartDate={tempStartDate || new Date().toISOString().split("T")[0]}
+        currentDueDate={tempDueDate || new Date().toISOString().split("T")[0]}
+      />
 
-      <div className="mt-4 flex items-center space-x-2">
+      <div className="mt-1 flex items-center hover:bg-gray-50 px-1.5 py-3 rounded-md transition-colors">
         <input
           type="text"
           value={newSubtaskTitle}
           onChange={(e) => setNewSubtaskTitle(e.target.value)}
           placeholder="Добавить новую подзадачу"
-          className="flex-1 border rounded-md px-2 py-1 focus:outline-none focus:border-blue-400 text-sm"
+          className="flex-1 border-none rounded-md text-sm focus:outline-none bg-transparent"
         />
         <button
           onClick={handleAddSubtask}
-          className="flex items-center space-x-1 bg-blue-500 text-white px-3 py-1 rounded-md hover:bg-blue-600 transition-colors text-sm"
+          className="ml-2 bg-blue-100 text-blue-700 rounded-md px-3 py-1 transition-colors"
         >
-          <Plus size={16} />
-          <span>Добавить</span>
+          Добавить
         </button>
       </div>
 
-      {isAssigneeModalOpen && activeSubtaskForAssignees && (
       <SubtaskAssigneeModal
         isOpen={isAssigneeModalOpen}
         onClose={() => setIsAssigneeModalOpen(false)}
-        users={taskAssignees || []} // Передаем массив без фильтрации
-        selectedAssignees={activeSubtaskForAssignees.assignees || []}
-        assignedTo={activeSubtaskForAssignees.assigned_to}
-        onAssigneeToggle={(userId) => {
-          const updatedAssignees = activeSubtaskForAssignees.assignees.includes(userId)
-            ? activeSubtaskForAssignees.assignees.filter((id) => id !== userId)
-            : [...(activeSubtaskForAssignees.assignees || []), userId];
+        users={taskAssignees}
+        selectedAssignees={(activeSubtaskForAssignees?.assigned_to || []).map(a => a.id)}
+        onAssigneeToggle={async (userId) => {
+          if (!activeSubtaskForAssignees) return;
 
-          updateSubtask({
-            id: activeSubtaskForAssignees.id,
-            assignees: updatedAssignees,
-            assigned_to: userId, // Обновляем assigned_to
-          });
+          try {
+            const currentAssignees = new Set(activeSubtaskForAssignees.assigned_to.map(a => a.id));
+
+            if (currentAssignees.has(userId)) {
+              currentAssignees.delete(userId);
+            } else {
+              currentAssignees.add(userId);
+            }
+
+            const newAssignees = Array.from(currentAssignees);
+            await updateSubtask({
+              id: activeSubtaskForAssignees.id,
+              assigned_to_ids: newAssignees,
+            }).unwrap();
+
+            const updatedAssignedTo = taskAssignees.filter(user =>
+              newAssignees.includes(user.id)
+            );
+
+            setActiveSubtaskForAssignees((prev: Subtask | null) => {
+              if (!prev) return null;
+              return {
+                ...prev,
+                assigned_to: updatedAssignedTo,
+              };
+            });
+          } catch (error) {
+            console.error("Ошибка обновления исполнителей:", error);
+          }
         }}
       />
-    )}
     </div>
   );
 };
 
 export default SubtaskList;
+
+function getTaskById(taskId: number) {
+  throw new Error("Function not implemented.");
+}

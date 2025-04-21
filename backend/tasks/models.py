@@ -83,9 +83,9 @@ class Subtask(models.Model):
 
     task = models.ForeignKey(Task, related_name='subtasks', on_delete=models.CASCADE)
     title = models.CharField(max_length=200)
-    description = models.TextField()
+    description = models.TextField(blank=True, null=True)
     status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='Новая')
-    priority = models.CharField(max_length=50)
+    priority = models.CharField(max_length=50, blank=True, null=True)
     start_date = models.DateTimeField(null=True, blank=True)
     due_date = models.DateTimeField(null=True, blank=True)
     tag = models.ForeignKey(Tag, related_name='subtask_tags', on_delete=models.CASCADE, null=True)
