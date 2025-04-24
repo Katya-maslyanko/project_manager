@@ -164,35 +164,30 @@ class TaskSerializer(serializers.ModelSerializer):
         return max(0, complexity)
 
     def calculate_task_complexity(self, task):
+        priority_weight = {
+            'Высокий': 0.4,
+            'Средний': 0.2,
+            'Низкий': 0.1,
+        }
+        
         complexity = 0
-
-        # Приоритет
-        if task.priority == 'Высокий':
-            complexity += 3
-        elif task.priority == 'Средний':
-            complexity += 2
-        elif task.priority == 'Низкий':
-            complexity += 1
-        else:
-            complexity += 0
-
-        # Подзадачи (максимум +3)
-        complexity += min(task.subtasks.count(), 3)
-
-        # Исполнители (максимум +3)
-        complexity += min(task.assignees.count(), 3)
-
-        # Сроки
+        complexity += priority_weight.get(task.priority, 0)
+        subtasks_count = task.subtasks.count()
+        complexity += min(subtasks_count * 0.1, 0.3)
+        assignees_count = task.assignees.count()
+        complexity += min(assignees_count * 0.05, 0.2)
         if task.start_date and task.due_date:
             duration = (task.due_date - task.start_date).days
             if duration < 3:
-                complexity += 2
+                complexity += 0.01
             elif duration < 7:
-                complexity += 1
+                complexity += 0.05
             else:
-                complexity += 0
+                complexity += 0.1
 
-        return max(0, min(complexity, 5))
+        normalized_complexity = max(1, int(complexity * 10))
+
+        return min(normalized_complexity, 5)
     
 class SubtaskSerializer(serializers.ModelSerializer):
     assignees = serializers.SerializerMethodField()
@@ -285,32 +280,28 @@ class SubtaskSerializer(serializers.ModelSerializer):
         return max(0, complexity)
 
     def calculate_subtask_complexity(self, subtask):
+        priority_weight = {
+            'Высокий': 0.4,
+            'Средний': 0.2,
+            'Низкий': 0.1,
+        }
+        
         complexity = 0
-
-        # Приоритет
-        if subtask.priority == 'Высокий':
-            complexity += 3
-        elif subtask.priority == 'Средний':
-            complexity += 2
-        elif subtask.priority == 'Низкий':
-            complexity += 1
-        else:
-            complexity += 0
-
-        # Исполнители (максимум +3)
-        complexity += min(subtask.assigned_to.count(), 3)
-
-        # Сроки
+        complexity += priority_weight.get(subtask.priority, 0)
+        assignees_count = subtask.assigned_to.count()
+        complexity += min(assignees_count * 0.05, 0.2)
         if subtask.start_date and subtask.due_date:
             duration = (subtask.due_date - subtask.start_date).days
             if duration < 3:
-                complexity += 2
+                complexity += 0.01
             elif duration < 7:
-                complexity += 1
+                complexity += 0.05
             else:
-                complexity += 0
+                complexity += 0.1
 
-        return max(0, min(complexity, 5))
+        normalized_complexity = max(1, int(complexity * 10))
+
+        return min(normalized_complexity, 5)
 
 class CommentSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
