@@ -84,9 +84,16 @@ class ProjectSerializer(serializers.ModelSerializer):
     team = TeamSerializer(read_only=True)
     team_id = serializers.PrimaryKeyRelatedField(queryset=Team.objects.all(), write_only=True, source='team')
 
+    total_tasks = serializers.IntegerField(read_only=True)
+    total_subtasks = serializers.IntegerField(read_only=True)
+    tasks_new = serializers.IntegerField(read_only=True)
+    tasks_in_progress = serializers.IntegerField(read_only=True)
+    tasks_done = serializers.IntegerField(read_only=True)
+
     class Meta:
         model = Project
-        fields = ['id', 'name', 'description', 'team', 'team_id', 'startDate', 'endDate', 'created_at', 'updated_at']
+        fields = ['id', 'name', 'description', 'team', 'team_id', 'startDate', 'endDate', 'created_at', 'updated_at', 
+        'total_tasks', 'total_subtasks', 'tasks_new', 'tasks_in_progress', 'tasks_done',]
 
     def update(self, instance, validated_data):
         instance.name = validated_data.get('name', instance.name)
@@ -100,6 +107,9 @@ class ProjectSerializer(serializers.ModelSerializer):
 
         instance.save()
         return instance
+    
+    def to_representation(self, instance):
+        return super().to_representation(instance)
 
 class ProjectGoalSerializer(serializers.ModelSerializer):
     class Meta:
@@ -121,10 +131,11 @@ class TaskSerializer(serializers.ModelSerializer):
     assignee_ids = serializers.PrimaryKeyRelatedField(queryset=User .objects.all(), many=True, write_only=True, source='assignees')
     tag = TagSerializer(read_only=True)
     tag_id = serializers.PrimaryKeyRelatedField(queryset=Tag.objects.all(), write_only=True, source='tag')
+    stars = serializers.SerializerMethodField()
 
     class Meta:
         model = Task
-        fields = ['id', 'title', 'description', 'status', 'priority', 'points', 'assignees', 'assignee_ids', 'tag', 'tag_id', 'start_date', 'due_date', 'created_at', 'updated_at', 'project']
+        fields = ['id', 'title', 'description', 'status', 'priority', 'points', 'assignees', 'assignee_ids', 'tag', 'tag_id', 'start_date', 'due_date', 'created_at', 'updated_at', 'project', 'stars']
 
     def update(self, instance, validated_data):
         instance.title = validated_data.get('title', instance.title)
@@ -148,6 +159,41 @@ class TaskSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
     
+    def get_stars(self, obj):
+        complexity = min(self.calculate_task_complexity(obj), 5)
+        return max(0, complexity)
+
+    def calculate_task_complexity(self, task):
+        complexity = 0
+
+        # Приоритет
+        if task.priority == 'Высокий':
+            complexity += 3
+        elif task.priority == 'Средний':
+            complexity += 2
+        elif task.priority == 'Низкий':
+            complexity += 1
+        else:
+            complexity += 0
+
+        # Подзадачи (максимум +3)
+        complexity += min(task.subtasks.count(), 3)
+
+        # Исполнители (максимум +3)
+        complexity += min(task.assignees.count(), 3)
+
+        # Сроки
+        if task.start_date and task.due_date:
+            duration = (task.due_date - task.start_date).days
+            if duration < 3:
+                complexity += 2
+            elif duration < 7:
+                complexity += 1
+            else:
+                complexity += 0
+
+        return max(0, min(complexity, 5))
+    
 class SubtaskSerializer(serializers.ModelSerializer):
     assignees = serializers.SerializerMethodField()
     assigned_to = UserSerializer(many=True, read_only=True)
@@ -164,13 +210,14 @@ class SubtaskSerializer(serializers.ModelSerializer):
         write_only=True,
         required=False
     )
+    stars = serializers.SerializerMethodField()
 
     class Meta:
         model = Subtask
         fields = [
             'id', 'title', 'description', 'status', 'priority',
             'tag', 'tag_id', 'points', 'start_date', 'due_date',
-            'assignees', 'assigned_to', 'assigned_to_ids', 'task'
+            'assignees', 'assigned_to', 'assigned_to_ids', 'task', 'stars' 
         ]
 
     def get_assignees(self, obj):
@@ -232,6 +279,38 @@ class SubtaskSerializer(serializers.ModelSerializer):
             if tag:
                 instance.tag = tag
         return instance
+    
+    def get_stars(self, obj):
+        complexity = min(self.calculate_subtask_complexity(obj), 5)
+        return max(0, complexity)
+
+    def calculate_subtask_complexity(self, subtask):
+        complexity = 0
+
+        # Приоритет
+        if subtask.priority == 'Высокий':
+            complexity += 3
+        elif subtask.priority == 'Средний':
+            complexity += 2
+        elif subtask.priority == 'Низкий':
+            complexity += 1
+        else:
+            complexity += 0
+
+        # Исполнители (максимум +3)
+        complexity += min(subtask.assigned_to.count(), 3)
+
+        # Сроки
+        if subtask.start_date and subtask.due_date:
+            duration = (subtask.due_date - subtask.start_date).days
+            if duration < 3:
+                complexity += 2
+            elif duration < 7:
+                complexity += 1
+            else:
+                complexity += 0
+
+        return max(0, min(complexity, 5))
 
 class CommentSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)

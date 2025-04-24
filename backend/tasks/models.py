@@ -99,7 +99,7 @@ class Subtask(models.Model):
         return self.task.assignees.all()
 
 class Comment(models.Model):
-    task = models.ForeignKey(Task, related_name='comments', on_delete=models.CASCADE)
+    task = models.ForeignKey(Task, related_name='comments', on_delete=models.CASCADE, null=True, blank=True)
     subtask = models.ForeignKey(Subtask, related_name='comments', on_delete=models.CASCADE, null=True, blank=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     content = models.TextField()

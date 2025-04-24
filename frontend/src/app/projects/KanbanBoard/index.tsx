@@ -14,7 +14,7 @@ import { LoaderCircle, CircleCheck, BookCheck, Plus } from "lucide-react";
 import EditTaskModal from "@/components/Task/EditTaskModal";
 import AddTaskModal from "@/components/Task/AddTaskModal";
 import TaskSidebar from "@/components/Task/TaskSidebar";
-import SubtaskSidebar from "@/components/Task/SubtaskSidebar";
+import SubtaskSidebar from "@/components/Subtask/SubtaskSidebar";
 import DeleteConfirmationModal from "@/components/Task/modal/DeleteConfirmationModal";
 import { useDeleteTaskMutation } from "@/state/api";
 

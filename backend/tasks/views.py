@@ -15,6 +15,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework.generics import RetrieveUpdateAPIView
 from rest_framework.filters import OrderingFilter
+from django.db.models import Count, Q
 from .models import (
     User,
     UserProfile,
@@ -132,6 +133,15 @@ class ProjectViewSet(viewsets.ModelViewSet):
     queryset = Project.objects.all()
     serializer_class = ProjectSerializer
 
+    def get_queryset(self):
+        return Project.objects.annotate(
+            total_tasks=Count('tasks', distinct=True),
+            total_subtasks=Count('tasks__subtasks', distinct=True),
+            tasks_new=Count('tasks', filter=Q(tasks__status='Новая')),
+            tasks_in_progress=Count('tasks', filter=Q(tasks__status='В процессе')),
+            tasks_done=Count('tasks', filter=Q(tasks__status='Завершено')),
+    )
+
 class ProjectGoalViewSet(viewsets.ModelViewSet):
     queryset = ProjectGoal.objects.all()
     serializer_class = ProjectGoalSerializer
@@ -180,13 +190,10 @@ class SubtaskViewSet(viewsets.ModelViewSet):
         task_id = self.request.query_params.get('taskId')
         if task_id:
             queryset = queryset.filter(task_id=task_id)
+        assignee_id = self.request.query_params.get('assigned_to')
+        if assignee_id:
+            queryset = queryset.filter(assigned_to__id=assignee_id)
         return queryset
-    
-    def get_task(self):
-        task_id = self.request.data.get('task')
-        if task_id:
-            return Task.objects.get(id=task_id)
-        return None
     
 class TagViewSet(viewsets.ModelViewSet):
     queryset = Tag.objects.all()
@@ -207,7 +214,8 @@ class CommentViewSet(viewsets.ModelViewSet):
         return queryset
     
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user) 
+        if self.request.user.is_authenticated:
+            serializer.save(user=self.request.user)
 
 class NotificationViewSet(viewsets.ModelViewSet):
     queryset = Notification.objects.all()

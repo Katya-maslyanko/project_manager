@@ -8,6 +8,7 @@ interface AddTaskModalProps {
   onClose: () => void;
   projectId: number;
   currentStatus: string;
+  refetchTasks: () => void;
 }
 
 const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, projectId, currentStatus }) => {

@@ -8,7 +8,7 @@ import {
   useGetTaskByIdQuery,
 } from "@/state/api";
 import SubtaskAssigneeModal from "./modal/SubtaskAssigneeModal";
-import DatePickerModal from "./modal/DatePickerModal";
+import DatePickerModal from "../Task/modal/DatePickerModal";
 
 interface SubtaskListProps {
   subtasks: Subtask[];
@@ -166,7 +166,11 @@ const SubtaskList: React.FC<SubtaskListProps> = ({
                   id={`subtaskCheckbox-${subtask.id}`}
                   className="peer h-5 w-5 cursor-pointer transition-all appearance-none rounded-full border border-gray-300 checked:bg-blue-600 checked:border-blue-600"
                   checked={subtask.status === "Завершено"}
-                  onChange={() => handleToggleSubtaskStatus(subtask)}
+                  onChange={(e) => {
+                    e.stopPropagation();
+                    handleToggleSubtaskStatus(subtask);
+                  }}
+                  
                 />
                 <span className="absolute text-white opacity-0 peer-checked:opacity-100 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
                   <svg

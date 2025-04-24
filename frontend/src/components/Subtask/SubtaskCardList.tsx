@@ -1,28 +1,24 @@
+"use client";
 import React, { useEffect, useState } from "react";
-import { GripVertical, Flag, Pencil } from "lucide-react";
+import { GripVertical, Flag } from "lucide-react";
 
-const TaskCard = ({ task, onDragStart, onEdit, onStatusChange, onOpenSidebar, onDelete }) => {
-  const [isChecked, setIsChecked] = useState(task.status === 'Завершено');
-  const [previousStatus, setPreviousStatus] = useState(task.status);
+const SubtaskCard = ({ subtask, onDragStart, onOpen, onStatusChange }) => {
+  const [isChecked, setIsChecked] = useState(subtask.status === 'Завершено');
+  const [previousStatus, setPreviousStatus] = useState(subtask.status);
 
   useEffect(() => {
-    setPreviousStatus(task.status);
-  }, [task.status]);
+    setPreviousStatus(subtask.status);
+  }, [subtask.status]);
 
   const handleCheckboxChange = () => {
     const newCheckedState = !isChecked;
     setIsChecked(newCheckedState);
 
     if (newCheckedState) {
-      onStatusChange(task.id, 'Завершено');
+      onStatusChange(subtask.id, 'Завершено');
     } else {
-      onStatusChange(task.id, previousStatus);
+      onStatusChange(subtask.id, previousStatus);
     }
-  };
-
-  const formatDate = (dateString) => {
-    const options = { day: 'numeric', month: 'long', year: 'numeric' };
-    return new Date(dateString).toLocaleDateString('ru-RU', options);
   };
 
   const tagColors = [
@@ -38,11 +34,16 @@ const TaskCard = ({ task, onDragStart, onEdit, onStatusChange, onOpenSidebar, on
     return tagColors[index % tagColors.length];
   };
 
+  const formatDate = (dateString) => {
+    const options = { day: 'numeric', month: 'long', year: 'numeric' };
+    return new Date(dateString).toLocaleDateString('ru-RU', options);
+  };
+
   return (
     <tr className="border-t border-b cursor-grab active:cursor-grabbing" 
-    onClick={() => onOpenSidebar(task)}
-    onDragStart={(e) => onDragStart(e, task)}
-    draggable>
+        onClick={onOpen}
+        onDragStart={(e) => onDragStart(e, subtask)}
+        draggable>
       <td className="py-3 pl-2 border-r">
         <div className="flex items-center">
           <div className="cursor-pointer">
@@ -53,7 +54,7 @@ const TaskCard = ({ task, onDragStart, onEdit, onStatusChange, onOpenSidebar, on
               <label className="flex items-center cursor-pointer relative">
                 <input
                   type="checkbox"
-                  id={`taskCheckbox-${task.id}`}
+                  id={`subtaskCheckbox-${subtask.id}`}
                   className="peer h-5 w-5 cursor-pointer transition-all appearance-none rounded-full hover:shadow-md border border-gray-300 checked:bg-blue-600 checked:border-blue-600"
                   checked={isChecked}
                   onChange={handleCheckboxChange}
@@ -65,29 +66,17 @@ const TaskCard = ({ task, onDragStart, onEdit, onStatusChange, onOpenSidebar, on
                 </span>
               </label>
             </div>
-            <label
-              // htmlFor={`taskCheckbox-${task.id}`}
-              className={`ml-2 w-[280px] overflow-hidden text-ellipsis whitespace-nowrap`}
-            >
-              {task.title}
+            <label className={`ml-2 w-[280px] overflow-hidden text-ellipsis whitespace-nowrap`}>
+              {subtask.title}
             </label>
-            {/* <div 
-              className="mr-1 p-1 rounded cursor-pointer hover:bg-gray-200" 
-              onClick={(e) => {
-                e.stopPropagation();
-                onEdit();
-              }}
-            >
-              <Pencil className="h-4 w-4 text-gray-500" />
-            </div> */}
           </div>
         </div>
       </td>
-      <td className="py-2 px-4 max-w-xs overflow-hidden text-ellipsis whitespace-nowrap border-r">{task.description || "Описание отсутствует"}</td>
+      <td className="py-2 px-4 max-w-xs overflow-hidden text-ellipsis whitespace-nowrap border-r">{subtask.description || "Описание отсутствует"}</td>
       <td className="py-2 px-4 border-r">
         <div className="flex -space-x-4 rtl:space-x-reverse">
-          {task.assignees && task.assignees.length > 0 ? (
-            task.assignees.map((assignee, index) => (
+          {subtask.assigned_to && subtask.assigned_to.length > 0 ? (
+            subtask.assigned_to.map((assignee, index) => (
               <div key={assignee.id} className={`w-10 h-10 border-2 border-gray-100 rounded-full dark:border-gray-800 flex items-center justify-center ${getTagColor(index)}`}>
                 {assignee.profile_image ? (
                   <img className="w-10 h-10 rounded-full" src={assignee.profile_image} alt={assignee.username} />
@@ -102,39 +91,37 @@ const TaskCard = ({ task, onDragStart, onEdit, onStatusChange, onOpenSidebar, on
         </div>
       </td>
       <td className="py-2 px-4 border-r w-full">
-        {formatDate(task.start_date)} - {formatDate(task.due_date)}
+        {formatDate(subtask.start_date)} - {formatDate(subtask.due_date)}
       </td>
       <td className="py-2 px-4 border-r">
-        <div className={`flex items-center border ${task.priority === 'Высокий' ? 'border-red-200' : task.priority === 'Средний' ? 'border-stone-200' : 'border-emerald-200'} rounded-md px-2 py-1`}>
-          <Flag className={`h-4 w-4 mr-1 ${task.priority === 'Высокий' ? 'text-red-600' : task.priority === 'Средний' ? 'text-stone-600' : 'text-emerald-600'}`} />
-          <span className={`text-xs font-semibold ${task.priority === 'Высокий' ? 'text-red-600' : task.priority === 'Средний' ? 'text-stone-600' : 'text-emerald-600'}`}>
-            {task.priority}
+        <div className={`flex items-center border ${subtask.priority === 'Высокий' ? 'border-red-200' : subtask.priority === 'Средний' ? 'border-stone-200' : 'border-emerald-200'} rounded-md px-2 py-1`}>
+          <Flag className={`h-4 w-4 mr-1 ${subtask.priority === 'Высокий' ? 'text-red-600' : subtask.priority === 'Средний' ? 'text-stone-600' : 'text-emerald-600'}`} />
+          <span className={`text-xs font-semibold ${subtask.priority === 'Высокий' ? 'text-red-600' : subtask.priority === 'Средний' ? 'text-stone-600' : 'text-emerald-600'}`}>
+            {subtask.priority}
           </span>
         </div>
       </td>
       <td className="py-2 px-4 border-r">
         <div className="flex flex-wrap">
-          {task.tag ? (
-            <span key={task.tag.id} className={`mr-1 px-2.5 py-0.5 rounded ${getTagColor(task.id)}`}>
-              {task.tag.name}
+          {subtask.tag ? (
+            <span key={subtask.tag.id} className={`mr-1 px-2.5 py-0.5 rounded bg-gray-200 text-gray-700 ${getTagColor(subtask.id)}`}>
+              {subtask.tag.name}
             </span>
           ) : (
-            <span className="mr-1 px-2.5 py-0.5 rounded bg-gray-200 text-gray-700">Нет тега</span>
+            <span className="mr-1 px-2.5 py-0.5 rounded bg-gray-200 text-gray-700 w-[69px]">Нет тега</span>
           )}
         </div>
       </td>
       <td className="py-2 px-4">
         <div className="flex items-center">
           <div className="w-[100px] bg-gray-200 rounded-full h-2 mr-2">
-            <div className="bg-blue-600 h-2 rounded-full" style={{ width: `${task.points || 0}%` }}></div>
+            <div className="bg-blue-600 h-2 rounded-full" style={{ width: `${subtask.points}%` }}></div>
           </div>
-          <div className="flex flex-col text-sm leading-tight">
-            <span>{task.points || 0}%</span>
-          </div>
+          <span className="text-sm">{subtask.points}%</span>
         </div>
       </td>
     </tr>
   );
 };
 
-export default TaskCard;
+export default SubtaskCard;

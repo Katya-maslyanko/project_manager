@@ -1,8 +1,8 @@
 import React, { useState, useEffect, ChangeEvent } from "react";
-import { Ellipsis, X, Flag, Calendar, Users, Tag, TrendingUp, Plus } from "lucide-react";
+import { Ellipsis, X, Flag, Calendar, Users, Tag, TrendingUp, Plus, BadgeCheck } from "lucide-react";
 import { Subtask, useGetTagsQuery, useGetUsersQuery, useUpdateSubtaskMutation, useDeleteSubtaskMutation, User } from "@/state/api";
 import SubtaskAssigneeModal from "./modal/SubtaskAssigneeModal";
-import DeleteConfirmationModal from "./modal/DeleteConfirmationModal";
+import DeleteConfirmationModal from "../Task/modal/DeleteConfirmationModal";
 import CommentsSectionSubtask from "./CommentsSectionSubtask";
 
 const formatDate = (dateString: string) => {
@@ -125,6 +125,26 @@ const SubtaskSidebar: React.FC<SubtaskSidebarProps> = ({ subtask, onClose, onCom
     "bg-pink-100 text-pink-600",
   ];
   const getTagColor = (index: number) => tagColors[index % tagColors.length];
+
+  const StarRating = ({ stars }: { stars: number }) => {
+    const safeStars = Math.min(Math.max(stars || 0, 0), 5);
+  
+    return (
+      <span className="text-lg">
+        {[...Array(5)].map((_, index) => (
+          <span
+            key={index}
+            className={`
+              ${index < safeStars ? 'text-yellow-500' : 'text-gray-300'}
+              font-[Arial]
+            `}
+          >
+            {index < safeStars ? '★' : '☆'}
+          </span>
+        ))}
+      </span>
+    );
+  };
 
   if (!subtask) return null;
 
@@ -428,6 +448,15 @@ const SubtaskSidebar: React.FC<SubtaskSidebarProps> = ({ subtask, onClose, onCom
                   {pointsValue}%
                 </span>
               )}
+            </div>
+          </div>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-1 text-gray-500 text-sm">
+              <BadgeCheck className="h-5 w-5" />
+              <span>Сложность:</span>
+            </div>
+            <div className="text-current">
+              <StarRating stars={subtask.stars} />
             </div>
           </div>
 

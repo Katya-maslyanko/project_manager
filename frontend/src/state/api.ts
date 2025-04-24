@@ -13,6 +13,11 @@ export interface Project {
   startDate?: string | null;
   endDate?: string | null;
   team: Team | null;
+  total_tasks: number;
+  tasks_new: number;
+  tasks_in_progress: number;
+  tasks_done: number;
+  total_subtasks: number;
 }
 
 export interface Assignee {
@@ -41,6 +46,7 @@ export interface Task {
   tag: Tag | null;
   points: number;
   assignees: Assignee[];
+  stars: number;
 }
 
 export interface Comment {
@@ -66,6 +72,7 @@ export interface Subtask {
   assigned_to: Assignee[]; 
   taskId: number;
   assigned_to_ids?: number[];
+  stars: number;
 }
 
 export interface RegisterUser  {
@@ -116,6 +123,10 @@ export const api = createApi({
       query: () => "projects/",
       providesTags: ["Projects"],
     }),
+    getProjectById: build.query<Project, number>({
+      query: (id) => `projects/${id}/`,
+      providesTags: (result, error, id) => [{ type: 'Projects', id }],
+    }),
     createProject: build.mutation<Project, Partial<Project>>({
       query: (project) => ({
         url: "projects/",
@@ -123,6 +134,14 @@ export const api = createApi({
         body: project,
       }),
       invalidatesTags: ["Projects"],
+    }),
+    updateProject: build.mutation<Project, Partial<Project> & Pick<Project, 'id'>>({
+      query: ({ id, ...patch }) => ({
+        url: `projects/${id}/`,
+        method: 'PATCH',
+        body: patch,
+      }),
+      invalidatesTags: (result, error, { id }) => [{ type: 'Projects', id }],
     }),
     getTaskById: build.query<Task, number>({
       query: (id) => `tasks/${id}/`,
@@ -228,6 +247,14 @@ export const api = createApi({
       }),
       invalidatesTags: ["Comments"],
     }),
+    createSubtaskComment: build.mutation<Comment, { subtaskId: number; content: string }>({
+      query: ({ subtaskId, content }) => ({
+          url: "comments/",
+          method: "POST",
+          body: { subtask: subtaskId, content },
+      }),
+      invalidatesTags: ["Comments"],
+  }),
     updateComment: build.mutation<Comment, { id: number; content: string }>({
       query: ({ id, content }) => ({
         url: `comments/${id}/`,
@@ -276,12 +303,21 @@ export const api = createApi({
         body: { refresh: Cookies.get('refreshToken') },
       }),
     }),
+    getSubtasksByAssignee: build.query<Subtask[], number>({
+      query: (userId) => `subtasks/?assigned_to=${userId}`,
+      providesTags: (result) =>
+        result
+          ? result.map(({ id }) => ({ type: "Subtasks" as const, id }))
+          : [{ type: "Subtasks", id: "LIST" }],
+    }),
   }),
 });
 
 export const {
   useGetProjectsQuery,
   useCreateProjectMutation,
+  useGetProjectByIdQuery,
+  useUpdateProjectMutation,
   useGetTaskByIdQuery,
   useUpdateProfileMutation,
   useGetTasksQuery,
@@ -293,6 +329,7 @@ export const {
   useGetCommentsByTaskIdQuery,
   useGetCommentsBySubTaskIdQuery,
   useCreateCommentMutation,
+  useCreateSubtaskCommentMutation,
   useRegisterMutation,
   useLoginMutation,
   useGetCurrentUserQuery,
@@ -306,4 +343,5 @@ export const {
   useCreateSubtaskMutation,
   useUpdateSubtaskMutation,
   useDeleteSubtaskMutation,
+  useGetSubtasksByAssigneeQuery,
 } = api;

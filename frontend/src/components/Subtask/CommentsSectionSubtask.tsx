@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Ellipsis, CornerUpLeft } from "lucide-react";
 import {
-useGetCommentsBySubTaskIdQuery,
-  useCreateCommentMutation,
+  useGetCommentsBySubTaskIdQuery,
+  useCreateSubtaskCommentMutation,
   useUpdateCommentMutation,
   useDeleteCommentMutation,
   Comment,
@@ -15,11 +15,7 @@ interface CommentsSectionSubtaskProps {
 
 const CommentsSectionSubtask: React.FC<CommentsSectionSubtaskProps> = ({ subtaskId }) => {
   const { user } = useAuth();
-  const {
-    data: comments = [],
-    isLoading,
-    isError,
-  } = useGetCommentsBySubTaskIdQuery({ subtaskId });
+  const { data: comments = [], isLoading, isError } = useGetCommentsBySubTaskIdQuery({ subtaskId });
 
   const [newComment, setNewComment] = useState("");
   const [replyTo, setReplyTo] = useState<Comment | null>(null);
@@ -28,26 +24,34 @@ const CommentsSectionSubtask: React.FC<CommentsSectionSubtaskProps> = ({ subtask
   const [dropdownOpen, setDropdownOpen] = useState<number | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const [createComment] = useCreateCommentMutation();
+  const [createComment] = useCreateSubtaskCommentMutation();
   const [updateComment] = useUpdateCommentMutation();
   const [deleteComment] = useDeleteCommentMutation();
 
   const handleCommentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    let content = editingCommentId ? editingContent : newComment;
-    const payload = { taskId: subtaskId, content };
-    if (replyTo && !editingCommentId) {
-      // prepend mention
-      payload.content = `@${replyTo.user.username} ` + content;
+    if (!user) {
+        alert("You must be logged in to submit a comment.");
+        return;
     }
-    if (editingCommentId) {
-      await updateComment({ id: editingCommentId, content }).unwrap();
-      setEditingCommentId(null);
-      setEditingContent("");
-    } else {
-      await createComment(payload).unwrap();
-      setNewComment("");
-      setReplyTo(null);
+    let content = editingCommentId ? editingContent : newComment;
+    const payload = { subtaskId, content }; // Убедитесь, что subtaskId передается правильно
+    if (replyTo && !editingCommentId) {
+        payload.content = `@${replyTo.user.username} ` + content; // Добавление упоминания
+    }
+    try {
+        if (editingCommentId) {
+            await updateComment({ id: editingCommentId, content }).unwrap();
+            setEditingCommentId(null);
+            setEditingContent("");
+        } else {
+            await createComment(payload).unwrap(); // Используйте createComment
+            setNewComment("");
+            setReplyTo(null);
+        }
+    } catch (error) {
+        console.error("Ошибка при создании комментария:", error);
+        alert("Не удалось создать комментарий. Пожалуйста, попробуйте еще раз.");
     }
   };
 

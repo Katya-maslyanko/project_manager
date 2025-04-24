@@ -14,7 +14,7 @@ import {
 import { useParams } from "next/navigation";
 import { Task } from "@/state/api";
 import TaskSidebar from "@/components/Task/TaskSidebar";
-import SubtaskSidebar from "@/components/Task/SubtaskSidebar";
+import SubtaskSidebar from "@/components/Subtask/SubtaskSidebar";
 import EditTaskModal from "@/components/Task/EditTaskModal";
 import DeleteConfirmationModal from "@/components/Task/modal/DeleteConfirmationModal";
 import AddTaskModal from "@/components/Task/AddTaskModal";
@@ -360,6 +360,7 @@ const TaskList: React.FC<{ projectId: number }> = ({ projectId }) => {
           onClose={() => setAddModalOpen(false)}
           projectId={projectId}
           currentStatus={currentTaskStatus}
+          refetchTasks={refetch}
         />
       )}
 

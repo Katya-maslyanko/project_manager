@@ -10,6 +10,7 @@ import {
   Tag,
   TrendingUp,
   Plus,
+  BadgeCheck,
 } from "lucide-react";
 import {
   Task,
@@ -22,7 +23,7 @@ import {
 import AddAssigneeModal from "./modal/AddAssigneeModal";
 import DeleteConfirmationModal from "./modal/DeleteConfirmationModal";
 import CommentsSection from "./CommentSection";
-import SubtaskList from "./SubtaskList";
+import SubtaskList from "../Subtask/SubtaskList";
 
 const formatDate = (dateString: string) => {
   const options = { day: "numeric", month: "long", year: "numeric" } as const;
@@ -124,6 +125,26 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
     );
   };
 
+  const StarRating = ({ stars }: { stars: number }) => {
+    const safeStars = Math.min(Math.max(stars || 0, 0), 5); // Ограничиваем значение от 0 до 5
+  
+    return (
+      <span className="text-lg">
+        {[...Array(5)].map((_, index) => (
+          <span
+            key={index}
+            className={`
+              ${index < safeStars ? 'text-yellow-500' : 'text-gray-300'}
+              font-[Arial]
+            `}
+          >
+            {index < safeStars ? '★' : '☆'}
+          </span>
+        ))}
+      </span>
+    );
+  };
+  
   const tagColors = [
     "bg-red-100 text-red-600",
     "bg-yellow-100 text-yellow-600",
@@ -482,6 +503,15 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
               {pointsValue}%
             </span>
           )}
+          </div>
+        </div>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-1 text-gray-500 text-sm">
+            <BadgeCheck className="h-5 w-5" />
+            <span>Сложность:</span>
+          </div>
+          <div className="text-current">
+            <StarRating stars={task.stars} />
           </div>
         </div>
         <div className="space-y-4">

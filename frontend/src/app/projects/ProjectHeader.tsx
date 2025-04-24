@@ -9,6 +9,7 @@ import {
   ArrowDownUp,
   SquareArrowOutUpRight,
   XCircle,
+  BookOpenCheck,
 } from "lucide-react";
 import Breadcrumbs from "@/components/ui/breadcrumbs/Breadcrumbs";
 import SortDropdown from "@/components/ui/dropdown/SortDropdown";
@@ -83,6 +84,12 @@ const ProjectHeader: React.FC<Props> = ({
 
       <div className="flex items-center mb-4">
         <div className="flex items-center border bg-gray-200 rounded-md">
+          <TabButton
+              name="Обзор"
+              icon={<BookOpenCheck className="h-5 w-5" />}
+              setActiveTab={setActiveTab}
+              activeTab={activeTab}
+          />
           <TabButton
             name="Список"
             icon={<ListTodo className="h-5 w-5" />}
