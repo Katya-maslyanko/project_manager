@@ -5,6 +5,7 @@ from django.conf import settings
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     profile_image = models.ImageField(upload_to='profile_images/', null=True, blank=True)
+    position = models.CharField(max_length=100, blank=True, null=True)
     role = models.CharField(max_length=50, choices=[
         ('admin', 'Администратор'),
         ('project_manager', 'Куратор проекта'),
@@ -20,13 +21,13 @@ class Team(models.Model):
     description = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    productOwnerUserId = models.IntegerField(null=True, blank=True)  # Поле для идентификатора владельца продукта
-    projectManagerUserId = models.IntegerField(null=True, blank=True)  # Поле для идентификатора менеджера проекта
+    project_manager = models.ForeignKey(User, related_name='managed_teams', on_delete=models.SET_NULL, null=True, blank=True)
 
 class Project(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField()
-    team = models.ForeignKey(Team, related_name='projects', on_delete=models.CASCADE)
+    team = models.ForeignKey(Team, related_name='primary_projects', on_delete=models.CASCADE, null=True, blank=True)
+    project_manager = models.ForeignKey(User, related_name='managed_projects', on_delete=models.SET_NULL, null=True, blank=True)
     startDate = models.DateTimeField(null=True, blank=True)  # Дата начала проекта
     endDate = models.DateTimeField(null=True, blank=True)  # Дата окончания проекта
     created_at = models.DateTimeField(auto_now_add=True)

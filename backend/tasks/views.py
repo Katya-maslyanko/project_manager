@@ -15,10 +15,13 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework.generics import RetrieveUpdateAPIView
 from rest_framework.filters import OrderingFilter
+from django.core.mail import send_mail
+from django.conf import settings
 from django.db.models import Count, Q
 from .models import (
+    ProjectTeam,
     User,
-    UserProfile,
+    UserTeamRelation,
     Team,
     Project,
     ProjectGoal,
@@ -97,13 +100,10 @@ class RegisterView(APIView):
         serializer = RegisterSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
-            
-            # Генерация токенов для пользователя
             refresh = RefreshToken.for_user(user)
             access_token = str(refresh.access_token)
             refresh_token = str(refresh)
             
-            # Возвращаем токены и данные пользователя
             return Response({
                 "access": access_token,
                 "refresh": refresh_token,
@@ -117,7 +117,6 @@ class UserDetailUpdateView(RetrieveUpdateAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_object(self):
-        # Возвращает текущего аутентифицированного пользователя
         return self.request.user
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -128,6 +127,69 @@ class UserViewSet(viewsets.ModelViewSet):
 class TeamViewSet(viewsets.ModelViewSet):
     queryset = Team.objects.all()
     serializer_class = TeamSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        if not user.is_authenticated:
+            return Team.objects.none()
+
+        role = getattr(user.userprofile, 'role', 'team_member')
+
+        if role == 'project_manager':
+            return Team.objects.filter(project_manager=user)
+        else:
+            team_ids = UserTeamRelation.objects.filter(user=user).values_list('team_id', flat=True)
+            return Team.objects.filter(id__in=team_ids)
+
+    @action(detail=False, methods=['get'], url_path='my-teams')
+    def my_teams(self, request):
+        user = request.user
+        if not user or not user.is_authenticated:
+            print("Пользователь не авторизован")
+            return Response([], status=200)
+        try:
+            role = getattr(user.userprofile, 'role', 'team_member')
+            print(f"User: {user}, Role: {role}")
+            if role == 'project_manager':
+                qs = Team.objects.filter(project_manager=user)
+                print(f"Teams for project_manager: {qs.count()}")
+            else:
+                # Используем связь через UserTeamRelation для получения команд пользователя
+                team_ids = UserTeamRelation.objects.filter(user=user).values_list('team_id', flat=True)
+                qs = Team.objects.filter(id__in=team_ids)
+                print(f"Teams for member: {qs.count()}")
+
+            serializer = self.get_serializer(qs, many=True)
+            return Response(serializer.data)
+        except Exception as e:
+            print(f"Ошибка в my_teams: {str(e)}")
+            return Response({'error': str(e)}, status=500)
+        
+    def perform_create(self, serializer):
+        if 'project_manager' not in serializer.validated_data or serializer.validated_data['project_manager'] is None:
+            serializer.validated_data['project_manager'] = self.request.user
+        serializer.save()
+
+    @action(detail=True, methods=['post'], url_path='invite')
+    def invite_member(self, request, pk=None):
+        team = self.get_object()
+        email = request.data.get('email')
+
+        if not email:
+            return Response({'error': 'Email is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:3000')
+            invite_link = f"{frontend_url}/join-team/{team.id}/"
+            subject = f"Приглашение в команду {team.name}"
+            message = f"Вы были приглашены в команду {team.name}. Перейдите по ссылке для присоединения: {invite_link}"
+            from_email = settings.DEFAULT_FROM_EMAIL
+            recipient_list = [email]
+
+            send_mail(subject, message, from_email, recipient_list, fail_silently=False)
+            return Response({'message': f'Приглашение отправлено на {email}'}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({'error': f'Ошибка при отправке приглашения: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class ProjectViewSet(viewsets.ModelViewSet):
     queryset = Project.objects.all()

@@ -1,12 +1,45 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import Cookies from "js-cookie";
 
+export interface Member {
+  id: number;
+  username: string;
+  email: string;
+  first_name: string;
+  last_name: string;
+  role_display: string;
+  project_position: string | null;
+  analytics: {
+    total_tasks: number;
+    tasks_new: number;
+    tasks_in_progress: number;
+    tasks_done: number;
+    total_subtasks: number;
+    subtasks_new: number;
+    subtasks_in_progress: number;
+    subtasks_done: number;
+    points_sum: number;
+    avg_task_complexity: number;
+    avg_subtask_complexity: number;
+    high_complexity_tasks: number;
+    recommendation: string;
+  };
+}
+
 export interface Team {
+  some(arg0: (t: any) => boolean): unknown;
+  project_manager: any;
   id: number;
   name: string;
+  description: string;
+  members_info: Member[];
+  created_at: string;
+  updated_at: string;
+  position_in_team: string | null;
 }
 
 export interface Project {
+  // project_manager: any;
   id: number;
   name: string;
   description?: string;
@@ -201,7 +234,24 @@ export const api = createApi({
     }),
     getTeams: build.query<Team[], void>({
       query: () => "teams/",
-      providesTags: ["Teams"],
+      providesTags: (result) =>
+        result
+          ? result.map(({ id }) => ({ type: "Teams" as const, id }))
+          : [{ type: "Teams", id: "LIST" }],
+    }),
+    getTeamsByUser: build.query<Team[], number>({
+      query: (userId) => `teams/?members_info=${userId}`,
+      providesTags: (result) =>
+        result
+          ? result.map(({ id }) => ({ type: "Teams" as const, id }))
+          : [{ type: "Teams", id: "LIST" }],
+    }),
+    getMyTeams: build.query<Team[], void>({
+      query: () => `teams/my-teams/`,
+      providesTags: (result) =>
+        result
+          ? result.map((t) => ({ type: "Teams" as const, id: t.id }))
+          : [{ type: "Teams", id: "LIST" }],
     }),
     getSubtasksByTaskId: build.query<Subtask[], number>({
       query: (taskId) => `subtasks/?taskId=${taskId}`,
@@ -310,6 +360,36 @@ export const api = createApi({
           ? result.map(({ id }) => ({ type: "Subtasks" as const, id }))
           : [{ type: "Subtasks", id: "LIST" }],
     }),
+    createTeam: build.mutation<Team, Partial<Team>>({
+      query: (team) => ({
+        url: 'teams/',
+        method: 'POST',
+        body: team,
+      }),
+      invalidatesTags: ['Teams'],
+    }),
+    updateTeam: build.mutation<Team, Partial<Team> & Pick<Team, 'id'>>({
+      query: ({ id, ...patch }) => ({
+        url: `teams/${id}/`,
+        method: 'PATCH',
+        body: patch,
+      }),
+      invalidatesTags: (result, error, { id }) => [{ type: 'Teams', id }],
+    }),
+    inviteMember: build.mutation<void, { teamId: number; email: string }>({
+      query: ({ teamId, email }) => ({
+        url: `teams/${teamId}/invite/`,
+        method: 'POST',
+        body: { email },
+      }),
+    }),
+    getTasksByAssignee: build.query<Task[], number>({
+      query: (userId) => `tasks/?assignee=${userId}`,
+      providesTags: (result) =>
+        result
+          ? result.map(({ id }) => ({ type: "Tasks" as const, id }))
+          : [{ type: "Tasks", id: "LIST" }],
+    }),
   }),
 });
 
@@ -344,4 +424,10 @@ export const {
   useUpdateSubtaskMutation,
   useDeleteSubtaskMutation,
   useGetSubtasksByAssigneeQuery,
+  useGetTeamsByUserQuery,
+  useGetMyTeamsQuery,
+  useCreateTeamMutation,
+  useInviteMemberMutation,
+  useGetTasksByAssigneeQuery,
+  useUpdateTeamMutation,
 } = api;

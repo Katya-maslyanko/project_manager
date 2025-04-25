@@ -159,6 +159,13 @@ SIMPLE_JWT = {
 }
 
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'katyamaslyanko3@gmail.com'
+EMAIL_HOST_PASSWORD = 'Kat-tan2823825333'
+DEFAULT_FROM_EMAIL = 'katyamaslyanko3@gmail.com'
+FRONTEND_URL = 'http://localhost:3000'
 
 DJOSER = {
     "PASSWORD_RESET_CONFIRM_URL": "auth/password/reset-password-confirmation/?uid={uid}&token={token}",

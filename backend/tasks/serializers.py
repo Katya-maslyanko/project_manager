@@ -2,7 +2,8 @@ from rest_framework import serializers
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.contrib.auth import get_user_model, authenticate
-from .models import UserProfile, Team, Project, ProjectGoal, Subgoal, Task, Subtask, Tag, Comment, Notification, File, Setting, ActivityLog, UserTeamRelation, ProjectMember
+from django.db.models import Sum, Avg
+from .models import ProjectTeam, UserProfile, Team, Project, ProjectGoal, Subgoal, Task, Subtask, Tag, Comment, Notification, File, Setting, ActivityLog, UserTeamRelation, ProjectMember
 
 User = get_user_model()
 
@@ -10,18 +11,19 @@ class UserProfileSerializer(serializers.ModelSerializer):
     role_display = serializers.SerializerMethodField()
     class Meta:
         model = UserProfile
-        fields = ('profile_image', 'role', 'role_display')
+        fields = ('profile_image', 'role', 'role_display', 'position')
     
     def get_role_display(self, obj):
         return obj.get_role_display()
 
 class UserSerializer(serializers.ModelSerializer):
     role = serializers.CharField(source='userprofile.role', required=False)
+    position = serializers.CharField(source='userprofile.position', required=False)
     role_display = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ('id', 'username', 'email', 'first_name', 'last_name', 'role', 'role_display')
+        fields = ('id', 'username', 'email', 'first_name', 'last_name', 'role', 'role_display', 'position')
 
     def get_role_display(self, obj):
         try:
@@ -29,10 +31,33 @@ class UserSerializer(serializers.ModelSerializer):
         except UserProfile.DoesNotExist:
             return None
 
+    def update(self, instance, validated_data):
+        userprofile_data = validated_data.pop('userprofile', {})
+
+        instance.username = validated_data.get('username', instance.username)
+        instance.email = validated_data.get('email', instance.email)
+        instance.first_name = validated_data.get('first_name', instance.first_name)
+        instance.last_name = validated_data.get('last_name', instance.last_name)
+        instance.save()
+
+        userprofile, created = UserProfile.objects.get_or_create(user=instance)
+        userprofile.role = userprofile_data.get('role', userprofile.role)
+        userprofile.position = userprofile_data.get('position', userprofile.position)
+        userprofile.save()
+
+        return instance
+
 class RegisterSerializer(serializers.ModelSerializer):
+    role = serializers.ChoiceField(choices=[
+        ('admin', 'Администратор'),
+        ('project_manager', 'Куратор проекта'),
+        ('team_leader', 'Лидер подгруппы'),
+        ('team_member', 'Участник команды'),
+    ], default='team_member')
+
     class Meta:
         model = User
-        fields = ['first_name', 'last_name', 'username', 'email', 'password']
+        fields = ['first_name', 'last_name', 'username', 'email', 'password', 'role']
 
     def validate_username(self, value):
         if User.objects.filter(username=value).exists():
@@ -45,13 +70,13 @@ class RegisterSerializer(serializers.ModelSerializer):
         return value
 
     def create(self, validated_data):
+        role = validated_data.pop('role', 'team_member')
         user = User(**validated_data)
         user.set_password(validated_data['password'])
         user.save()
         
-        UserProfile.objects.create(user=user, role='team_member')
+        UserProfile.objects.create(user=user, role=role)
         
-        user.refresh_from_db()
         return user
 
 class CustomAuthTokenSerializer(serializers.Serializer):
@@ -63,22 +88,140 @@ class CustomAuthTokenSerializer(serializers.Serializer):
         password = attrs.get('password')
 
         try:
-            user = User.objects.get(email=email)  # Получаем пользователя по email
+            user = User.objects.get(email=email)
         except User.DoesNotExist:
             raise serializers.ValidationError('Неверные учетные данные.')
 
-        user = authenticate(username=user.username, password=password)  # Аутентификация по username
+        user = authenticate(username=user.username, password=password)
 
         if user is None:
             raise serializers.ValidationError('Неверные учетные данные.')
 
         attrs['user'] = user
         return attrs
+    
+class SimpleUserSerializer(serializers.ModelSerializer):
+    role_display = serializers.SerializerMethodField()
+    project_position = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'role_display', 'project_position']
+
+    def get_role_display(self, obj):
+        try:
+            return obj.userprofile.get_role_display()
+        except (UserProfile.DoesNotExist, AttributeError):
+            return None
+
+    def get_project_position(self, obj):
+        try:
+            return obj.userprofile.position
+        except (UserProfile.DoesNotExist, AttributeError):
+            return None
+
 
 class TeamSerializer(serializers.ModelSerializer):
+    project_manager = serializers.PrimaryKeyRelatedField(
+        queryset=User .objects.all(),
+        required=False
+    )
+    members = serializers.PrimaryKeyRelatedField(
+        queryset=User .objects.all(),
+        many=True,
+        write_only=True
+    )
+    members_info = serializers.SerializerMethodField(read_only=True)
+
     class Meta:
         model = Team
-        fields = '__all__'
+        fields = ['id', 'name', 'description', 'members', 'members_info', 'created_at', 'updated_at', 'project_manager']
+
+    def get_members_info(self, obj):
+        relations = obj.userteamrelation_set.select_related('user')
+        result = []
+        for rel in relations:
+            u = rel.user
+            tasks = Task.objects.filter(project__team=obj, assignees=u)
+            subtasks = Subtask.objects.filter(task__project__team=obj, assigned_to=u)
+
+            # Подсчет задач по статусам
+            tasks_new = tasks.filter(status='Новая').count()
+            tasks_in_progress = tasks.filter(status='В процессе').count()
+            tasks_done = tasks.filter(status='Завершено').count()
+
+            # Подсчет подзадач по статусам
+            subtasks_new = subtasks.filter(status='Новая').count()
+            subtasks_in_progress = subtasks.filter(status='В процессе').count()
+            subtasks_done = subtasks.filter(status='Завершено').count()
+
+            # Вычисление средней сложности задач (на основе get_stars)
+            total_tasks = tasks.count()
+            total_subtasks = subtasks.count()
+            task_stars = [TaskSerializer().get_stars(task) for task in tasks]
+            subtask_stars = [SubtaskSerializer().get_stars(subtask) for subtask in subtasks]
+            task_complexity = sum(task_stars) / len(task_stars) if task_stars else 0
+            subtask_complexity = sum(subtask_stars) / len(subtask_stars) if subtask_stars else 0
+            high_complexity_tasks = sum(1 for stars in task_stars if stars >= 4)
+
+            # Рекомендация по распределению задач
+            recommendation = ""
+            if total_tasks == 0 and total_subtasks == 0:
+                recommendation = "Нет задач. Рекомендуется назначить задачу."
+            elif high_complexity_tasks > 0 or total_tasks > 3:
+                recommendation = "Высокая нагрузка или сложные задачи. Не рекомендуется добавлять новые задачи."
+            else:
+                recommendation = "Можно назначить новые задачи."
+
+            result.append({
+                'id': u.id,
+                'username': u.username,
+                'email': u.email,
+                'first_name': u.first_name,
+                'last_name': u.last_name,
+                'role_display': u.userprofile.get_role_display(),
+                'project_position': u.userprofile.position,
+                'analytics': {
+                    'total_tasks': total_tasks,
+                    'tasks_new': tasks_new,
+                    'tasks_in_progress': tasks_in_progress,
+                    'tasks_done': tasks_done,
+                    'total_subtasks': total_subtasks,
+                    'subtasks_new': subtasks_new,
+                    'subtasks_in_progress': subtasks_in_progress,
+                    'subtasks_done': subtasks_done,
+                    'points_sum': tasks.aggregate(total=Sum('points'))['total'] or 0,
+                    'avg_task_complexity': round(task_complexity, 1),
+                    'avg_subtask_complexity': round(subtask_complexity, 1),
+                    'high_complexity_tasks': high_complexity_tasks,
+                    'recommendation': recommendation,
+                }
+            })
+        return result
+
+    def create(self, validated_data):
+        members = validated_data.pop('members', [])
+        project_manager = validated_data.pop('project_manager', None)
+        team = Team.objects.create(**validated_data, project_manager=project_manager)
+        for user in members:
+            UserTeamRelation.objects.create(user=user, team=team, role='team_member')
+        return team
+
+    def update(self, instance, validated_data):
+        members = validated_data.pop('members', None)
+        project_manager = validated_data.pop('project_manager', None)
+        instance.name = validated_data.get('name', instance.name)
+        instance.description = validated_data.get('description', instance.description)
+        if project_manager is not None:
+            instance.project_manager = project_manager
+        instance.save()
+
+        if members is not None:
+            UserTeamRelation.objects.filter(team=instance).delete()
+            for user in members:
+                UserTeamRelation.objects.create(user=user, team=instance, role='team_member')
+
+        return instance
 
 class ProjectSerializer(serializers.ModelSerializer):
     team = TeamSerializer(read_only=True)
