@@ -194,15 +194,100 @@ class TeamViewSet(viewsets.ModelViewSet):
 class ProjectViewSet(viewsets.ModelViewSet):
     queryset = Project.objects.all()
     serializer_class = ProjectSerializer
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return Project.objects.annotate(
+        user = self.request.user
+        try:
+            role = user.userprofile.role
+        except AttributeError:
+            role = 'team_member'
+
+        queryset = Project.objects.annotate(
             total_tasks=Count('tasks', distinct=True),
             total_subtasks=Count('tasks__subtasks', distinct=True),
             tasks_new=Count('tasks', filter=Q(tasks__status='Новая')),
             tasks_in_progress=Count('tasks', filter=Q(tasks__status='В процессе')),
             tasks_done=Count('tasks', filter=Q(tasks__status='Завершено')),
-    )
+        )
+
+        if role == 'project_manager':
+            print(f"Filtering projects for project_manager: {user.username}")
+            filtered_queryset = queryset.filter(curator=user)
+            print(f"Found projects: {filtered_queryset.count()}")
+            return filtered_queryset
+        else:
+            user_team_ids = UserTeamRelation.objects.filter(user=user).values_list('team_id', flat=True)
+            print(f"User team IDs for {user.username}: {list(user_team_ids)}")
+            if user_team_ids:
+                filtered_queryset = queryset.filter(teams__id__in=user_team_ids)
+                print(f"Found projects for teams: {filtered_queryset.count()}")
+                return filtered_queryset
+            print(f"No teams found for {user.username}, returning empty queryset")
+            return queryset.none()
+    # def get_queryset(self):
+    #     print("Returning all projects without filtering by user")
+    #     queryset = Project.objects.annotate(
+    #         total_tasks=Count('tasks', distinct=True),
+    #         total_subtasks=Count('tasks__subtasks', distinct=True),
+    #         tasks_new=Count('tasks', filter=Q(tasks__status='Новая')),
+    #         tasks_in_progress=Count('tasks', filter=Q(tasks__status='В процессе')),
+    #         tasks_done=Count('tasks', filter=Q(tasks__status='Завершено')),
+    #     )
+    #     return queryset
+
+    def create(self, request, *args, **kwargs):
+        user = request.user
+        if not user.is_authenticated:
+            return Response({'error': 'Необходимо авторизоваться для создания проекта'}, status=status.HTTP_401_UNAUTHORIZED)
+        
+        if user.userprofile.role != 'project_manager':
+            return Response({'error': 'Только кураторы проектов могут создавать проекты'}, status=status.HTTP_403_FORBIDDEN)
+
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(curator=user)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def update(self, request, *args, **kwargs):
+        try:
+            role = request.user.userprofile.role
+        except AttributeError:
+            role = 'team_member'
+        if role != 'project_manager':
+            return Response({'error': 'Только кураторы проектов могут редактировать проекты'}, status=status.HTTP_403_FORBIDDEN)
+        return super().update(request, *args, **kwargs)
+
+    def partial_update(self, request, *args, **kwargs):
+        try:
+            role = request.user.userprofile.role
+        except AttributeError:
+            role = 'team_member'
+        if role != 'project_manager':
+            return Response({'error': 'Только кураторы проектов могут редактировать проекты'}, status=status.HTTP_403_FORBIDDEN)
+        return super().partial_update(request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        try:
+            role = request.user.userprofile.role
+        except AttributeError:
+            role = 'team_member'
+        if role != 'project_manager':
+            return Response({'error': 'Только кураторы проектов могут удалять проекты'}, status=status.HTTP_403_FORBIDDEN)
+        return super().destroy(request, *args, **kwargs)
+
+    def perform_create(self, serializer):
+        if 'curator' not in serializer.validated_data or serializer.validated_data['curator'] is None:
+            serializer.validated_data['curator'] = self.request.user
+        serializer.save()
+
+    @action(detail=False, methods=['get'], url_path='my-projects')
+    def my_projects(self, request):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        print(f"Returning projects data: {serializer.data}")
+        return Response(serializer.data)
 
 class ProjectGoalViewSet(viewsets.ModelViewSet):
     queryset = ProjectGoal.objects.all()

@@ -216,7 +216,7 @@ const SubtaskList: React.FC<SubtaskListProps> = ({
                                 />
                               ) : (
                                 <span className="text-sm font-semibold">
-                                  {user.username ? user.username.charAt(0).toUpperCase() : "?"}
+                                  {user.username ? user.username.charAt(0) : "?"}
                                 </span>
                               )}
                             </div>

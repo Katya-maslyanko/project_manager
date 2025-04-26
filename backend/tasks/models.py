@@ -26,8 +26,8 @@ class Team(models.Model):
 class Project(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField()
-    team = models.ForeignKey(Team, related_name='primary_projects', on_delete=models.CASCADE, null=True, blank=True)
-    project_manager = models.ForeignKey(User, related_name='managed_projects', on_delete=models.SET_NULL, null=True, blank=True)
+    curator = models.ForeignKey(User, related_name='curated_projects', on_delete=models.SET_NULL, null=True, blank=True)
+    teams = models.ManyToManyField(Team, related_name='projects', through='ProjectTeam')  
     startDate = models.DateTimeField(null=True, blank=True)  # Дата начала проекта
     endDate = models.DateTimeField(null=True, blank=True)  # Дата окончания проекта
     created_at = models.DateTimeField(auto_now_add=True)

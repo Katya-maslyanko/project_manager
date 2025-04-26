@@ -28,7 +28,9 @@ const TaskList: React.FC<{ projectId: number }> = ({ projectId }) => {
     error,
     isLoading,
     refetch,
-  } = useGetTasksQuery({ projectId: Number(id) });
+  } = useGetTasksQuery({ projectId: Number(id) }, {
+    pollingInterval: 30000,
+  });;
   const [updateTaskStatus] = useUpdateTaskStatusMutation();
   const [updateSubTaskStatus] = useUpdateSubTaskStatusMutation();
   const [deleteTask] = useDeleteTaskMutation();

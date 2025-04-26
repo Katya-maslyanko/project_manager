@@ -45,8 +45,8 @@ export default function TeamTable({ members, showAnalytics }: Props) {
             className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 hover:shadow-lg transition-shadow cursor-pointer border border-gray-200 dark:border-gray-700"
           >
             <div className="flex items-center mb-4">
-              <div className={`${getTagColor(idx)} w-12 h-12 rounded-lg flex items-center justify-center mr-4`}>
-                <span className="font-bold text-xl">{m.username.charAt(0).toUpperCase()}</span>
+              <div className={`${getTagColor(idx)} border w-12 h-12 rounded-lg flex items-center justify-center mr-4`}>
+                <span className='font-semibold'>{m.username.charAt(0)}</span>
               </div>
               <div className="flex-1">
                 <h3 className="font-semibold text-xl text-gray-800 dark:text-white">{m.username}</h3>

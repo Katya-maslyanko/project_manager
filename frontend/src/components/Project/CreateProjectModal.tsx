@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useCreateProjectMutation, useGetMyTeamsQuery } from '@/state/api';
-import { X, Plus, Check } from 'lucide-react';
+import { X, Check } from 'lucide-react';
 import { useModal } from '@/context/ModalContext';
 
 const CreateProjectModal: React.FC = () => {
@@ -30,25 +30,16 @@ const CreateProjectModal: React.FC = () => {
         description,
         startDate,
         endDate,
-        team_id: primaryTeamId,
+        teams_ids: selectedTeamIds,
       }).unwrap();
-
-      if (selectedTeamIds.length > 1) {
-        const projectId = result.id;
-        await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/projects/${projectId}/add-teams/`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${document.cookie.split('; ').find(row => row.startsWith('accessToken='))?.split('=')[1]}`,
-          },
-          body: JSON.stringify({ team_ids: selectedTeamIds }),
-        });
-      }
 
       closeModal();
     } catch (err) {
-      setError('Ошибка при создании проекта. Пожалуйста, попробуйте еще раз.');
+      setError('Ошибка при создании проекта. Пожалуйста, проверьте введенные данные и попробуйте еще раз.');
       console.error('Ошибка при создании проекта:', err);
+      if (err.data) {
+        console.error('Server response:', err.data);
+      }
     }
   };
 
@@ -98,7 +89,7 @@ const CreateProjectModal: React.FC = () => {
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="mt-1 block w-full border border-gray-200 dark:border-gray-700 rounded-md p-2 h-24 dark:bg-gray-700 dark:text-white"
+                className="mt-1 block w-full border border-gray-200 dark:border-gray-700 rounded-md p-2 h-24 dark:bg-gray-700 dark .text-white"
                 rows={4}
               />
             </div>

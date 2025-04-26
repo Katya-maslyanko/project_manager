@@ -88,7 +88,7 @@ const TaskCard = ({ task, onDragStart, onEdit, onStatusChange, onOpenSidebar, on
         <div className="flex -space-x-4 rtl:space-x-reverse">
           {task.assignees && task.assignees.length > 0 ? (
             task.assignees.map((assignee, index) => (
-              <div key={assignee.id} className={`w-10 h-10 border-2 border-gray-100 rounded-full dark:border-gray-800 flex items-center justify-center ${getTagColor(index)}`}>
+              <div key={assignee.id} className={`w-10 h-10 border-2 font-semibold border-gray-100 rounded-full dark:border-gray-800 flex items-center justify-center ${getTagColor(index)}`}>
                 {assignee.profile_image ? (
                   <img className="w-10 h-10 rounded-full" src={assignee.profile_image} alt={assignee.username} />
                 ) : (

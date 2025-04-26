@@ -23,7 +23,14 @@ class TeamAdmin(admin.ModelAdmin):
 
 @admin.register(Project)
 class ProjectAdmin(admin.ModelAdmin):
-    list_display = ('name', 'team', 'created_at', 'updated_at')
+    list_display = ('name', 'get_teams', 'curator', 'created_at', 'updated_at')
+    list_filter = ('created_at', 'updated_at', 'curator')
+    search_fields = ('name', 'description')
+
+    def get_teams(self, obj):
+        return ", ".join([team.name for team in obj.teams.all()])
+    
+    get_teams.short_description = 'Команды'
 
 @admin.register(ProjectGoal)
 class ProjectGoalAdmin(admin.ModelAdmin):

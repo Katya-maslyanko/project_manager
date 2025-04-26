@@ -102,7 +102,7 @@ const UserTeamPage: React.FC = () => {
                 <tr key={m.id} className="border-t dark:border-gray-700">
                   <td className="py-2 px-4">
                     <div className={`${getTagColor(idx)} w-10 h-10 rounded-full flex items-center justify-center`}>
-                      <span className="font-semibold text-lg">{m.username.charAt(0).toUpperCase()}</span>
+                      <span className='font-semibold'>{m.username.charAt(0)}</span>
                     </div>
                   </td>
                   <td className="py-2 px-4">{m.username}</td>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Task, useCreateTaskMutation, useGetTagsQuery, useGetUsersQuery } from "@/state/api"; 
+import { Task, useCreateTaskMutation, useGetTagsQuery, useGetUsersQuery, useGetProjectByIdQuery } from "@/state/api"; 
 import { X, Plus } from "lucide-react";
 import AddAssigneeModal from "./modal/AddAssigneeModal";
 
@@ -11,9 +11,10 @@ interface AddTaskModalProps {
   refetchTasks: () => void;
 }
 
-const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, projectId, currentStatus }) => {
+const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, projectId, currentStatus, refetchTasks }) => {
   const { data: tags = [] } = useGetTagsQuery();
   const { data: users = [] } = useGetUsersQuery();
+  const { data: project, isLoading: projectLoading, error: projectError } = useGetProjectByIdQuery(projectId);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [priority, setPriority] = useState("Новая");
@@ -23,15 +24,34 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, projectId,
   const [startDate, setStartDate] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [status, setStatus] = useState(currentStatus);
-  const [createTask] = useCreateTaskMutation();
+  const [createTask, { isLoading, error }] = useCreateTaskMutation();
   const [isAddAssigneeModalOpen, setIsAddAssigneeModalOpen] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
     setStatus(currentStatus);
   }, [currentStatus]);
 
+  useEffect(() => {
+    if (error && 'data' in error) {
+      const errorData = error.data as any;
+      if (errorData && typeof errorData === 'object') {
+        if (errorData.start_date) {
+          setErrorMessage(errorData.start_date[0] || "Ошибка с датой начала");
+        } else if (errorData.due_date) {
+          setErrorMessage(errorData.due_date[0] || "Ошибка с датой завершения");
+        } else {
+          setErrorMessage("Произошла ошибка при создании задачи");
+        }
+      } else {
+        setErrorMessage("Произошла ошибка при создании задачи");
+      }
+    }
+  }, [error]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMessage(null); // Сбрасываем сообщение об ошибке перед отправкой
     try {
       await createTask({
         title,
@@ -44,10 +64,11 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, projectId,
         start_date: startDate,
         due_date: dueDate,
         project: projectId,
-      });
+      }).unwrap();
+      refetchTasks();
       onClose();
-    } catch (error) {
-      console.error("Ошибка при добавлении задачи:", error);
+    } catch (err) {
+      console.error("Ошибка при добавлении задачи:", err);
     }
   };
 
@@ -73,8 +94,11 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, projectId,
 
   if (!isOpen) return null;
 
+  if (projectLoading) return <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">Загрузка данных проекта...</div>;
+  if (projectError) return <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">Ошибка загрузки данных проекта: {JSON.stringify(projectError)}</div>;
+
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 overflow-y: auto">
+    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 overflow-y-auto">
       <div className="w-[800px] mx-auto bg-white rounded-lg shadow-lg p-6">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold">Добавить задачу</h2>
@@ -82,6 +106,12 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, projectId,
             <X className="h-5 w-5 text-gray-500" />
           </button>
         </div>
+
+        {errorMessage && (
+          <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md">
+            {errorMessage}
+          </div>
+        )}
 
         <form onSubmit={handleSubmit}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -208,6 +238,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, projectId,
                     type="date"
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
+                    min={project?.startDate?.split("T")[0] || ""}
                   />
                 </div>
                 <div className="flex-1">
@@ -218,6 +249,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, projectId,
                     type="date"
                     value={dueDate}
                     onChange={(e) => setDueDate(e.target.value)}
+                    max={project?.endDate?.split("T")[0] || ""}
                   />
                 </div>
               </div>
@@ -227,8 +259,8 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, projectId,
             <button type="button" className="mr-2 border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-200 py-2 px-4" onClick={onClose}>
               Отмена
             </button>
-            <button type="submit" className="mr-2 bg-blue-100 rounded-lg text-blue-700 hover:bg-blue-600 hover:text-white py-2 px-4">
-              Добавить
+            <button type="submit" className="mr-2 bg-blue-100 rounded-lg text-blue-700 hover:bg-blue-600 hover:text-white py-2 px-4" disabled={isLoading}>
+              {isLoading ? "Добавление..." : "Добавить"}
             </button>
           </div>
         </form>

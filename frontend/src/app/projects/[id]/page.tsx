@@ -13,7 +13,7 @@ import { useParams } from "next/navigation";
 const Projects = () => {
   const { id } = useParams();
   const [activeTab, setActiveTab] = useState<string>("Список");
-  const { data: projects = [], error, isLoading } = useGetProjectsQuery();
+  const { data: projects = [], error, isLoading, refetch } = useGetProjectsQuery();
 
   const project = projects.find((project) => project.id.toString() === id);
   const projectId = project ? project.id : null;
@@ -34,7 +34,7 @@ const Projects = () => {
               projectName={project.name}
               projectId={projectId}
             />
-            {activeTab === "Обзор" && projectId && <Overview projectId={projectId} />}
+            {activeTab === "Обзор" && projectId && <Overview projectId={projectId} refetch={refetch} />}
             {activeTab === "Список" && projectId && <TaskList projectId={projectId} />}
             {activeTab === "Доска" && projectId && <KanbanBoard projectId={projectId} />}
             {activeTab === "Хронология" && projectId && <TimeLine projectId={projectId} />}

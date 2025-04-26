@@ -123,11 +123,11 @@ class SimpleUserSerializer(serializers.ModelSerializer):
 
 class TeamSerializer(serializers.ModelSerializer):
     project_manager = serializers.PrimaryKeyRelatedField(
-        queryset=User .objects.all(),
+        queryset=User.objects.all(),
         required=False
     )
     members = serializers.PrimaryKeyRelatedField(
-        queryset=User .objects.all(),
+        queryset=User.objects.all(),
         many=True,
         write_only=True
     )
@@ -142,8 +142,9 @@ class TeamSerializer(serializers.ModelSerializer):
         result = []
         for rel in relations:
             u = rel.user
-            tasks = Task.objects.filter(project__team=obj, assignees=u)
-            subtasks = Subtask.objects.filter(task__project__team=obj, assigned_to=u)
+            # Исправляем фильтр: используем teams вместо team
+            tasks = Task.objects.filter(project__teams=obj, assignees=u)
+            subtasks = Subtask.objects.filter(task__project__teams=obj, assigned_to=u)
 
             # Подсчет задач по статусам
             tasks_new = tasks.filter(status='Новая').count()
@@ -224,31 +225,104 @@ class TeamSerializer(serializers.ModelSerializer):
         return instance
 
 class ProjectSerializer(serializers.ModelSerializer):
-    team = TeamSerializer(read_only=True)
-    team_id = serializers.PrimaryKeyRelatedField(queryset=Team.objects.all(), write_only=True, source='team')
-
+    teams = TeamSerializer(many=True, read_only=True)
+    teams_ids = serializers.PrimaryKeyRelatedField(queryset=Team.objects.all(), many=True, write_only=True, source='teams')
+    curator = UserSerializer(read_only=True)
+    curator_id = serializers.PrimaryKeyRelatedField(queryset=User.objects.all(), write_only=True, source='curator', required=False)
     total_tasks = serializers.IntegerField(read_only=True)
     total_subtasks = serializers.IntegerField(read_only=True)
     tasks_new = serializers.IntegerField(read_only=True)
     tasks_in_progress = serializers.IntegerField(read_only=True)
     tasks_done = serializers.IntegerField(read_only=True)
+    members_info = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Project
-        fields = ['id', 'name', 'description', 'team', 'team_id', 'startDate', 'endDate', 'created_at', 'updated_at', 
-        'total_tasks', 'total_subtasks', 'tasks_new', 'tasks_in_progress', 'tasks_done',]
+        fields = ['id', 'name', 'description', 'teams', 'teams_ids', 'curator', 'curator_id', 
+                  'startDate', 'endDate', 'created_at', 'updated_at', 
+                  'total_tasks', 'total_subtasks', 'tasks_new', 'tasks_in_progress', 'tasks_done', 'members_info']
+
+    def get_members_info(self, obj):
+        result = []
+        seen_user_ids = set()
+        for team in obj.teams.all():
+            relations = team.userteamrelation_set.select_related('user')
+            for rel in relations:
+                u = rel.user
+                if u.id in seen_user_ids:
+                    continue
+                seen_user_ids.add(u.id)
+                tasks = Task.objects.filter(project=obj, assignees=u)
+                subtasks = Subtask.objects.filter(task__project=obj, assigned_to=u)
+
+                tasks_new = tasks.filter(status='Новая').count()
+                tasks_in_progress = tasks.filter(status='В процессе').count()
+                tasks_done = tasks.filter(status='Завершено').count()
+
+                subtasks_new = subtasks.filter(status='Новая').count()
+                subtasks_in_progress = subtasks.filter(status='В процессе').count()
+                subtasks_done = subtasks.filter(status='Завершено').count()
+
+                total_tasks = tasks.count()
+                total_subtasks = subtasks.count()
+                task_stars = [TaskSerializer().get_stars(task) for task in tasks]
+                subtask_stars = [SubtaskSerializer().get_stars(subtask) for subtask in subtasks]
+                task_complexity = sum(task_stars) / len(task_stars) if task_stars else 0
+                subtask_complexity = sum(subtask_stars) / len(subtask_stars) if subtask_stars else 0
+                high_complexity_tasks = sum(1 for stars in task_stars if stars >= 4)
+
+                recommendation = ""
+                if total_tasks == 0 and total_subtasks == 0:
+                    recommendation = "Нет задач. Рекомендуется назначить задачу."
+                elif high_complexity_tasks > 0 or total_tasks > 3:
+                    recommendation = "Высокая нагрузка или сложные задачи. Не рекомендуется добавлять новые задачи."
+                else:
+                    recommendation = "Можно назначить новые задачи."
+
+                result.append({
+                    'id': u.id,
+                    'username': u.username,
+                    'email': u.email,
+                    'first_name': u.first_name,
+                    'last_name': u.last_name,
+                    'role_display': u.userprofile.get_role_display() if hasattr(u, 'userprofile') else None,
+                    'project_position': u.userprofile.position if hasattr(u, 'userprofile') else None,
+                    'analytics': {
+                        'total_tasks': total_tasks,
+                        'tasks_new': tasks_new,
+                        'tasks_in_progress': tasks_in_progress,
+                        'tasks_done': tasks_done,
+                        'total_subtasks': total_subtasks,
+                        'subtasks_new': subtasks_new,
+                        'subtasks_in_progress': subtasks_in_progress,
+                        'subtasks_done': subtasks_done,
+                        'points_sum': tasks.aggregate(total=Sum('points'))['total'] or 0,
+                        'avg_task_complexity': round(task_complexity, 1),
+                        'avg_subtask_complexity': round(subtask_complexity, 1),
+                        'high_complexity_tasks': high_complexity_tasks,
+                        'recommendation': recommendation,
+                    }
+                })
+        return result
+
+    def create(self, validated_data):
+        teams = validated_data.pop('teams', [])
+        project = Project.objects.create(**validated_data)
+        project.teams.set(teams)
+        return project
 
     def update(self, instance, validated_data):
+        teams = validated_data.pop('teams', None)
         instance.name = validated_data.get('name', instance.name)
         instance.description = validated_data.get('description', instance.description)
         instance.startDate = validated_data.get('startDate', instance.startDate)
         instance.endDate = validated_data.get('endDate', instance.endDate)
-
-        team = validated_data.pop('team', None)
-        if team is not None:
-            instance.team = team
-
+        instance.curator = validated_data.get('curator', instance.curator)
         instance.save()
+
+        if teams is not None:
+            instance.teams.set(teams)
+
         return instance
     
     def to_representation(self, instance):
@@ -279,6 +353,30 @@ class TaskSerializer(serializers.ModelSerializer):
     class Meta:
         model = Task
         fields = ['id', 'title', 'description', 'status', 'priority', 'points', 'assignees', 'assignee_ids', 'tag', 'tag_id', 'start_date', 'due_date', 'created_at', 'updated_at', 'project', 'stars']
+
+    def validate(self, attrs):
+        project = None
+        if self.instance:
+            project = self.instance.project
+        else:
+            project_id = attrs.get('project')
+            if project_id:
+                try:
+                    project = Project.objects.get(id=project_id)
+                except Project.DoesNotExist:
+                    raise serializers.ValidationError("Проект не найден")
+
+        if project:
+            start_date = attrs.get('start_date')
+            due_date = attrs.get('due_date')
+
+            if start_date and project.startDate and (start_date < project.startDate):
+                raise serializers.ValidationError("Дата начала задачи не может быть раньше даты начала проекта.")
+
+            if due_date and project.endDate and (due_date > project.endDate):
+                raise serializers.ValidationError("Дата завершения задачи не может быть позже даты завершения проекта.")
+
+        return attrs
 
     def update(self, instance, validated_data):
         instance.title = validated_data.get('title', instance.title)

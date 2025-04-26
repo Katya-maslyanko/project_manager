@@ -39,13 +39,14 @@ export interface Team {
 }
 
 export interface Project {
-  // project_manager: any;
+  members_info: never[];
   id: number;
   name: string;
   description?: string;
   startDate?: string | null;
   endDate?: string | null;
-  team: Team | null;
+  teams: Team[] | null;
+  curator: User | null;
   total_tasks: number;
   tasks_new: number;
   tasks_in_progress: number;
@@ -153,7 +154,7 @@ export const api = createApi({
   tagTypes: ["Projects", "Tasks", "Users", "Tags", "Comments", "Teams", "Subtasks"],
   endpoints: (build) => ({
     getProjects: build.query<Project[], void>({
-      query: () => "projects/",
+      query: () => "projects/my-projects/",
       providesTags: ["Projects"],
     }),
     getProjectById: build.query<Project, number>({
@@ -175,6 +176,13 @@ export const api = createApi({
         body: patch,
       }),
       invalidatesTags: (result, error, { id }) => [{ type: 'Projects', id }],
+    }),
+    deleteProject: build.mutation<void, number>({
+      query: (id) => ({
+        url: `projects/${id}/`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Projects"],
     }),
     getTaskById: build.query<Task, number>({
       query: (id) => `tasks/${id}/`,
@@ -397,6 +405,7 @@ export const {
   useGetProjectsQuery,
   useCreateProjectMutation,
   useGetProjectByIdQuery,
+  useDeleteProjectMutation,
   useUpdateProjectMutation,
   useGetTaskByIdQuery,
   useUpdateProfileMutation,
