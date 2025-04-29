@@ -1,4 +1,4 @@
-import React, {useState} from "react";
+import React, { useState } from "react";
 import { User } from "@/state/api";
 import { X, Check } from "lucide-react";
 
@@ -8,6 +8,7 @@ interface AddAssigneeModalProps {
   users: User[];
   selectedAssignees: number[];
   onAssigneeToggle: (userId: number) => void;
+  projectMembers?: User[];
 }
 
 const AddAssigneeModal: React.FC<AddAssigneeModalProps> = ({
@@ -16,14 +17,19 @@ const AddAssigneeModal: React.FC<AddAssigneeModalProps> = ({
   users,
   selectedAssignees,
   onAssigneeToggle,
+  projectMembers = [],
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
 
   if (!isOpen) return null;
 
-  const filteredUsers = users.filter(user =>
-    user.username.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredUsers = projectMembers.length > 0 
+    ? projectMembers.filter(user =>
+        user.username.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    : users.filter(user =>
+        user.username.toLowerCase().includes(searchTerm.toLowerCase())
+      );
 
   return (
     <div className={`fixed inset-0 flex items-center justify-center ${isOpen ? 'bg-black bg-opacity-5' : ''} z-50`}>

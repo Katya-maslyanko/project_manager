@@ -5,10 +5,14 @@ import { GripVertical, Flag } from "lucide-react";
 const SubtaskCard = ({ subtask, onDragStart, onOpen, onStatusChange }) => {
   const [isChecked, setIsChecked] = useState(subtask.status === 'Завершено');
   const [previousStatus, setPreviousStatus] = useState(subtask.status);
+  const [isOverdue, setIsOverdue] = useState(false);
 
   useEffect(() => {
     setPreviousStatus(subtask.status);
-  }, [subtask.status]);
+    const dueDateObj = new Date(subtask.due_date);
+    const currentDate = new Date();
+    setIsOverdue(currentDate > dueDateObj && subtask.status !== "Завершено");
+  }, [subtask.status, subtask.due_date]);
 
   const handleCheckboxChange = () => {
     const newCheckedState = !isChecked;
@@ -91,7 +95,11 @@ const SubtaskCard = ({ subtask, onDragStart, onOpen, onStatusChange }) => {
         </div>
       </td>
       <td className="py-2 px-4 border-r w-full">
-        {formatDate(subtask.start_date)} - {formatDate(subtask.due_date)}
+      <div className="flex items-center space-x-2">
+          <span className={isOverdue ? "text-red-400 font-semibold" : ""}>
+            {formatDate(subtask.start_date)} - {formatDate(subtask.due_date)}
+          </span>
+        </div>
       </td>
       <td className="py-2 px-4 border-r">
         <div className={`flex items-center border ${subtask.priority === 'Высокий' ? 'border-red-200' : subtask.priority === 'Средний' ? 'border-stone-200' : 'border-emerald-200'} rounded-md px-2 py-1`}>

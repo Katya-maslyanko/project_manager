@@ -23,10 +23,13 @@ interface Props {
 const SubtaskCard: React.FC<Props> = ({ subtask, onDragStart, onOpen, onStatusChange }) => {
   const [isChecked, setIsChecked] = useState(subtask.status === 'Завершено');
   const [previousStatus, setPreviousStatus] = useState(subtask.status);
+  const [isOverdue, setIsOverdue] = useState(false);
 
   useEffect(() => {
-    setPreviousStatus(subtask.status);
-  }, [subtask.status]);
+    const dueDateObj = new Date(subtask.due_date);
+    const currentDate = new Date();
+    setIsOverdue(currentDate > dueDateObj && subtask.status !== "Завершено");
+  }, [subtask.due_date, subtask.status]);
 
   const handleCheckboxChange = () => {
     const newCheckedState = !isChecked;
@@ -92,7 +95,9 @@ const SubtaskCard: React.FC<Props> = ({ subtask, onDragStart, onOpen, onStatusCh
       </p>
 
       <div className="flex items-center justify-between mb-3">
-        <span className="text-xs text-gray-500">{formatDate(subtask.start_date)} - {formatDate(subtask.due_date)}</span>
+        <span className={`text-xs ${isOverdue ? "text-red-400 font-semibold" : "text-gray-500"}`}>
+          {formatDate(subtask.start_date)} - {formatDate(subtask.due_date)}
+        </span>      
       </div>
 
       <div className="flex items-center mb-3">

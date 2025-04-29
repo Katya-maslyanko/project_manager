@@ -1,32 +1,45 @@
 "use client";
 
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { useAuth } from "@/context/AuthContext"; 
-import InboxWrapper from "./inboxWrapper";
+import React from "react";
+import { useAuth } from "@/context/AuthContext";
+import InboxWrapper from "@/app/inboxWrapper";
+import AdminDashboard from "@/components/Dashboard/AdminDashboard";
+import ProjectManagerDashboard from "@/components/Dashboard/ProjectManagerDashboard";
+import TeamMemberDashboard from "@/components/Dashboard/TeamMemberDashboard";
 
-const HomePage = () => {
-  const router = useRouter();
-  // const { user, isAuthenticated, isLoading } = useAuth(); // Получаем состояние аутентификации
+const DashboardPage: React.FC = () => {
+  const { user, isLoading: authLoading } = useAuth();
 
-  // useEffect(() => {
-  //   if (isLoading) return;
+  if (authLoading) {
+    return (
+      <InboxWrapper>
+        <div className="p-6">Загрузка...</div>
+      </InboxWrapper>
+    );
+  }
 
-  //   if (!isAuthenticated) {
-  //     router.push("/auth/signin");
-  //   }
-  // }, [isAuthenticated, isLoading, router]);
+  if (!user) {
+    return (
+      <InboxWrapper>
+        <div className="p-6 text-gray-500">Пользователь не авторизован</div>
+      </InboxWrapper>
+    );
+  }
 
-  // if (isLoading || (isAuthenticated && !user)) {
-  //   return <div className="p-10 text-lg">Загрузка...</div>;
-  // }
+  // Выбираем дашборд в зависимости от роли
+  let dashboardComponent;
+  switch (user.role) {
+    case "admin":
+      dashboardComponent = <AdminDashboard />;
+      break;
+    case "project_manager":
+      dashboardComponent = <ProjectManagerDashboard />;
+      break;
+    default:
+      dashboardComponent = <TeamMemberDashboard />;
+  }
 
-  return (
-    <InboxWrapper>
-      <h1 className="text-2xl font-bold">Добро пожаловать в Inbox!</h1>
-      {/* Здесь будет отображаться содержимое Inbox */}
-    </InboxWrapper>
-  );
+  return <InboxWrapper>{dashboardComponent}</InboxWrapper>;
 };
 
-export default HomePage;
+export default DashboardPage;

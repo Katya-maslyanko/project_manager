@@ -101,7 +101,7 @@ const UserTeamPage: React.FC = () => {
               {filteredMembers.map((m, idx) => (
                 <tr key={m.id} className="border-t dark:border-gray-700">
                   <td className="py-2 px-4">
-                    <div className={`${getTagColor(idx)} w-10 h-10 rounded-full flex items-center justify-center`}>
+                    <div className={`${getTagColor(idx)} border w-10 h-10 rounded-full flex items-center justify-center`}>
                       <span className='font-semibold'>{m.username.charAt(0)}</span>
                     </div>
                   </td>

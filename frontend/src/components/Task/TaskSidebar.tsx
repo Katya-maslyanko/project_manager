@@ -11,6 +11,7 @@ import {
   TrendingUp,
   Plus,
   BadgeCheck,
+  AlertTriangle, // Добавляем иконку для индикации просрочки
 } from "lucide-react";
 import {
   Task,
@@ -18,6 +19,7 @@ import {
   useGetUsersQuery,
   useUpdateTaskMutation,
   useGetSubtasksByTaskIdQuery,
+  useGetProjectByIdQuery,
   Subtask,
 } from "@/state/api";
 import AddAssigneeModal from "./modal/AddAssigneeModal";
@@ -51,6 +53,8 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
   const { data: users = [] } = useGetUsersQuery();
   const [updateTask] = useUpdateTaskMutation();
   const { data: subtasks = [] } = useGetSubtasksByTaskIdQuery(task?.id || 0);
+  const { data: project } = useGetProjectByIdQuery(task?.project || 0, { skip: !task });
+  const projectMembers = project?.members_info || [];
 
   const [editingTitle, setEditingTitle] = useState(false);
   const [editingDescription, setEditingDescription] = useState(false);
@@ -72,6 +76,7 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [isAssigneeModalOpen, setAssigneeModalOpen] = useState(false);
   const [isDeleteConfirmationOpen, setDeleteConfirmationOpen] = useState(false);
+  const [isOverdue, setIsOverdue] = useState(false);
 
   useEffect(() => {
     if (task) {
@@ -84,6 +89,10 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
       setPointsValue(task.points || 0);
       setSelectedAssignees(task.assignees.map((a) => a.id));
       setIsCompleted(task.status === "Завершено");
+
+      const dueDateObj = new Date(task.due_date);
+      const currentDate = new Date();
+      setIsOverdue(currentDate > dueDateObj && task.status !== "Завершено");
     }
   }, [task]);
 
@@ -381,12 +390,21 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
               />
             </div>
           ) : (
-            <span
-              className="text-sm text-gray-600 cursor-pointer hover:text-blue-600 transition-colors"
-              onClick={() => setEditingDates(true)}
-            >
-              {formatDate(startDate)} – {formatDate(dueDate)}
-            </span>
+            <div className="flex items-center space-x-2">
+              <span
+                className={`text-sm cursor-pointer hover:text-blue-600 transition-colors ${
+                  isOverdue ? "text-red-400 font-semibold" : "text-gray-600"
+                }`}
+                onClick={() => setEditingDates(true)}
+              >
+                {formatDate(startDate)} – {formatDate(dueDate)}
+              </span>
+              {isOverdue && (
+                <span className="flex items-center text-red-400 text-xs font-semibold">
+                  <AlertTriangle className="h-4 w-4 mr-1" />
+                </span>
+              )}
+            </div>
           )}
         </div>
 
@@ -541,6 +559,7 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
         users={users}
         selectedAssignees={selectedAssignees}
         onAssigneeToggle={handleAssigneeToggle}
+        projectMembers={projectMembers}
       />
     </div>
     </div>

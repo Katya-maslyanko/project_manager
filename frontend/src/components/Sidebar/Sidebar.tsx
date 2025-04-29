@@ -53,7 +53,6 @@ const AppSidebar: React.FC = () => {
   const pathname = usePathname();
   const { openModal } = useModal();
   const { user, isLoading: authLoading } = useAuth();
-
   const [openProjects, setOpenProjects] = useState(false);
 
   const { data: projects = [], error: projectsError, isLoading: projectsLoading } = useGetProjectsQuery(undefined, {
@@ -69,12 +68,10 @@ const AppSidebar: React.FC = () => {
     setOpenProjects((prev) => !prev);
   };
 
-  const handleSidebarClose = () => {
-    setOpenProjects(false);
-  };
-
   useEffect(() => {
-    if (!isExpanded && !isMobileOpen) {
+    if (isExpanded || isMobileOpen) {
+      setOpenProjects(true);
+    } else {
       setOpenProjects(false);
     }
   }, [isExpanded, isMobileOpen]);

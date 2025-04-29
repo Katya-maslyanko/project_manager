@@ -39,7 +39,6 @@ export interface Team {
 }
 
 export interface Project {
-  members_info: never[];
   id: number;
   name: string;
   description?: string;
@@ -52,6 +51,7 @@ export interface Project {
   tasks_in_progress: number;
   tasks_done: number;
   total_subtasks: number;
+  members_info: Member[];
 }
 
 export interface Assignee {
@@ -392,7 +392,7 @@ export const api = createApi({
       }),
     }),
     getTasksByAssignee: build.query<Task[], number>({
-      query: (userId) => `tasks/?assignee=${userId}`,
+      query: (userId) => `tasks/?assigneeId=${userId}`,
       providesTags: (result) =>
         result
           ? result.map(({ id }) => ({ type: "Tasks" as const, id }))

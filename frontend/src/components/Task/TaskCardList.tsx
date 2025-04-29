@@ -1,13 +1,17 @@
 import React, { useEffect, useState } from "react";
-import { GripVertical, Flag, Pencil } from "lucide-react";
+import { GripVertical, Flag, AlertTriangle } from "lucide-react";
 
 const TaskCard = ({ task, onDragStart, onEdit, onStatusChange, onOpenSidebar, onDelete }) => {
   const [isChecked, setIsChecked] = useState(task.status === 'Завершено');
   const [previousStatus, setPreviousStatus] = useState(task.status);
+  const [isOverdue, setIsOverdue] = useState(false);
 
   useEffect(() => {
     setPreviousStatus(task.status);
-  }, [task.status]);
+    const dueDateObj = new Date(task.due_date);
+    const currentDate = new Date();
+    setIsOverdue(currentDate > dueDateObj && task.status !== "Завершено");
+  }, [task.status, task.due_date]);
 
   const handleCheckboxChange = () => {
     const newCheckedState = !isChecked;
@@ -39,10 +43,12 @@ const TaskCard = ({ task, onDragStart, onEdit, onStatusChange, onOpenSidebar, on
   };
 
   return (
-    <tr className="border-t border-b cursor-grab active:cursor-grabbing" 
-    onClick={() => onOpenSidebar(task)}
-    onDragStart={(e) => onDragStart(e, task)}
-    draggable>
+    <tr 
+      className="border-t border-b cursor-grab active:cursor-grabbing" 
+      onClick={() => onOpenSidebar(task)}
+      onDragStart={(e) => onDragStart(e, task)}
+      draggable
+    >
       <td className="py-3 pl-2 border-r">
         <div className="flex items-center">
           <div className="cursor-pointer">
@@ -71,15 +77,6 @@ const TaskCard = ({ task, onDragStart, onEdit, onStatusChange, onOpenSidebar, on
             >
               {task.title}
             </label>
-            {/* <div 
-              className="mr-1 p-1 rounded cursor-pointer hover:bg-gray-200" 
-              onClick={(e) => {
-                e.stopPropagation();
-                onEdit();
-              }}
-            >
-              <Pencil className="h-4 w-4 text-gray-500" />
-            </div> */}
           </div>
         </div>
       </td>
@@ -102,7 +99,11 @@ const TaskCard = ({ task, onDragStart, onEdit, onStatusChange, onOpenSidebar, on
         </div>
       </td>
       <td className="py-2 px-4 border-r w-full">
-        {formatDate(task.start_date)} - {formatDate(task.due_date)}
+        <div className="flex items-center space-x-2">
+          <span className={isOverdue ? "text-red-400 font-semibold" : ""}>
+            {formatDate(task.start_date)} - {formatDate(task.due_date)}
+          </span>
+        </div>
       </td>
       <td className="py-2 px-4 border-r">
         <div className={`flex items-center border ${task.priority === 'Высокий' ? 'border-red-200' : task.priority === 'Средний' ? 'border-stone-200' : 'border-emerald-200'} rounded-md px-2 py-1`}>

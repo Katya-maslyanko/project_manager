@@ -1,8 +1,15 @@
-import React from "react";
-import { Pencil, Flag } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Flag} from "lucide-react";
 
 const TaskCardBoard = ({ task, onDragStart, onEdit, onStatusChange, onOpenSidebar, onDelete }) => {
-  const [isChecked, setIsChecked] = React.useState(task.status === 'Завершено');
+  const [isChecked, setIsChecked] = useState(task.status === 'Завершено');
+  const [isOverdue, setIsOverdue] = useState(false);
+
+  useEffect(() => {
+    const dueDateObj = new Date(task.due_date);
+    const currentDate = new Date();
+    setIsOverdue(currentDate > dueDateObj && task.status !== "Завершено");
+  }, [task.due_date, task.status]);
 
   const handleCheckboxChange = () => {
     const newCheckedState = !isChecked;
@@ -71,15 +78,6 @@ const TaskCardBoard = ({ task, onDragStart, onEdit, onStatusChange, onOpenSideba
           >
             {task.title}
           </label>
-          {/* <div 
-            className="p-1 rounded cursor-pointer hover:bg-gray-200" 
-            onClick={(e) => {
-            e.stopPropagation();
-            onEdit();
-            }}
-          >
-            <Pencil className="h-4 w-4 text-gray-500" />
-          </div> */}
         </div>
       </div>
 
@@ -88,7 +86,9 @@ const TaskCardBoard = ({ task, onDragStart, onEdit, onStatusChange, onOpenSideba
       </p>
 
       <div className="flex items-center justify-between mb-3">
-        <span className="text-xs text-gray-500">{formatDate(task.start_date)} - {formatDate(task.due_date)}</span>
+        <span className={`text-xs ${isOverdue ? "text-red-400 font-semibold" : "text-gray-500"}`}>
+          {formatDate(task.start_date)} - {formatDate(task.due_date)}
+        </span>
       </div>
 
       <div className="flex items-center mb-3">
@@ -146,7 +146,7 @@ const TaskCardBoard = ({ task, onDragStart, onEdit, onStatusChange, onOpenSideba
           <span className="text-sm">{task.points}%</span>
         </div>
         <div className="flex -space-x-3 cursor-pointer">
-        {task.assignees && task.assignees.length > 0 ? (
+          {task.assignees && task.assignees.length > 0 ? (
             <>
               {task.assignees.slice(0, 3).map((assignee, index) => (
                 <div key={assignee.id} className={`w-10 h-10 font-semibold border-2 border-gray-100 rounded-full dark:border-gray-800 flex items-center justify-center ${getTagColor(index)}`}>

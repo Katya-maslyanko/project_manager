@@ -27,6 +27,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, projectId,
   const [createTask, { isLoading, error }] = useCreateTaskMutation();
   const [isAddAssigneeModalOpen, setIsAddAssigneeModalOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const projectMembers = project?.members_info || [];
 
   useEffect(() => {
     setStatus(currentStatus);
@@ -271,6 +272,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, projectId,
           users={users} 
           selectedAssignees={selectedAssignees} 
           onAssigneeToggle={handleAssigneeToggle} 
+          projectMembers={projectMembers}
         />
       </div>
     </div>

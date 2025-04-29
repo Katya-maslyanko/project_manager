@@ -26,7 +26,26 @@ type Props = {
   setActiveTab: (tabName: string) => void;
   onSelectSort: (value: string) => void;
   onApplyFilter: (filters: any) => void;
+  members: Member[];
 };
+
+interface Member {
+  id: number;
+  username: string;
+  first_name: string;
+  last_name: string;
+}
+
+const tagColors = [
+  'bg-red-100 text-red-600',
+  'bg-yellow-100 text-yellow-600',
+  'bg-green-100 text-green-600',
+  'bg-blue-100 text-blue-600',
+  'bg-purple-100 text-purple-600',
+  'bg-pink-100 text-pink-600',
+];
+
+const getTagColor = (index: number) => tagColors[index % tagColors.length];
 
 const ProjectHeader: React.FC<Props> = ({
   projectName,
@@ -34,6 +53,7 @@ const ProjectHeader: React.FC<Props> = ({
   setActiveTab,
   onSelectSort,
   onApplyFilter,
+  members,
 }) => {
   const breadcrumbsItems: BreadcrumbItem[] = [
     { label: "Главная", href: "/" },
@@ -72,14 +92,38 @@ const ProjectHeader: React.FC<Props> = ({
         <h1 className="text-3xl font-semibold text-gray-800 dark:text-white">
           {projectName}
         </h1>
-        {/* Тут необходимо добавить иконки user тип котоорые учавствуют в проекте */}
-        <button
-          className="flex items-center px-4 py-2 text-base border bg-blue-100 rounded-lg text-blue-700 hover:text-white hover:bg-blue-600 duration-200 transition-colors dark:border-gray-800 dark:bg-dark-bg dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white"
-          onClick={() => console.log("Share clicked")}
-        >
-          <SquareArrowOutUpRight className="h-5 w-5 mr-2" />
-          Делиться
-        </button>
+        <div className="flex items-center space-x-4">
+          {/* Добавляем отображение участников проекта */}
+          <div className="flex -space-x-2 rtl:space-x-reverse">
+            {members && members.length > 0 ? (
+              members.slice(0, 5).map((member, index) => (
+                <div 
+                  key={member.id} 
+                  className={`w-11 h-11 border-2 font-semibold border-gray-100 rounded-full dark:border-gray-800 flex items-center justify-center ${getTagColor(index)}`}
+                  title={`${member.first_name} ${member.last_name}`}
+                >
+                  <span className="text-xs">
+                    {member.username ? member.username.charAt(0) : '?'}
+                  </span>
+                </div>
+              ))
+            ) : (
+              <span className="text-gray-500 text-sm">Нет участников</span>
+            )}
+            {members && members.length > 5 && (
+              <div className="w-11 h-11 border-2 font-semibold border-gray-100 rounded-full dark:border-gray-800 flex items-center justify-center bg-gray-200 text-gray-600">
+                <span className="text-xs">+{members.length - 5}</span>
+              </div>
+            )}
+          </div>
+          <button
+            className="flex items-center px-4 py-2 text-base border bg-blue-100 rounded-lg text-blue-700 hover:text-white hover:bg-blue-600 duration-200 transition-colors dark:border-gray-800 dark:bg-dark-bg dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white"
+            onClick={() => console.log("Share clicked")}
+          >
+            <SquareArrowOutUpRight className="h-5 w-5 mr-2" />
+            Делиться
+          </button>
+        </div>
       </div>
 
       <div className="flex items-center mb-4">

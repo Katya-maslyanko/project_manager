@@ -1,5 +1,5 @@
 import React, { useState, useEffect, ChangeEvent } from "react";
-import { Ellipsis, X, Flag, Calendar, Users, Tag, TrendingUp, Plus, BadgeCheck } from "lucide-react";
+import { Ellipsis, X, Flag, Calendar, Users, Tag, TrendingUp, Plus, BadgeCheck, AlertTriangle } from "lucide-react";
 import { Subtask, useGetTagsQuery, useGetUsersQuery, useUpdateSubtaskMutation, useDeleteSubtaskMutation, User } from "@/state/api";
 import SubtaskAssigneeModal from "./modal/SubtaskAssigneeModal";
 import DeleteConfirmationModal from "../Task/modal/DeleteConfirmationModal";
@@ -45,6 +45,7 @@ const SubtaskSidebar: React.FC<SubtaskSidebarProps> = ({ subtask, onClose, onCom
   const [isAssigneeModalOpen, setIsAssigneeModalOpen] = useState(false);
   const [isDeleteConfirmationOpen, setIsDeleteConfirmationOpen] = useState(false);
   const [activeSubtaskForAssignees, setActiveSubtaskForAssignees] = useState<Subtask | null>(null);
+  const [isOverdue, setIsOverdue] = useState(false);
 
   useEffect(() => {
     if (subtask) {
@@ -57,6 +58,10 @@ const SubtaskSidebar: React.FC<SubtaskSidebarProps> = ({ subtask, onClose, onCom
       setPointsValue(subtask.points || 0);
       setSelectedAssignees(subtask.assigned_to?.map((a) => a.id) || []);
       setIsCompleted(subtask.status === "Завершено");
+
+      const dueDateObj = new Date(subtask.due_date);
+      const currentDate = new Date();
+      setIsOverdue(currentDate > dueDateObj && subtask.status !== "Завершено");
     }
   }, [subtask]);
 
@@ -328,12 +333,21 @@ const SubtaskSidebar: React.FC<SubtaskSidebarProps> = ({ subtask, onClose, onCom
                 />
               </div>
             ) : (
+              <div className="flex items-center space-x-2">
               <span
-                className="text-sm text-gray-600 cursor-pointer hover:text-blue-600 transition-colors"
+                className={`text-sm cursor-pointer hover:text-blue-600 transition-colors ${
+                  isOverdue ? "text-red-400 font-semibold" : "text-gray-600"
+                }`}
                 onClick={() => setEditingDates(true)}
               >
                 {formatDate(startDate)} – {formatDate(dueDate)}
               </span>
+              {isOverdue && (
+                <span className="flex items-center text-red-400 text-xs font-semibold">
+                  <AlertTriangle className="h-4 w-4 mr-1" />
+                </span>
+              )}
+            </div>
             )}
           </div>
 

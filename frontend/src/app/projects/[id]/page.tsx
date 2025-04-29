@@ -33,6 +33,7 @@ const Projects = () => {
               setActiveTab={setActiveTab}
               projectName={project.name}
               projectId={projectId}
+              members={project.members_info}
             />
             {activeTab === "Обзор" && projectId && <Overview projectId={projectId} refetch={refetch} />}
             {activeTab === "Список" && projectId && <TaskList projectId={projectId} />}
