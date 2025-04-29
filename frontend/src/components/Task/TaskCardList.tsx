@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { GripVertical, Flag, AlertTriangle } from "lucide-react";
+import { GripVertical, Flag, Pencil } from "lucide-react";
 
 const TaskCard = ({ task, onDragStart, onEdit, onStatusChange, onOpenSidebar, onDelete }) => {
   const [isChecked, setIsChecked] = useState(task.status === 'Завершено');
@@ -43,11 +43,10 @@ const TaskCard = ({ task, onDragStart, onEdit, onStatusChange, onOpenSidebar, on
   };
 
   return (
-    <tr 
-      className="border-t border-b cursor-grab active:cursor-grabbing" 
-      onClick={() => onOpenSidebar(task)}
-      onDragStart={(e) => onDragStart(e, task)}
-      draggable
+    <tr className="border-t border-b cursor-grab active:cursor-grabbing" 
+    onClick={() => onOpenSidebar(task)}
+    onDragStart={(e) => onDragStart(e, task)}
+    draggable
     >
       <td className="py-3 pl-2 border-r">
         <div className="flex items-center">

@@ -124,6 +124,20 @@ class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
     permission_classes = [AllowAny]
 
+    def get_queryset(self):
+        user = self.request.user
+        if not user.is_authenticated:
+            return User.objects.none()
+
+        try:
+            role = getattr(user.userprofile, 'role', 'team_member')
+        except AttributeError:
+            role = 'team_member'
+
+        if role == 'admin':
+            return User.objects.all()
+        return User.objects.filter(id=user.id)
+
 class TeamViewSet(viewsets.ModelViewSet):
     queryset = Team.objects.all()
     serializer_class = TeamSerializer
@@ -135,7 +149,9 @@ class TeamViewSet(viewsets.ModelViewSet):
 
         role = getattr(user.userprofile, 'role', 'team_member')
 
-        if role == 'project_manager':
+        if role == 'admin':
+            return Team.objects.all()
+        elif role == 'project_manager':
             return Team.objects.filter(project_manager=user)
         else:
             team_ids = UserTeamRelation.objects.filter(user=user).values_list('team_id', flat=True)
@@ -211,11 +227,19 @@ class ProjectViewSet(viewsets.ModelViewSet):
             tasks_done=Count('tasks', filter=Q(tasks__status='Завершено')),
         )
 
-        if role == 'project_manager':
+        if role == 'admin':
+            return queryset
+        elif role == 'project_manager':
             print(f"Filtering projects for project_manager: {user.username}")
-            filtered_queryset = queryset.filter(curator=user)
-            print(f"Found projects: {filtered_queryset.count()}")
-            return filtered_queryset
+            curated_projects = queryset.filter(curator=user)
+            print(f"Found curated projects: {curated_projects.count()}")
+            user_team_ids = UserTeamRelation.objects.filter(user=user).values_list('team_id', flat=True)
+            if user_team_ids:
+                team_projects = queryset.filter(teams__id__in=user_team_ids)
+                print(f"Found team projects for project_manager: {team_projects.count()}")
+                combined_projects = curated_projects | team_projects
+                return combined_projects.distinct()
+            return curated_projects
         else:
             user_team_ids = UserTeamRelation.objects.filter(user=user).values_list('team_id', flat=True)
             print(f"User team IDs for {user.username}: {list(user_team_ids)}")
@@ -327,6 +351,11 @@ class TaskViewSet(viewsets.ModelViewSet):
             queryset = queryset.order_by(*order_fields)
 
         return queryset
+
+    def update(self, request, *args, **kwargs):
+        print("PATCH request for task:", kwargs.get('pk'))
+        print("Request data:", request.data)
+        return super().update(request, *args, **kwargs)
 
 class SubtaskViewSet(viewsets.ModelViewSet):
     queryset = Subtask.objects.all()

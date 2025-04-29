@@ -57,9 +57,12 @@ const AppSidebar: React.FC = () => {
 
   const { data: projects = [], error: projectsError, isLoading: projectsLoading } = useGetProjectsQuery(undefined, {
     skip: authLoading || !user,
+    refetchOnMountOrArgChange: true,
   });
+  
   const { data: myTeams = [], error: teamsError, isLoading: teamsLoading } = useGetMyTeamsQuery(undefined, {
     skip: authLoading || !user,
+    refetchOnMountOrArgChange: true,
   });
 
   const isActive = useCallback((path: string) => path === pathname, [pathname]);
@@ -76,17 +79,7 @@ const AppSidebar: React.FC = () => {
     }
   }, [isExpanded, isMobileOpen]);
 
-  let filteredProjects: any[] = [];
-  if (user) {
-    const role = user.role || 'team_member';
-    if (role === 'project_manager') {
-      filteredProjects = projects.filter(project => project.curator?.id === user.id);
-    } else {
-      filteredProjects = projects.filter(project => {
-        return myTeams.some(team => project.teams.some((projectTeam: { id: number; }) => projectTeam.id === team.id));
-      });
-    }
-  }
+  let filteredProjects: any[] = projects; 
 
   navItems[3].subItems = filteredProjects.map((project) => ({
     name: project.name,

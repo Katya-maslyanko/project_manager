@@ -52,26 +52,31 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, projectId,
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setErrorMessage(null); // Сбрасываем сообщение об ошибке перед отправкой
-    try {
-      await createTask({
-        title,
-        description,
-        priority,
-        points,
-        assignee_ids: selectedAssignees,
-        tag_id: tag,
-        status,
-        start_date: startDate,
-        due_date: dueDate,
-        project: projectId,
-      }).unwrap();
-      refetchTasks();
-      onClose();
-    } catch (err) {
-      console.error("Ошибка при добавлении задачи:", err);
+    setErrorMessage(null);
+    if (startDate && dueDate && new Date(dueDate) < new Date(startDate)) {
+        setErrorMessage("Дата завершения не может быть раньше даты начала");
+        return;
     }
-  };
+
+    try {
+        await createTask({
+            title,
+            description,
+            priority,
+            points,
+            assignee_ids: selectedAssignees,
+            tag_id: tag,
+            status,
+            start_date: startDate,
+            due_date: dueDate,
+            project: projectId,
+        }).unwrap();
+        refetchTasks();
+        onClose();
+    } catch (err) {
+        console.error("Ошибка при добавлении задачи:", err);
+    }
+};
 
   const handleTagChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setTag(Number(e.target.value));
@@ -245,14 +250,15 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, projectId,
                 <div className="flex-1">
                   <label className="block text-sm font-medium text-gray-700" htmlFor="due-date">Дата завершения</label>
                   <input
-                    className="mt-1 block w-full border border-gray-200 rounded-md shadow-sm p-2"
-                    id="due-date"
-                    type="date"
-                    value={dueDate}
-                    onChange={(e) => setDueDate(e.target.value)}
-                    max={project?.endDate?.split("T")[0] || ""}
+                      className="mt-1 block w-full border border-gray-200 rounded-md shadow-sm p-2"
+                      id="due-date"
+                      type="date"
+                      value={dueDate}
+                      onChange={(e) => setDueDate(e.target.value)}
+                      min={startDate || project?.startDate?.split("T")[0] || ""} // Ограничение минимальной даты
+                      max={project?.endDate?.split("T")[0] || ""}
                   />
-                </div>
+              </div>
               </div>
             </div>
           </div>

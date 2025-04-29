@@ -27,7 +27,7 @@ const ProjectOverviewPage: React.FC<{ projectId: number; refetch: () => void }> 
   const router = useRouter();
   const { user } = useAuth();
   const { data: project, isLoading: projLoading } = useGetProjectByIdQuery(projectId, {
-    pollingInterval: 10000,
+    pollingInterval: 1000000,
   });
   const [updateProject] = useUpdateProjectMutation();
   const [deleteProject] = useDeleteProjectMutation();

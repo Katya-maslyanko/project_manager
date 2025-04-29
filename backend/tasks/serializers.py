@@ -2,7 +2,7 @@ from rest_framework import serializers
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.contrib.auth import get_user_model, authenticate
-from django.db.models import Sum, Avg
+from django.db.models import Sum, Count
 from .models import ProjectTeam, UserProfile, Team, Project, ProjectGoal, Subgoal, Task, Subtask, Tag, Comment, Notification, File, Setting, ActivityLog, UserTeamRelation, ProjectMember
 
 User = get_user_model()
@@ -356,25 +356,21 @@ class TaskSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         project = None
-        if self.instance:
-            project = self.instance.project
-        else:
-            project_id = attrs.get('project')
-            if project_id:
-                try:
-                    project = Project.objects.get(id=project_id)
-                except Project.DoesNotExist:
-                    raise serializers.ValidationError("Проект не найден")
 
         if project:
             start_date = attrs.get('start_date')
             due_date = attrs.get('due_date')
 
             if start_date and project.startDate and (start_date < project.startDate):
-                raise serializers.ValidationError("Дата начала задачи не может быть раньше даты начала проекта.")
+                raise serializers.ValidationError({"start_date": "Дата начала задачи не может быть раньше даты начала проекта."})
 
             if due_date and project.endDate and (due_date > project.endDate):
-                raise serializers.ValidationError("Дата завершения задачи не может быть позже даты завершения проекта.")
+                raise serializers.ValidationError({"due_date": "Дата завершения задачи не может быть позже даты завершения проекта."})
+
+        start_date = attrs.get('start_date')
+        due_date = attrs.get('due_date')
+        if start_date and due_date and due_date < start_date:
+            raise serializers.ValidationError({"due_date": "Дата завершения не может быть раньше даты начала."})
 
         return attrs
 

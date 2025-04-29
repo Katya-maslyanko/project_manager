@@ -367,26 +367,37 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
                 className={commonInputStyle + " w-40"}
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
+                min={project?.startDate?.split("T")[0] || ""}
                 onBlur={() => {
+                  if (startDate && dueDate && new Date(dueDate) < new Date(startDate)) {
+                      alert("Дата завершения не может быть раньше даты начала");
+                      setDueDate(startDate);
+                  }
                   handleUpdate({
-                    start_date: startDate,
-                    due_date: dueDate,
+                      start_date: startDate,
+                      due_date: dueDate,
                   });
                   setEditingDates(false);
-                }}
+              }}
               />
               <input
-                type="date"
-                className={commonInputStyle + " w-40"}
-                value={dueDate}
-                onChange={(e) => setDueDate(e.target.value)}
-                onBlur={() => {
-                  handleUpdate({
-                    start_date: startDate,
-                    due_date: dueDate,
-                  });
-                  setEditingDates(false);
-                }}
+                  type="date"
+                  className={commonInputStyle + " w-40"}
+                  value={dueDate}
+                  onChange={(e) => setDueDate(e.target.value)}
+                  min={startDate || project?.startDate?.split("T")[0] || ""}
+                  max={project?.endDate?.split("T")[0] || ""}
+                  onBlur={() => {
+                      if (startDate && dueDate && new Date(dueDate) < new Date(startDate)) {
+                          alert("Дата завершения не может быть раньше даты начала");
+                          setDueDate(startDate);
+                      }
+                      handleUpdate({
+                          start_date: startDate,
+                          due_date: dueDate,
+                      });
+                      setEditingDates(false);
+                  }}
               />
             </div>
           ) : (

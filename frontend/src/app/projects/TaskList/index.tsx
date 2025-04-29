@@ -29,7 +29,7 @@ const TaskList: React.FC<{ projectId: number }> = ({ projectId }) => {
     isLoading,
     refetch,
   } = useGetTasksQuery({ projectId: Number(id) }, {
-    pollingInterval: 30000,
+    pollingInterval: 10000,
   });;
   const [updateTaskStatus] = useUpdateTaskStatusMutation();
   const [updateSubTaskStatus] = useUpdateSubTaskStatusMutation();
@@ -45,18 +45,28 @@ const TaskList: React.FC<{ projectId: number }> = ({ projectId }) => {
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
   const [isAddModalOpen, setAddModalOpen] = useState(false);
   const [draggedTask, setDraggedTask] = useState<Task | null>(null);
+  const [isUpdating, setIsUpdating] = useState(false);
   const [currentTaskStatus, setCurrentTaskStatus] = useState<string>("Новая"); 
   const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null);
   const selectedTask = tasks.find((t) => t.id === selectedTaskId) || null;
   const [selectedSubtask, setSelectedSubtask] = useState<Subtask | null>(null);
 
-  const handleDragStart = (e: React.DragEvent<HTMLDivElement>, task: Task) => {
+  const handleDragStart = (e: React.DragEvent<HTMLTableRowElement>, task: Task) => {
+    console.log("Drag started for task:", task.id);
     setDraggedTask(task);
+    e.dataTransfer.effectAllowed = "move";
   };
 
   const handleStatusChange = async (taskId: number, newStatus: string) => {
-    await updateTaskStatus({ id: taskId, status: newStatus });
-    refetch();
+    if (isUpdating) return;
+    setIsUpdating(true);
+    try {
+      await updateTaskStatus({ id: taskId, status: newStatus }).unwrap();
+    } catch (error) {
+      console.error("Error updating task status:", error);
+    } finally {
+      setIsUpdating(false);
+    }
   };
 
   const handleStatusChangeSub = async (subtaskId: number, newStatus: string) => {
@@ -84,11 +94,16 @@ const TaskList: React.FC<{ projectId: number }> = ({ projectId }) => {
     setDeleteModalOpen(true);
   };
 
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+  };
+
   const handleDrop = async (e: React.DragEvent<HTMLDivElement>, status: string) => {
     e.preventDefault();
-    if (draggedTask) {
-      await updateTaskStatus({ id: draggedTask.id, status });
-      await updateSubTaskStatus({ id: draggedTask.id, status });
+    if (draggedTask && !isUpdating) {
+      console.log("Dropping task", draggedTask.id, "to status:", status);
+      await handleStatusChange(draggedTask.id, status);
       setDraggedTask(null);
     }
   };
@@ -168,7 +183,7 @@ const TaskList: React.FC<{ projectId: number }> = ({ projectId }) => {
       {/* <!-- К исполнению --> */}
       <div
         className="p-4 mb-6"
-        onDragOver={(e) => e.preventDefault()}
+        onDragOver={handleDragOver}
         onDrop={(e) => handleDrop(e, 'Новая')}
       >
         <div className="flex items-center justify-between mb-4">
@@ -219,7 +234,7 @@ const TaskList: React.FC<{ projectId: number }> = ({ projectId }) => {
       {/* <!-- В процессе --> */}
       <div
         className="p-4 mb-6"
-        onDragOver={(e) => e.preventDefault()}
+        onDragOver={handleDragOver}
         onDrop={(e) => handleDrop(e, 'В процессе')}
       >
         <div className="flex items-center justify-between mb-4">
@@ -270,7 +285,7 @@ const TaskList: React.FC<{ projectId: number }> = ({ projectId }) => {
       {/* <!-- Завершено --> */}
       <div
         className="p-4 mb-6"
-        onDragOver={(e) => e.preventDefault()}
+        onDragOver={handleDragOver}
         onDrop={(e) => handleDrop(e, 'Завершено')}
       >
         <div className="flex items-center justify-between mb-4">
