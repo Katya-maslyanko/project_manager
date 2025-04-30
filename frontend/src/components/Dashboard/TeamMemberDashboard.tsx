@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useGetSubtasksByAssigneeQuery, useGetProjectsQuery, useGetMyTeamsQuery, useUpdateSubTaskStatusMutation } from "@/state/api";
 import { useAuth } from "@/context/AuthContext";
 import {
@@ -32,12 +32,14 @@ const TeamMemberDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState("Новые");
   const [filteredSubtasks, setFilteredSubtasks] = useState(subtasks);
 
-  React.useEffect(() => {
-    let result = [...subtasks];
-    if (activeTab === "Новые") result = result.filter(subtask => subtask.status === "Новая");
-    if (activeTab === "В процессе") result = result.filter(subtask => subtask.status === "В процессе");
-    if (activeTab === "Завершено") result = result.filter(subtask => subtask.status === "Завершено");
-    setFilteredSubtasks(result);
+  useEffect(() => {
+    if (subtasks.length > 0) {
+      let result = [...subtasks];
+      if (activeTab === "Новые") result = result.filter(subtask => subtask.status === "Новая");
+      if (activeTab === "В процессе") result = result.filter(subtask => subtask.status === "В процессе");
+      if (activeTab === "Завершено") result = result.filter(subtask => subtask.status === "Завершено");
+      setFilteredSubtasks(result);
+    }
   }, [subtasks, activeTab]);
 
   if (subtasksLoading || projectsLoading || teamsLoading) {
@@ -91,7 +93,7 @@ const TeamMemberDashboard: React.FC = () => {
     }
   };
 
-  const TabButton: React.FC<{ name: string; icon?: React.ReactNode; setActiveTab: (tab: string) => void; activeTab: string }> = ({ name, icon, setActiveTab, activeTab }) => {
+  const TabButton: React.FC<{ name: string; icon?: React.ReactElement; setActiveTab: (tab: string) => void; activeTab: string }> = ({ name, icon, setActiveTab, activeTab }) => {
     const isActive = activeTab === name;
     return (
       <button

@@ -22,7 +22,7 @@ const TimeLineList: React.FC = () => {
 
   const ganttContainer = useRef<HTMLDivElement>(null);
   const [contextMenu, setContextMenu] = useState<{ taskId: number; x: number; y: number } | null>(null);
-  const [gridWidth, setGridWidth] = useState(480);
+  const [gridWidth, setGridWidth] = useState(450);
   const [isResizing, setIsResizing] = useState(false);
   const resizeRef = useRef<HTMLDivElement>(null);
   const draggedTaskRef = useRef<{ id: number; startY: number; startParent: string | null } | null>(null);
@@ -55,6 +55,8 @@ const TimeLineList: React.FC = () => {
     setContextMenu(null);
     refetch();
   };
+
+  // Улучшенная логика изменения ширины с плавным переходом
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       if (isResizing && resizeRef.current && ganttContainer.current) {
@@ -95,12 +97,7 @@ const TimeLineList: React.FC = () => {
             tree: true,
             template: (task: any) => {
               if (task.isGroup) {
-                const icon = task.id === "nova" 
-                  ? '<svg class="h-5 w-5 mr-2 text-yellow-600" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-circle-check-icon lucide-circle-check"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>'
-                  : task.id === "in_progress"
-                    ? '<svg class="h-5 w-5 mr-2 text-purple-600" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-loader-circle-icon lucide-loader-circle"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>'
-                    : '<svg class="h-5 w-5 mr-2 text-green-600" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-book-check-icon lucide-book-check"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20"/><path d="m9 9.5 2 2 4-4"/></svg>';
-                    return `<div class="mt-1.5 flex items-center justify-center w-full font-semibold text-gray-800 text-sm px-2 py-1 rounded-md">${icon}${task.text}</div>`;
+                return `<div class="flex items-center justify-center font-semibold text-gray-800 text-sm bg-gray-50 px-2 py-1 rounded-md">${task.text}</div>`;
               }
               const checkbox = `<div class="inline-flex items-center"><label class="flex items-center cursor-pointer relative"><input type="checkbox" id="taskCheckbox-${task.id}" class="peer h-5 w-5 cursor-pointer transition-all appearance-none rounded-full hover:shadow-md border border-gray-300 checked:bg-blue-600 checked:border-blue-600" ${task.status === "Завершено" ? "checked" : ""} onclick="window.handleCheckboxChange(${task.id}, '${task.status}')"/><span class="absolute text-white opacity-0 peer-checked:opacity-100 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"><svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor" stroke="currentColor" strokeWidth="1"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path></svg></span></label></div>`;
               return `<div class="flex items-center justify-center w-full">${checkbox}<label for="taskCheckbox-${task.id}" class="ml-2 w-[180px] overflow-hidden text-ellipsis whitespace-nowrap font-semibold text-gray-800">${task.text}</label></div>`;
@@ -109,18 +106,18 @@ const TimeLineList: React.FC = () => {
           {
             name: "assignees",
             label: "Исполнители",
-            width: 200,
+            width: 120,
             template: (task: any) => {
-              if (task.isGroup || !task.assignees || task.assignees.length === 0) return "<span class='text-gray-500 text-sm flex justify-center items-center mt-2'>Нет</span>";
-              let html = task.assignees.slice(0, 2).map((assignee: any, index: number) => (
+              if (task.isGroup || !task.assignees || task.assignees.length === 0) return "<span class='text-gray-500 text-sm flex justify-center items-center'>Нет</span>";
+              let html = task.assignees.slice(0, 3).map((assignee: any, index: number) => (
                 `<div class="w-10 h-10 font-semibold border-2 border-white rounded-full dark:border-gray-800 flex items-center justify-center ${getTagColor(index)}">
                   ${assignee.profile_image ? 
                     `<img class="w-10 h-10 rounded-full object-cover" src="${assignee.profile_image}" alt="${assignee.username}" />` : 
                     `<span class="text-sm">${assignee.username ? assignee.username.split(' ').map((n: string) => n[0]).join('') : '?'}</span>`}
                 </div>`
               )).join('');
-              if (task.assignees.length > 2) {
-                html += `<div class="w-10 h-10 border-2 border-white rounded-full flex items-center justify-center bg-gray-200"><span class="text-gray-500 text-sm">+${task.assignees.length - 2}</span></div>`;
+              if (task.assignees.length > 3) {
+                html += `<div class="w-10 h-10 border-2 border-white rounded-full flex items-center justify-center bg-gray-200"><span class="text-gray-500 text-sm">+${task.assignees.length - 3}</span></div>`;
               }
               return `<div class="flex -space-x-2 justify-center items-center">${html}</div>`;
             },
@@ -131,9 +128,12 @@ const TimeLineList: React.FC = () => {
             width: 100,
             template: (task: any) => {
               if (task.isGroup) return "";
-              return `<div class="flex items-center justify-center border mt-1.5 ${
+              return `<div class="flex items-center justify-center border ${
                 task.priority === "Высокий" ? "border-red-200" : task.priority === "Средний" ? "border-amber-200" : "border-green-200"
               } rounded-md px-2 py-1">
+                <div class="h-4 w-4 mr-1 ${
+                  task.priority === "Высокий" ? "text-red-600" : task.priority === "Средний" ? "text-amber-600" : "text-green-600"
+                }"></div>
                 <span class="text-xs font-semibold ${
                   task.priority === "Высокий" ? "text-red-600" : task.priority === "Средний" ? "text-amber-600" : "text-green-600"
                 }">${task.priority}</span>
@@ -147,7 +147,7 @@ const TimeLineList: React.FC = () => {
             template: (task: any) => {
               if (task.isGroup) return "";
               const isOverdue = new Date(task.end_date).getTime() < new Date().getTime() && task.status !== "Завершено";
-              return `<span class="text-xs mt-3 flex justify-center items-center ${isOverdue ? "text-red-500 font-semibold" : "text-gray-600"}">${formatDate(task.start_date)} - ${formatDate(task.end_date)}</span>`;
+              return `<span class="text-xs flex justify-center items-center ${isOverdue ? "text-red-500 font-semibold" : "text-gray-600"}">${formatDate(task.start_date)} - ${formatDate(task.end_date)}</span>`;
             },
           },
         ];
@@ -174,6 +174,8 @@ const TimeLineList: React.FC = () => {
           }
           return "";
         };
+
+        // Улучшенное контекстное меню с центрированием
         window.gantt.attachEvent("onContextMenu", (taskId: number, linkId: number, event: MouseEvent) => {
           if (taskId && !window.gantt.getTask(taskId).isGroup) {
             const viewportHeight = window.innerHeight;
@@ -192,6 +194,7 @@ const TimeLineList: React.FC = () => {
           return true;
         });
 
+        // Улучшенный drag-and-drop с визуальной обратной связью
         window.gantt.attachEvent("onBeforeTaskDrag", (id: number, mode: string, e: any) => {
           const task = window.gantt.getTask(id);
           draggedTaskRef.current = {
@@ -355,21 +358,20 @@ const TimeLineList: React.FC = () => {
       <div className="overflow-x-auto sm:rounded-lg relative">
         <div className="relative shadow-md rounded-xl overflow-hidden bg-white">
           <div ref={ganttContainer} id="gantt" className="min-w-[1000px] w-full h-[600px] border border-gray-200" />
+          {/* Тонкая и красивая плашка для изменения ширины */}
           <div
             ref={resizeRef}
-            className="absolute top-0 bottom-0 w-1 bg-gray-200 cursor-ew-resize hover:bg-blue-400 transition-colors duration-200 z-10 select-none"
+            className="absolute top-0 bottom-0 w-1 bg-gray-300 cursor-ew-resize hover:bg-blue-500 transition-colors duration-200 z-10"
             style={{ left: `${gridWidth}px` }}
-            onMouseDown={(e) => {
-              e.preventDefault();
-              setIsResizing(true);
-            }}
+            onMouseDown={() => setIsResizing(true)}
           >
-            <div className="absolute top-1/2 left-0 transform -translate-y-1/2 w-1 h-12 bg-blue-400 rounded-full opacity-0 hover:opacity-100 transition-opacity duration-200"></div>
+            <div className="absolute top-1/2 left-0 transform -translate-y-1/2 w-0.5 h-10 bg-blue-500 rounded-full opacity-0 hover:opacity-100 transition-opacity duration-200"></div>
           </div>
         </div>
+        {/* Модальное окно по центру экрана */}
         {contextMenu && (
           <div
-            className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-5 z-50"
+            className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50"
             onClick={() => setContextMenu(null)}
           >
             <div
@@ -378,21 +380,21 @@ const TimeLineList: React.FC = () => {
             >
               <h4 className="font-semibold text-gray-800 mb-3 text-lg border-b pb-2 text-center">Изменить статус</h4>
               <button
-                className="w-full text-left px-4 py-2 hover:bg-yellow-50 rounded-lg text-gray-800 text-sm flex items-center transition-colors duration-200"
+                className="block w-full text-left px-4 py-2 hover:bg-yellow-50 rounded-lg text-gray-800 text-sm flex items-center transition-colors duration-200"
                 onClick={() => handleStatusChange(contextMenu.taskId, "Новая")}
               >
                 <CircleCheck className="h-5 w-5 mr-3 text-yellow-600" />
                 <span className="font-medium">Новая</span>
               </button>
               <button
-                className="w-full text-left px-4 py-2 hover:bg-purple-50 rounded-lg text-gray-800 text-sm flex items-center transition-colors duration-200"
+                className="block w-full text-left px-4 py-2 hover:bg-purple-50 rounded-lg text-gray-800 text-sm flex items-center transition-colors duration-200"
                 onClick={() => handleStatusChange(contextMenu.taskId, "В процессе")}
               >
                 <LoaderCircle className="h-5 w-5 mr-3 text-purple-600" />
                 <span className="font-medium">В процессе</span>
               </button>
               <button
-                className="w-full text-left px-4 py-2 hover:bg-green-50 rounded-lg text-gray-800 text-sm flex items-center transition-colors duration-200"
+                className="block w-full text-left px-4 py-2 hover:bg-green-50 rounded-lg text-gray-800 text-sm flex items-center transition-colors duration-200"
                 onClick={() => handleStatusChange(contextMenu.taskId, "Завершено")}
               >
                 <BookCheck className="h-5 w-5 mr-3 text-green-600" />
@@ -434,45 +436,16 @@ const TimeLineList: React.FC = () => {
           border-radius: 0.75rem;
           box-shadow: 0 3px 6px rgba(0, 0, 0, 0.08);
           background-color: #ffffff;
-          margin: 8px 0;
+          margin: 6px 0;
           transition: all 0.3s ease;
           cursor: grab;
           position: relative;
           overflow: hidden;
-          height: 40px;
         }
         .gantt_task_line:hover {
           box-shadow: 0 6px 12px rgba(0, 0, 0, 0.12);
           cursor: grabbing;
           transform: translateY(-2px);
-        }
-        .gantt_grid_data .gantt_row {
-          border-bottom: 1px solid #edf2f7;
-          transition: background-color 0.2s ease;
-          display: flex;
-          align-items: center;
-          height: 48px;
-        }
-        .gantt_grid_data .gantt_row:hover {
-          background-color: #f8fafc;
-        }
-        .gantt_grid_data .gantt_row.gantt_row_project {
-          background-color: #f1f5f9;
-          font-weight: 600;
-          border-radius: 0.5rem;
-          transition: background-color 0.2s ease;
-        }
-        .gantt_grid_data .gantt_row.gantt_row_project:hover {
-          background-color: #e2e6ea;
-        }
-        .gantt_grid_data .gantt_row.gantt_row_project.gantt_grid_row_nova:hover {
-          background-color: #fefce8;
-        }
-        .gantt_grid_data .gantt_row.gantt_row_project.gantt_grid_row_in_progress:hover {
-          background-color: #faf5ff;
-        }
-        .gantt_grid_data .gantt_row.gantt_row_project.gantt_grid_row_done:hover {
-          background-color: #f0fdf4;
         }
         .gantt_task_line.dragging-task {
           opacity: 0.8;
@@ -509,6 +482,20 @@ const TimeLineList: React.FC = () => {
           box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
           border: 1px solid #e2e8f0;
           background-color: #ffffff;
+        }
+        .gantt_grid_data .gantt_row {
+          border-bottom: 1px solid #edf2f7;
+          transition: background-color 0.2s ease;
+          display: flex;
+          align-items: center;
+        }
+        .gantt_grid_data .gantt_row:hover {
+          background-color: #f8fafc;
+        }
+        .gantt_grid_data .gantt_row.gantt_row_project {
+          background-color: #f1f5f9;
+          font-weight: 600;
+          border-radius: 0.5rem;
         }
         @keyframes fade-in {
           from {

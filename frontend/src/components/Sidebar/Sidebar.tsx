@@ -23,29 +23,6 @@ type NavItem = {
   subItems?: { name: string; path: string; pro?: boolean; new?: boolean }[];
 };
 
-const navItems: NavItem[] = [
-  {
-    icon: <LayoutDashboard />,
-    name: "Дашборд",
-    path: "/",
-  },
-  {
-    icon: <CircleCheckBig />,
-    name: "Мои задачи",
-    path: "/my-tasks",
-  },
-  {
-    icon: <Users />,
-    name: "Команда",
-    path: "/team",
-  },
-  {
-    name: "Проекты",
-    icon: <FolderKanban />,
-    subItems: [],
-  },
-];
-
 const projectColors = ["bg-red-200", "bg-green-200", "bg-blue-200", "bg-purple-200"];
 
 const AppSidebar: React.FC = () => {
@@ -81,11 +58,55 @@ const AppSidebar: React.FC = () => {
 
   let filteredProjects: any[] = projects; 
 
-  navItems[3].subItems = filteredProjects.map((project) => ({
-    name: project.name,
-    path: `/projects/${project.id}`,
-  }));
+  // Определяем элементы навигации в зависимости от роли пользователя
+  const getNavItems = () => {
+    if (!user) return [];
 
+    const baseNavItems: NavItem[] = [
+      {
+        icon: <LayoutDashboard />,
+        name: "Дашборд",
+        path: "/",
+      },
+    ];
+
+    if (user.role === 'admin') {
+      return [
+        ...baseNavItems,
+        {
+          icon: <Users />,
+          name: "Пользователи",
+          path: "/users",
+        },
+      ];
+    } else if (user.role === 'project_manager') {
+      return [
+        ...baseNavItems,
+        {
+          icon: <Users />,
+          name: "Команда",
+          path: "/team",
+        },
+      ];
+    } else {
+      // Для всех остальных ролей (участники проекта и другие)
+      return [
+        ...baseNavItems,
+        {
+          icon: <CircleCheckBig />,
+          name: "Мои задачи",
+          path: "/my-tasks",
+        },
+        {
+          icon: <Users />,
+          name: "Команда",
+          path: "/team",
+        },
+      ];
+    }
+  };
+
+  const navItems = getNavItems();
   const canCreateProjects = user && user.role === 'project_manager';
 
   return (
@@ -127,7 +148,7 @@ const AppSidebar: React.FC = () => {
       <div className="flex flex-col overflow-y-auto duration-300 ease-linear no-scrollbar">
         <nav className="mb-6">
           <ul className="flex flex-col gap-2">
-            {navItems.slice(0, 3).map((nav) => (
+            {navItems.map((nav) => (
               <li key={nav.name}>
                 <Link
                   href={nav.path!}
@@ -143,52 +164,55 @@ const AppSidebar: React.FC = () => {
               </li>
             ))}
           </ul>
-          <div className="border-t border-gray-200 dark:border-gray-700 my-4" />
-
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <h2 className={`text-gray-400 dark:text-gray-500 text-sm font-semibold uppercase flex items-center ${!(isExpanded || isMobileOpen) ? "justify-center w-full" : ""}`}>
-                {(isExpanded || isMobileOpen) ? "Мои Проекты" : "..."}
-              </h2>
-              {(isExpanded || isMobileOpen) && canCreateProjects && (
-                <button onClick={openModal} className="bg-blue-100 dark:bg-blue-900 rounded-lg p-1 w-8 h-8 flex items-center justify-center">
-                  <Plus className="text-blue-600 dark:text-blue-400 w-4 h-4" />
-                </button>
+          {user && user.role !== 'admin' && (
+            <div className="border-t border-gray-200 dark:border-gray-700 my-4" />
+          )}
+          {user && user.role !== 'admin' && (
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <h2 className={`text-gray-400 dark:text-gray-500 text-sm font-semibold uppercase flex items-center ${!(isExpanded || isMobileOpen) ? "justify-center w-full" : ""}`}>
+                  {(isExpanded || isMobileOpen) ? "Мои Проекты" : "..."}
+                </h2>
+                {(isExpanded || isMobileOpen) && canCreateProjects && (
+                  <button onClick={openModal} className="bg-blue-100 dark:bg-blue-900 rounded-lg p-1 w-8 h-8 flex items-center justify-center">
+                    <Plus className="text-blue-600 dark:text-blue-400 w-4 h-4" />
+                  </button>
+                )}
+              </div>
+              <button onClick={toggleProjects} className={`flex items-center justify-between w-full px-4 py-3 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-all duration-200 ease-in-out ${openProjects ? "bg-gray-200 dark:bg-gray-700" : ""}`}>
+                <span className="flex items-center">
+                  <FolderKanban className={`mr-2 ${openProjects ? "text-blue-600 dark:text-blue-400" : "text-gray-500 dark:text-gray-400"}`} />
+                  {(isExpanded || isMobileOpen) && <span className={`text-lg ${openProjects ? "text-blue-600 dark:text-blue-400" : "text-gray-600 dark:text-gray-300"}`}>Проекты</span>}
+                </span>
+                <ChevronDown className={`transition-transform duration-200 ${openProjects ? "rotate-180" : ""} text-gray-500 dark:text-gray-400`} />
+              </button>
+              {openProjects && (
+                <ul className="ml-4 mt-2 space-y-1">
+                  {projectsLoading || teamsLoading ? (
+                    <li className="text-gray-500 dark:text-gray-400 text-sm px-4 py-2">Загрузка проектов...</li>
+                  ) : projectsError || teamsError ? (
+                    <li className="text-red-500 dark:text-red-400 text-sm px-4 py-2">Ошибка загрузки</li>
+                  ) : filteredProjects.length > 0 ? (
+                    filteredProjects.map((project, index) => (
+                      <li key={project.name} className="flex items-center">
+                        <Link
+                          href={`/projects/${project.id}`}
+                          className={`flex items-center w-full px-4 py-3 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-all duration-200 ease-in-out ${
+                            isActive(`/projects/${project.id}`) ? "bg-blue-600 text-white dark:bg-blue-800" : "text-gray-600 dark:text-gray-300"
+                          }`}
+                        >
+                          <span className={`mr-2 w-4 h-4 rounded ${projectColors[index % projectColors.length]}`} />
+                          {project.name}
+                        </Link>
+                      </li>
+                    ))
+                  ) : (
+                    <li className="text-gray-500 dark:text-gray-400 text-sm px-4 py-2">Нет проектов</li>
+                  )}
+                </ul>
               )}
             </div>
-            <button onClick={toggleProjects} className={`flex items-center justify-between w-full px-4 py-3 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-all duration-200 ease-in-out ${openProjects ? "bg-gray-200 dark:bg-gray-700" : ""}`}>
-              <span className="flex items-center">
-                <FolderKanban className={`mr-2 ${openProjects ? "text-blue-600 dark:text-blue-400" : "text-gray-500 dark:text-gray-400"}`} />
-                {(isExpanded || isMobileOpen) && <span className={`text-lg ${openProjects ? "text-blue-600 dark:text-blue-400" : "text-gray-600 dark:text-gray-300"}`}>Проекты</span>}
-              </span>
-              <ChevronDown className={`transition-transform duration-200 ${openProjects ? "rotate-180" : ""} text-gray-500 dark:text-gray-400`} />
-            </button>
-            {openProjects && (
-              <ul className="ml-4 mt-2 space-y-1">
-                {projectsLoading || teamsLoading ? (
-                  <li className="text-gray-500 dark:text-gray-400 text-sm px-4 py-2">Загрузка проектов...</li>
-                ) : projectsError || teamsError ? (
-                  <li className="text-red-500 dark:text-red-400 text-sm px-4 py-2">Ошибка загрузки</li>
-                ) : navItems[3].subItems?.length > 0 ? (
-                  navItems[3].subItems?.map((subItem, index) => (
-                    <li key={subItem.name} className="flex items-center">
-                      <Link
-                        href={subItem.path!}
-                        className={`flex items-center w-full px-4 py-3 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-all duration-200 ease-in-out ${
-                          isActive(subItem.path!) ? "bg-blue-600 text-white dark:bg-blue-800" : "text-gray-600 dark:text-gray-300"
-                        }`}
-                      >
-                        <span className={`mr-2 w-4 h-4 rounded ${projectColors[index % projectColors.length]}`} />
-                        {subItem.name}
-                      </Link>
-                    </li>
-                  ))
-                ) : (
-                  <li className="text-gray-500 dark:text-gray-400 text-sm px-4 py-2">Нет проектов</li>
-                )}
-              </ul>
-            )}
-          </div>
+          )}
         </nav>
       </div>
     </aside>

@@ -1,12 +1,13 @@
 "use client";
 
-import React, { useState } from "react";
-import { useGetProjectsQuery, useGetMyTeamsQuery } from "@/state/api";
+import React, { useState, useMemo } from "react";
+import { useGetProjectsQuery, useGetMyTeamsQuery, useGetActivityLogsByProjectQuery } from "@/state/api";
 import { useAuth } from "@/context/AuthContext";
 import {
   Calendar,
   Users,
   FolderKanban,
+  Activity,
 } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, PieChart, Pie, Cell } from "recharts";
 
@@ -14,12 +15,15 @@ const ProjectManagerDashboard: React.FC = () => {
   const { user } = useAuth();
   const { data: allProjects = [], isLoading: projectsLoading } = useGetProjectsQuery(undefined, {
     skip: !user,
+    refetchOnMountOrArgChange: true,
   });
   const { data: myTeams = [], isLoading: teamsLoading } = useGetMyTeamsQuery(undefined, {
     skip: !user,
+    refetchOnMountOrArgChange: true,
   });
 
   const [showAllMembers, setShowAllMembers] = useState(false);
+  const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
 
   if (projectsLoading || teamsLoading) {
     return <div className="p-6">Загрузка данных...</div>;
@@ -64,10 +68,44 @@ const ProjectManagerDashboard: React.FC = () => {
     const options: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'short', year: 'numeric' };
     return new Date(dateString).toLocaleDateString('ru-RU', options);
   };
-//   console.log("All Projects Data (before filtering):", allProjects);
-//   console.log("Filtered Projects Data (curator only):", projects);
-//   console.log("Projects Chart Data:", projectChartData);
-//   console.log("Total Tasks Breakdown - New:", tasksNew, "In Progress:", tasksInProgress, "Done:", tasksDone);
+
+  // Получение данных активности для выбранного проекта
+  const { data: activityLogs = [], isLoading: activityLoading } = useGetActivityLogsByProjectQuery(
+    { projectId: selectedProjectId || undefined },
+    { skip: !selectedProjectId }
+  );
+
+  // Подготовка данных для графика активности
+  const activityData = useMemo(() => {
+    const today = new Date();
+    const startDate = new Date(today);
+    startDate.setFullYear(today.getFullYear() - 1); // Последний год
+    const days = Math.ceil((today.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+    const grid = Array.from({ length: days }, (_, i) => {
+      const date = new Date(startDate);
+      date.setDate(startDate.getDate() + i);
+      return { date: date.toISOString().split('T')[0], count: 0 };
+    });
+
+    activityLogs.forEach(log => {
+      const logDate = new Date(log.day).toISOString().split('T')[0];
+      const dayIndex = grid.findIndex(day => day.date === logDate);
+      if (dayIndex >= 0) {
+        grid[dayIndex].count += log.activity_count;
+      }
+    });
+
+    return grid;
+  }, [activityLogs]);
+
+  // Определение цвета ячейки на основе количества активности
+  const getActivityColor = (count: number) => {
+    if (count === 0) return "#ebedf0"; // Нет активности
+    if (count < 2) return "#9be9a8"; // Низкая активность
+    if (count < 5) return "#40c463"; // Средняя активность
+    if (count < 10) return "#30a14e"; // Высокая активность
+    return "#216e39"; // Очень высокая активность
+  };
 
   return (
     <div className="p-4 bg-gray-50 min-h-screen">
@@ -129,6 +167,7 @@ const ProjectManagerDashboard: React.FC = () => {
                     <th className="py-3 px-4">Сроки</th>
                     <th className="py-3 px-4">Задачи (Всего/Завершено)</th>
                     <th className="py-3 px-4 min-w-[50px] overflow-hidden text-ellipsis whitespace-nowrap">Прогресс (%)</th>
+                    {/* <th className="py-3 px-4">Действия</th> */}
                   </tr>
                 </thead>
                 <tbody>
@@ -146,16 +185,24 @@ const ProjectManagerDashboard: React.FC = () => {
                           {project.total_tasks} / {project.tasks_done}
                         </td>
                         <td className="py-2 px-4">
-                            <div className="flex items-center justify-between">
-                                <div className="w-full bg-gray-200 rounded-full h-2.5">
-                                <div
+                          <div className="flex items-center justify-between">
+                            <div className="w-full bg-gray-200 rounded-full h-2.5">
+                              <div
                                 className="bg-blue-600 h-2.5 rounded-full"
                                 style={{ width: `${progress}%` }}
-                                ></div>
+                              ></div>
                             </div>
                             <span className="text-sm ml-2 text-gray-600">{progress}%</span>
-                            </div>
+                          </div>
                         </td>
+                        {/* <td className="py-2 px-4">
+                          <button
+                            className="text-blue-600 hover:underline text-sm"
+                            onClick={() => setSelectedProjectId(project.id)}
+                          >
+                            Показать активность
+                          </button>
+                        </td> */}
                       </tr>
                     );
                   })}
@@ -212,6 +259,47 @@ const ProjectManagerDashboard: React.FC = () => {
           </div>
         )}
       </div>
+      {/* График активности
+      {selectedProjectId && (
+        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+          <div className="flex items-center mb-4">
+            <Activity size={20} className="text-blue-600 mr-2" />
+            <h2 className="text-lg font-semibold">
+              Активность проекта: {projects.find(p => p.id === selectedProjectId)?.name || "Неизвестно"}
+            </h2>
+          </div>
+          {activityLoading ? (
+            <p className="text-gray-500 text-center">Загрузка данных активности...</p>
+          ) : activityData.length === 0 ? (
+            <p className="text-gray-500 text-center">Данные по активности отсутствуют.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <div className="grid grid-cols-7 gap-1 min-w-[700px]">
+                {activityData.map((day, index) => (
+                  <div
+                    key={index}
+                    className="w-4 h-4 rounded-sm cursor-pointer"
+                    style={{ backgroundColor: getActivityColor(day.count) }}
+                    title={`${day.date}: ${day.count} действий`}
+                  />
+                ))}
+              </div>
+              <div className="mt-2 text-sm text-gray-500">
+                <p>Активность за последний год. Цвет ячейки отражает количество действий в день.</p>
+                <div className="flex items-center mt-1">
+                  <span className="mr-2">Меньше</span>
+                  <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: "#ebedf0" }} />
+                  <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: "#9be9a8" }} />
+                  <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: "#40c463" }} />
+                  <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: "#30a14e" }} />
+                  <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: "#216e39" }} />
+                  <span className="ml-2">Больше</span>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )} */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
         <div className="bg-white rounded-lg shadow-sm p-4">
           <div className="flex items-center mb-4">
@@ -280,13 +368,13 @@ const ProjectManagerDashboard: React.FC = () => {
                       <td className="py-2 px-4 border-r">{member.analytics.total_tasks} / {member.analytics.tasks_done}</td>
                       <td className="py-2 px-4">
                         <div className="flex items-center justify-between">
-                            <div className="w-full bg-gray-200 rounded-full h-2.5">
-                                <div
-                                className="bg-blue-600 h-2.5 rounded-full"
-                                style={{ width: `${progress}%` }}
-                                ></div>
-                            </div>
-                            <span className="text-sm ml-2 text-gray-600">{progress}%</span>
+                          <div className="w-full bg-gray-200 rounded-full h-2.5">
+                            <div
+                              className="bg-blue-600 h-2.5 rounded-full"
+                              style={{ width: `${progress}%` }}
+                            ></div>
+                          </div>
+                          <span className="text-sm ml-2 text-gray-600">{progress}%</span>
                         </div>
                       </td>
                     </tr>

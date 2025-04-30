@@ -151,7 +151,7 @@ export const api = createApi({
     },
   }),
   reducerPath: "api",
-  tagTypes: ["Projects", "Tasks", "Users", "Tags", "Comments", "Teams", "Subtasks"],
+  tagTypes: ["Projects", "Tasks", "Users", "Tags", "Comments", "Teams", "Subtasks", "ActivityLogs"],
   endpoints: (build) => ({
     getProjects: build.query<Project[], void>({
       query: () => "projects/my-projects/",
@@ -409,6 +409,19 @@ export const api = createApi({
           ? result.map(({ id }) => ({ type: "Tasks" as const, id }))
           : [{ type: "Tasks", id: "LIST" }],
     }),
+    getActivityLogsByProject: build.query<{ day: string; project_name: string; activity_count: number }[], { projectId?: number }>({
+      query: ({ projectId }) => `activity_logs/by-project/${projectId ? `?project_id=${projectId}` : ''}`,
+      providesTags: (result) =>
+        result ? result.map((_, index) => ({ type: "ActivityLogs" as const, id: index })) : [{ type: "ActivityLogs", id: "LIST" }],
+    }),
+    updateUserRole: build.mutation<void, { userId: number; role: string }>({
+      query: ({ userId, role }) => ({
+        url: `users/${userId}/`,
+        method: 'PATCH',
+        body: { role },
+      }),
+      invalidatesTags: ['Users'],
+    }),
   }),
 });
 
@@ -450,4 +463,6 @@ export const {
   useInviteMemberMutation,
   useGetTasksByAssigneeQuery,
   useUpdateTeamMutation,
+  useGetActivityLogsByProjectQuery,
+  useUpdateUserRoleMutation,
 } = api;

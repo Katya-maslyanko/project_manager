@@ -563,9 +563,13 @@ class SettingSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class ActivityLogSerializer(serializers.ModelSerializer):
+    project_name = serializers.CharField(source='project.name', read_only=True)
+    day = serializers.DateTimeField(read_only=True)
+    activity_count = serializers.IntegerField(read_only=True)
+
     class Meta:
         model = ActivityLog
-        fields = '__all__'
+        fields = ['day', 'project_name', 'activity_count']
 
 class UserTeamRelationSerializer(serializers.ModelSerializer):
     class Meta:

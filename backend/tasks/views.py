@@ -127,7 +127,7 @@ class UserViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         if not user.is_authenticated:
-            return User.objects.none()
+            return User.objects.all()
 
         try:
             role = getattr(user.userprofile, 'role', 'team_member')
@@ -136,7 +136,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
         if role == 'admin':
             return User.objects.all()
-        return User.objects.filter(id=user.id)
+        return User.objects.all()
 
 class TeamViewSet(viewsets.ModelViewSet):
     queryset = Team.objects.all()
@@ -230,24 +230,24 @@ class ProjectViewSet(viewsets.ModelViewSet):
         if role == 'admin':
             return queryset
         elif role == 'project_manager':
-            print(f"Filtering projects for project_manager: {user.username}")
+            print(f"Фильтр по куратору проекта: {user.username}")
             curated_projects = queryset.filter(curator=user)
-            print(f"Found curated projects: {curated_projects.count()}")
+            print(f"Куратор проекта: {curated_projects.count()}")
             user_team_ids = UserTeamRelation.objects.filter(user=user).values_list('team_id', flat=True)
             if user_team_ids:
                 team_projects = queryset.filter(teams__id__in=user_team_ids)
-                print(f"Found team projects for project_manager: {team_projects.count()}")
+                print(f"Проекты куратора проекта: {team_projects.count()}")
                 combined_projects = curated_projects | team_projects
                 return combined_projects.distinct()
             return curated_projects
         else:
             user_team_ids = UserTeamRelation.objects.filter(user=user).values_list('team_id', flat=True)
-            print(f"User team IDs for {user.username}: {list(user_team_ids)}")
+            print(f"Исполнители команд {user.username}: {list(user_team_ids)}")
             if user_team_ids:
                 filtered_queryset = queryset.filter(teams__id__in=user_team_ids)
-                print(f"Found projects for teams: {filtered_queryset.count()}")
+                print(f"Проекты команды: {filtered_queryset.count()}")
                 return filtered_queryset
-            print(f"No teams found for {user.username}, returning empty queryset")
+            # print(f"Нет в команде {user.username}, вопрос")
             return queryset.none()
     # def get_queryset(self):
     #     print("Returning all projects without filtering by user")
@@ -310,7 +310,6 @@ class ProjectViewSet(viewsets.ModelViewSet):
     def my_projects(self, request):
         queryset = self.get_queryset()
         serializer = self.get_serializer(queryset, many=True)
-        print(f"Returning projects data: {serializer.data}")
         return Response(serializer.data)
 
 class ProjectGoalViewSet(viewsets.ModelViewSet):
@@ -405,9 +404,36 @@ class SettingViewSet(viewsets.ModelViewSet):
     queryset = Setting.objects.all()
     serializer_class = SettingSerializer
 
-class ActivityLogViewSet(viewsets.ModelViewSet):
+class ActivityLogViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = ActivityLog.objects.all()
     serializer_class = ActivityLogSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        try:
+            role = user.userprofile.role
+        except AttributeError:
+            role = 'team_member'
+
+        queryset = ActivityLog.objects.all()
+        if role == 'project_manager':
+            queryset = queryset.filter(project__curator=user)
+        project_id = self.request.query_params.get('project_id')
+        if project_id:
+            queryset = queryset.filter(project_id=project_id)
+
+        return queryset.annotate(
+            day=models.functions.TruncDay('created_at')
+        ).values('day', 'project__name').annotate(
+            activity_count=Count('id')
+        ).order_by('day')
+
+    @action(detail=False, methods=['get'], url_path='by-project')
+    def by_project(self, request):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
 class UserTeamRelationViewSet(viewsets.ModelViewSet):
     queryset = UserTeamRelation.objects.all()
