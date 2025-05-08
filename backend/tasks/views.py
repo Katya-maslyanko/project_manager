@@ -497,6 +497,25 @@ class CommentViewSet(viewsets.ModelViewSet):
 class NotificationViewSet(viewsets.ModelViewSet):
     queryset = Notification.objects.all()
     serializer_class = NotificationSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        if not self.request.user.is_authenticated:
+            return Notification.objects.none()
+        return Notification.objects.filter(user=self.request.user)
+
+    @action(detail=False, methods=['post'], url_path='mark-all-read')
+    def mark_all_read(self, request):
+        notifications = self.get_queryset().filter(is_read=False)
+        notifications.update(is_read=True)
+        return Response({'message': 'Все прочитал'}, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['post'], url_path='mark-read')
+    def mark_read(self, request, pk=None):
+        notification = self.get_object()
+        notification.is_read = True
+        notification.save()
+        return Response({'message': 'Уведомления'}, status=status.HTTP_200_OK)
 
 class FileViewSet(viewsets.ModelViewSet):
     queryset = File.objects.all()

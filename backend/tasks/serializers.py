@@ -614,9 +614,27 @@ class CommentSerializer(serializers.ModelSerializer):
         fields = ['id', 'user', 'task', 'content', 'created_at', 'updated_at', 'subtask']
 
 class NotificationSerializer(serializers.ModelSerializer):
+    project = ProjectSerializer(read_only=True)
+    task = TaskSerializer(read_only=True)
+    subtask = SubtaskSerializer(read_only=True)
+    comment = CommentSerializer(read_only=True)
+    team = TeamSerializer(read_only=True)
+    goal = ProjectGoalSerializer(read_only=True)
+    subgoal = SubgoalSerializer(read_only=True)
+    sticky_note = StickyNoteSerializer(read_only=True)
+
     class Meta:
         model = Notification
-        fields = '__all__'
+        fields = ['id', 'user', 'message', 'is_read', 'created_at', 'updated_at', 
+                 'project', 'task', 'subtask', 'comment', 'team', 'goal', 
+                 'subgoal', 'sticky_note']
+    
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        if instance.comment:
+            representation['comment'] = CommentSerializer(instance.comment).data
+        return representation
+    
 
 class FileSerializer(serializers.ModelSerializer):
     class Meta:

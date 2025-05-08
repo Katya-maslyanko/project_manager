@@ -113,6 +113,7 @@ const StrategicMapInner: React.FC<StrategicMapProps> = ({ projectId }) => {
     (data) => {
       // console.log('Курсор:', data);
       if (data.user_id === user?.id) return;
+      const flowPosition = screenToFlowPosition({ x: data.x, y: data.y });
       setUserCursors((cursors) => {
         const existing = cursors.find((c) => c.id === data.user_id);
         if (existing) {
@@ -334,10 +335,11 @@ const StrategicMapInner: React.FC<StrategicMapProps> = ({ projectId }) => {
   useEffect(() => {
     setNodes(computedNodes);
     setEdges(computedEdges);
-  }, [computedNodes, computedEdges, setNodes, setEdges]);
-  useEffect(() => {
     setStickies(initialStickies);
-  }, [initialStickies]);
+}, [computedNodes, computedEdges, initialStickies]);
+  // useEffect(() => {
+  //   setStickies(initialStickies);
+  // }, [initialStickies]);
 
   const throttledSendCursorUpdate = useMemo(
     () =>
@@ -825,7 +827,7 @@ const StrategicMapInner: React.FC<StrategicMapProps> = ({ projectId }) => {
               style={{
                 left: currentUserCursor.x - 290,
                 top: currentUserCursor.y - 240,
-                zIndex: 10000,
+                zIndex: 10,
               }}
             >
               <div
@@ -833,31 +835,33 @@ const StrategicMapInner: React.FC<StrategicMapProps> = ({ projectId }) => {
                 style={{ backgroundColor: getRandomColor(user.id) }}
               />
               <div className="text-xs mt-1 text-gray-800 bg-white px-2 py-1 rounded shadow-md">
-                {user.username}
+                Вы
               </div>
             </div>
           )}
 
           {userCursors
-            .filter((cursor) => cursor.id !== user?.id)
-            .map((cursor) => (
-              <div
-                key={cursor.id}
-                className="absolute pointer-events-none transition-transform duration-100"
-                style={{
-                  transform: `translate(${cursor.x}px, ${cursor.y}px)`,
-                  zIndex: 10000,
-                }}
-              >
-                <div
-                  className="w-3 h-3 rounded-full border border-white"
-                  style={{ backgroundColor: cursor.color }}
-                />
-                <div className="text-xs mt-1 text-gray-800 bg-white px-2 py-1 rounded shadow-md">
-                  {cursor.username}
-                </div>
-              </div>
-            ))}
+              .filter((cursor) => cursor.id !== user?.id)
+              .map((cursor) => (
+                  <div
+                      key={cursor.id}
+                      className="absolute pointer-events-none transition-transform duration-100"
+                      style={{
+                          left: cursor.x + 374,
+                          top: cursor.y + 450,
+                          zIndex: 10,
+                      }}
+                  >
+                      <div
+                          className="w-3 h-3 rounded-full border border-white"
+                          style={{ backgroundColor: cursor.color }}
+                      />
+                      <div className="text-xs mt-1 text-gray-800 bg-white px-2 py-1 rounded shadow-md">
+                          {cursor.username}
+                      </div>
+                  </div>
+              ))}
+
         </>
       )}
     </div>

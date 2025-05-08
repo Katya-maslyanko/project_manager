@@ -193,6 +193,26 @@ export interface StrategicConnection {
   updated_at: string;
 }
 
+export interface Notification {
+  id: number;
+  message: string;
+  is_read: boolean;
+  created_at: string;
+  updated_at: string;
+  project?: { id: number; name: string };
+  task?: { id: number; title: string };
+  subtask?: { id: number; title: string };
+  comment?: {
+    id: number;
+    content: string;
+    user: User;
+  };
+  team?: { id: number; name: string };
+  goal?: { id: number; title: string };
+  subgoal?: { id: number; title: string };
+  sticky_note?: { id: number; text: string };
+}
+
 export const api = createApi({
   baseQuery: fetchBaseQuery({
     baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL,
@@ -205,7 +225,7 @@ export const api = createApi({
     },
   }),
   reducerPath: "api",
-  tagTypes: ["Projects", "Tasks", "Users", "Tags", "Comments", "Teams", "Subtasks", "ActivityLogs", "ProjectGoals", "StickyNotes", "StrategicConnections", "SubGoals"],
+  tagTypes: ["Projects", "Tasks", "Users", "Tags", "Comments", "Teams", "Subtasks", "ActivityLogs", "ProjectGoals", "StickyNotes", "StrategicConnections", "SubGoals", "Notifications"],
   endpoints: (build) => ({
     getProjects: build.query<Project[], void>({
       query: () => "projects/my-projects/",
@@ -583,6 +603,30 @@ export const api = createApi({
       }),
       invalidatesTags: ["StrategicConnections"],
     }),
+    getNotifications: build.query<Notification[], void>({
+      query: () => "notifications/",
+      providesTags: (result) =>
+        result
+          ? result.map(({ id }) => ({ type: "Notifications" as const, id }))
+          : [{ type: "Notifications", id: "LIST" }],
+    }),
+    markNotificationAsRead: build.mutation<void, number>({
+      query: (id) => ({
+        url: `notifications/${id}/mark-read/`,
+        method: "POST",
+      }),
+      invalidatesTags: (result, error, id) => [
+        { type: "Notifications", id },
+        { type: "Notifications", id: "LIST" },
+      ],
+    }),
+    markAllNotificationsAsRead: build.mutation<void, void>({
+      query: () => ({
+        url: "notifications/mark-all-read/",
+        method: "POST",
+      }),
+      invalidatesTags: [{ type: "Notifications", id: "LIST" }],
+    }),
   }),
 });
 
@@ -642,4 +686,7 @@ export const {
   useGetStrategicConnectionsQuery,
   useCreateStrategicConnectionMutation,
   useDeleteStrategicConnectionMutation,
+  useGetNotificationsQuery,
+  useMarkNotificationAsReadMutation,
+  useMarkAllNotificationsAsReadMutation,
 } = api;
