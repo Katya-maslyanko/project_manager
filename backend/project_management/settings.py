@@ -32,6 +32,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'daphne',
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -44,6 +45,7 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt.token_blacklist",
     'tasks',
     'corsheaders',
+    'channels',
 ]
 
 MIDDLEWARE = [
@@ -176,4 +178,14 @@ DJOSER = {
         'user': 'tasks.serializers.UserSerializer',
     },
     "LOGIN_FIELD": "email",
+}
+
+ASGI_APPLICATION = 'project_management.asgi.application'
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [('127.0.0.1', 6379)],
+        },
+    },
 }

@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.contrib.auth import get_user_model, authenticate
 from django.db.models import Sum, Count
-from .models import ProjectTeam, UserProfile, Team, Project, ProjectGoal, Subgoal, Task, Subtask, Tag, Comment, Notification, File, Setting, ActivityLog, UserTeamRelation, ProjectMember
+from .models import ProjectTeam, StickyNote, StrategicConnection, UserCursorPosition, UserProfile, Team, Project, ProjectGoal, Subgoal, Task, Subtask, Tag, Comment, Notification, File, Setting, ActivityLog, UserTeamRelation, ProjectMember
 
 User = get_user_model()
 
@@ -331,7 +331,73 @@ class ProjectSerializer(serializers.ModelSerializer):
 class ProjectGoalSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProjectGoal
-        fields = '__all__'
+        fields = ['id', 'project', 'title', 'description', 'status', 'position_x', 'position_y', 'color', 'progress', 'created_at', 'updated_at']
+
+class SubgoalSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Subgoal
+        fields = ['id', 'goal', 'title', 'description', 'status', 'position_x', 'position_y', 'color', 'progress', 'created_at', 'updated_at']
+
+class StickyNoteSerializer(serializers.ModelSerializer):
+    author = UserSerializer(read_only=True)
+
+    class Meta:
+        model = StickyNote
+        fields = ['id', 'project', 'goal', 'subgoal', 'text', 'author', 'position_x', 'position_y', 'created_at', 'updated_at']
+
+class StrategicConnectionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = StrategicConnection
+        fields = [
+            'id', 'connection_type', 'source_goal', 'source_subgoal',
+            'target_goal', 'target_subgoal', 'target_task', 'target_subtask', 'label',
+            'created_at', 'updated_at'
+        ]
+        extra_kwargs = {
+            'source_subgoal': {'required': False, 'allow_null': True},
+            'target_goal': {'required': False, 'allow_null': True},
+            'target_subgoal': {'required': False, 'allow_null': True},
+            'target_subtask': {'required': False, 'allow_null': True},
+        }
+
+    def validate(self, data):
+        connection_type = data.get('connection_type')
+        source_goal = data.get('source_goal')
+        source_subgoal = data.get('source_subgoal')
+        target_goal = data.get('target_goal')
+        target_subgoal = data.get('target_subgoal')
+        target_task = data.get('target_task')
+        target_subtask = data.get('target_subtask')
+
+        if connection_type == 'goal_to_task':
+            if not source_goal or not target_task:
+                raise serializers.ValidationError("Для связи 'goal_to_task' необходимо указать source_goal и target_task")
+        elif connection_type == 'goal_to_subgoal':
+            if not source_goal or not target_subgoal:
+                raise serializers.ValidationError("Для связи 'goal_to_subgoal' необходимо указать source_goal и target_subgoal")
+        elif connection_type == 'subgoal_to_task':
+            if not source_subgoal or not target_task:
+                raise serializers.ValidationError("Для связи 'subgoal_to_task' необходимо указать source_subgoal и target_task")
+        elif connection_type == 'goal_to_goal':
+            if not source_goal or not target_goal:
+                raise serializers.ValidationError("Для связи 'goal_to_goal' необходимо указать source_goal и target_goal")
+        elif connection_type == 'subgoal_to_subgoal':
+            if not source_subgoal or not target_subgoal:
+                raise serializers.ValidationError("Для связи 'subgoal_to_subgoal' необходимо указать source_subgoal и target_subgoal")
+        elif connection_type == 'subgoal_to_subtask':
+            if not source_subgoal or not target_subtask:
+                raise serializers.ValidationError("Для связи 'subgoal_to_subtask' необходимо указать source_subgoal и target_subtask")
+        else:
+            raise serializers.ValidationError("Неверный тип связи")
+
+        return data
+
+class UserCursorPositionSerializer(serializers.ModelSerializer):
+    user = UserSerializer(read_only=True)
+
+    class Meta:
+        model = UserCursorPosition
+        fields = ['id', 'user', 'project', 'position_x', 'position_y', 'last_updated']
 
 class SubgoalSerializer(serializers.ModelSerializer):
     class Meta:

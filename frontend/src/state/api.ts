@@ -66,6 +66,7 @@ export interface Tag {
 }
 
 export interface Task {
+  connected_goals: StrategicConnection[];
   comments: never[];
   id: number;
   title: string;
@@ -139,6 +140,59 @@ export interface User {
   role_display?: string;
 }
 
+export interface ProjectGoal {
+  progress: number;
+  id: number;
+  project: number;
+  title: string;
+  description: string;
+  status: string;
+  position_x: number;
+  position_y: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SubGoal {
+  id: number;
+  goal: number;
+  title: string;
+  description: string;
+  status: string;
+  position_x: number;
+  position_y: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface StickyNote {
+  id: number;
+  project: number;
+  goal?: number;
+  subgoal?: number;
+  text: string;
+  author: User;
+  position_x: number;
+  position_y: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface StrategicConnection {
+  id: number;
+  project: number;
+  connection_type: string;
+  source_goal?: number;
+  source_subgoal?: number;
+  target_goal?: number;
+  target_subgoal?: number;
+  target_task?: number;
+  target_subtask?: number;
+  label?: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export const api = createApi({
   baseQuery: fetchBaseQuery({
     baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL,
@@ -151,7 +205,7 @@ export const api = createApi({
     },
   }),
   reducerPath: "api",
-  tagTypes: ["Projects", "Tasks", "Users", "Tags", "Comments", "Teams", "Subtasks", "ActivityLogs"],
+  tagTypes: ["Projects", "Tasks", "Users", "Tags", "Comments", "Teams", "Subtasks", "ActivityLogs", "ProjectGoals", "StickyNotes", "StrategicConnections", "SubGoals"],
   endpoints: (build) => ({
     getProjects: build.query<Project[], void>({
       query: () => "projects/my-projects/",
@@ -422,6 +476,113 @@ export const api = createApi({
       }),
       invalidatesTags: ['Users'],
     }),
+    getProjectGoals: build.query<ProjectGoal[], { projectId: number }>({
+      query: ({ projectId }) => `project_goals/?project_id=${projectId}`,
+      providesTags: ["ProjectGoals"],
+    }),
+    createProjectGoal: build.mutation<ProjectGoal, Partial<ProjectGoal>>({
+      query: (goal) => ({
+        url: "project_goals/",
+        method: "POST",
+        body: goal,
+      }),
+      invalidatesTags: ["ProjectGoals"],
+    }),
+    updateProjectGoal: build.mutation<ProjectGoal, Partial<ProjectGoal> & Pick<ProjectGoal, 'id'>>({
+      query: ({ id, ...patch }) => ({
+        url: `project_goals/${id}/`,
+        method: "PATCH",
+        body: patch,
+      }),
+      invalidatesTags: ["ProjectGoals"],
+    }),
+    deleteProjectGoal: build.mutation<void, number>({
+      query: (id) => ({
+        url: `project_goals/${id}/`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["ProjectGoals"],
+    }),
+    updateGoalProgress: build.mutation<{ progress: number }, number>({
+      query: (goalId) => ({
+        url: `project_goals/${goalId}/update-progress/`,
+        method: "POST",
+      }),
+      invalidatesTags: ["ProjectGoals"],
+    }),
+    getSubGoals: build.query<SubGoal[], { goalId: number }>({
+      query: ({ goalId }) => `subgoals/?goal_id=${goalId}`,
+      providesTags: ["SubGoals"],
+    }),
+    createSubGoal: build.mutation<SubGoal, Partial<SubGoal>>({
+      query: (subgoal) => ({
+        url: "subgoals/",
+        method: "POST",
+        body: subgoal,
+      }),
+      invalidatesTags: ["SubGoals"],
+    }),
+    updateSubGoal: build.mutation<SubGoal, Partial<SubGoal> & Pick<SubGoal, 'id'>>({
+      query: ({ id, ...patch }) => ({
+        url: `subgoals/${id}/`,
+        method: "PATCH",
+        body: patch,
+      }),
+      invalidatesTags: ["SubGoals"],
+    }),
+    deleteSubGoal: build.mutation<void, number>({
+      query: (id) => ({
+        url: `subgoals/${id}/`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["SubGoals"],
+    }),
+    getStickyNotes: build.query<StickyNote[], { projectId: number }>({
+      query: ({ projectId }) => `sticky_notes/?project_id=${projectId}`,
+      providesTags: ["StickyNotes"],
+    }),
+    createStickyNote: build.mutation<StickyNote, Partial<StickyNote>>({
+      query: (sticky) => ({
+        url: "sticky_notes/",
+        method: "POST",
+        body: sticky,
+      }),
+      invalidatesTags: ["StickyNotes"],
+    }),
+    updateStickyNote: build.mutation<StickyNote, Partial<StickyNote> & Pick<StickyNote, 'id'>>({
+      query: ({ id, ...patch }) => ({
+        url: `sticky_notes/${id}/`,
+        method: "PATCH",
+        body: patch,
+      }),
+      invalidatesTags: ["StickyNotes"],
+    }),
+    deleteStickyNote: build.mutation<void, number>({
+      query: (id) => ({
+        url: `sticky_notes/${id}/`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["StickyNotes"],
+    }),
+    getStrategicConnections: build.query<StrategicConnection[], { projectId: number }>({
+      query: ({ projectId }) => `strategic_connections/?project_id=${projectId}`,
+      providesTags: ["StrategicConnections"],
+    }),
+    createStrategicConnection: build.mutation<StrategicConnection, Partial<StrategicConnection>>({
+      query: (connection) => ({
+        url: "strategic_connections/",
+        method: "POST",
+        body: connection,
+      }),
+      invalidatesTags: ["StrategicConnections"],
+    }),
+    deleteStrategicConnection: build.mutation<void, number>({
+      query: (id) => ({
+        url: `strategic_connections/${id}/`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["StrategicConnections"],
+    }),
   }),
 });
 
@@ -465,4 +626,20 @@ export const {
   useUpdateTeamMutation,
   useGetActivityLogsByProjectQuery,
   useUpdateUserRoleMutation,
+  useGetProjectGoalsQuery,
+  useCreateProjectGoalMutation,
+  useUpdateProjectGoalMutation,
+  useDeleteProjectGoalMutation,
+  useUpdateGoalProgressMutation,
+  useGetSubGoalsQuery,
+  useCreateSubGoalMutation,
+  useUpdateSubGoalMutation,
+  useDeleteSubGoalMutation,
+  useGetStickyNotesQuery,
+  useCreateStickyNoteMutation,
+  useUpdateStickyNoteMutation,
+  useDeleteStickyNoteMutation,
+  useGetStrategicConnectionsQuery,
+  useCreateStrategicConnectionMutation,
+  useDeleteStrategicConnectionMutation,
 } = api;

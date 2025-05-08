@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useGetSubtasksByAssigneeQuery, useGetProjectsQuery, useGetMyTeamsQuery, useUpdateSubTaskStatusMutation } from "@/state/api";
 import { useAuth } from "@/context/AuthContext";
 import {
@@ -93,7 +93,7 @@ const TeamMemberDashboard: React.FC = () => {
     }
   };
 
-  const TabButton: React.FC<{ name: string; icon?: React.ReactElement; setActiveTab: (tab: string) => void; activeTab: string }> = ({ name, icon, setActiveTab, activeTab }) => {
+  const TabButton: React.FC<{ name: string; icon?: React.ReactNode; setActiveTab: (tab: string) => void; activeTab: string }> = ({ name, icon, setActiveTab, activeTab }) => {
     const isActive = activeTab === name;
     return (
       <button

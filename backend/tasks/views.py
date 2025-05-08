@@ -15,12 +15,16 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework.generics import RetrieveUpdateAPIView
 from rest_framework.filters import OrderingFilter
+from rest_framework.exceptions import NotFound, ValidationError
 from django.core.mail import send_mail
 from django.conf import settings
 from django.db.models import Count, Q
 from .models import (
     ProjectTeam,
+    StickyNote,
+    StrategicConnection,
     User,
+    UserCursorPosition,
     UserTeamRelation,
     Team,
     Project,
@@ -38,6 +42,9 @@ from .models import (
     ProjectMember
 )
 from .serializers import (
+    StickyNoteSerializer,
+    StrategicConnectionSerializer,
+    UserCursorPositionSerializer,
     UserSerializer,
     RegisterSerializer,
     TeamSerializer,
@@ -168,12 +175,9 @@ class TeamViewSet(viewsets.ModelViewSet):
             print(f"User: {user}, Role: {role}")
             if role == 'project_manager':
                 qs = Team.objects.filter(project_manager=user)
-                print(f"Teams for project_manager: {qs.count()}")
             else:
-                # Используем связь через UserTeamRelation для получения команд пользователя
                 team_ids = UserTeamRelation.objects.filter(user=user).values_list('team_id', flat=True)
                 qs = Team.objects.filter(id__in=team_ids)
-                print(f"Teams for member: {qs.count()}")
 
             serializer = self.get_serializer(qs, many=True)
             return Response(serializer.data)
@@ -230,24 +234,18 @@ class ProjectViewSet(viewsets.ModelViewSet):
         if role == 'admin':
             return queryset
         elif role == 'project_manager':
-            print(f"Фильтр по куратору проекта: {user.username}")
             curated_projects = queryset.filter(curator=user)
-            print(f"Куратор проекта: {curated_projects.count()}")
             user_team_ids = UserTeamRelation.objects.filter(user=user).values_list('team_id', flat=True)
             if user_team_ids:
                 team_projects = queryset.filter(teams__id__in=user_team_ids)
-                print(f"Проекты куратора проекта: {team_projects.count()}")
                 combined_projects = curated_projects | team_projects
                 return combined_projects.distinct()
             return curated_projects
         else:
             user_team_ids = UserTeamRelation.objects.filter(user=user).values_list('team_id', flat=True)
-            print(f"Исполнители команд {user.username}: {list(user_team_ids)}")
             if user_team_ids:
                 filtered_queryset = queryset.filter(teams__id__in=user_team_ids)
-                print(f"Проекты команды: {filtered_queryset.count()}")
                 return filtered_queryset
-            # print(f"Нет в команде {user.username}, вопрос")
             return queryset.none()
     # def get_queryset(self):
     #     print("Returning all projects without filtering by user")
@@ -310,11 +308,112 @@ class ProjectViewSet(viewsets.ModelViewSet):
     def my_projects(self, request):
         queryset = self.get_queryset()
         serializer = self.get_serializer(queryset, many=True)
+        # print(f"Returning projects data: {serializer.data}")
         return Response(serializer.data)
 
 class ProjectGoalViewSet(viewsets.ModelViewSet):
     queryset = ProjectGoal.objects.all()
     serializer_class = ProjectGoalSerializer
+    # permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        project_id = self.request.query_params.get('project_id')
+        if project_id:
+            return ProjectGoal.objects.filter(project_id=project_id)
+        return ProjectGoal.objects.all()
+
+    @action(detail=True, methods=['post'], url_path='update-progress')
+    def update_progress(self, request, pk=None):
+        goal = self.get_object()
+        tasks = Task.objects.filter(connected_goals__source_goal=goal)
+        if tasks:
+            total_tasks = tasks.count()
+            completed_tasks = tasks.filter(status='Завершено').count()
+            progress = (completed_tasks / total_tasks) * 100 if total_tasks > 0 else 0
+            goal.progress = progress
+            goal.save()
+            return Response({'progress': progress}, status=status.HTTP_200_OK)
+        return Response({'error': 'Нет задач'}, status=status.HTTP_400_BAD_REQUEST)
+
+class SubgoalViewSet(viewsets.ModelViewSet):
+    queryset = Subgoal.objects.all()
+    serializer_class = SubgoalSerializer
+    # permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        goal_id = self.request.query_params.get('goal_id')
+        if goal_id:
+            return Subgoal.objects.filter(goal_id=goal_id)
+        return Subgoal.objects.all()
+    
+    @action(detail=True, methods=['post'], url_path='update-progress')
+    def update_progress(self, request, pk=None):
+        subgoal = self.get_object()
+        tasks = Task.objects.filter(connected_goals__source_goal=subgoal)
+        if tasks:
+            total_tasks = tasks.count()
+            completed_tasks = tasks.filter(status='Завершено').count()
+            progress = (completed_tasks / total_tasks) * 100 if total_tasks > 0 else 0
+            subgoal.progress = progress
+            subgoal.save()
+            return Response({'progress': progress}, status=status.HTTP_200_OK)
+        return Response({'error': 'Нет задач'}, status=status.HTTP_400_BAD_REQUEST)
+
+class StickyNoteViewSet(viewsets.ModelViewSet):
+    queryset = StickyNote.objects.all()
+    serializer_class = StickyNoteSerializer
+    # permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        project_id = self.request.query_params.get('project_id')
+        if project_id:
+            return StickyNote.objects.filter(project_id=project_id)
+        return StickyNote.objects.all()
+    def perform_create(self, serializer):
+        goal = serializer.validated_data.get('goal')
+        subgoal = serializer.validated_data.get('subgoal')
+        if goal and goal.sticky_notes.count() >= 10:
+            raise serializer.ValidationError({"goal": "Достигнуто максимальное количество стикеров для этой цели (10)."})
+        if subgoal and subgoal.sticky_notes.count() >= 10:
+            raise serializer.ValidationError({"subgoal": "Достигнуто максимальное количество стикеров для этой подцели (10)."})
+        serializer.save(author=self.request.user)
+
+    # def update(self, request, *args, **kwargs):
+    #     sticky_note = self.get_object()
+    #     if sticky_note.author != request.user:
+    #         return Response({'detail': 'У вас нет прав для редактирования этого стикера.'}, status=status.HTTP_403_FORBIDDEN)
+    #     return super().update(request, *args, **kwargs)
+    
+    # def partial_update(self, request, *args, **kwargs):
+    #     sticky_note = self.get_object()
+    #     if sticky_note.author != request.user:
+    #         return Response({'detail': 'У вас нет прав для редактирования этого стикера.'}, status=status.HTTP_403_FORBIDDEN)
+    #     return super().partial_update(request, *args, **kwargs)
+
+class StrategicConnectionViewSet(viewsets.ModelViewSet):
+    queryset = StrategicConnection.objects.all()
+    serializer_class = StrategicConnectionSerializer
+
+    def destroy(self, request, *args, **kwargs):
+        try:
+            instance = self.get_object()
+            self.perform_destroy(instance)
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except StrategicConnection.DoesNotExist:
+            raise NotFound(detail=f"Соединение с ID {kwargs.get('pk')} не найдено.")
+        except Exception as e:
+            raise ValidationError(detail=f"Не удалось удалить соединение: {str(e)}")
+
+class UserCursorPositionViewSet(viewsets.ModelViewSet):
+    queryset = UserCursorPosition.objects.all()
+    serializer_class = UserCursorPositionSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        project_id = self.request.query_params.get('project_id')
+        if project_id:
+            return UserCursorPosition.objects.filter(project_id=project_id)
+        return UserCursorPosition.objects.all()
 
 class SubgoalViewSet(viewsets.ModelViewSet):
     queryset = Subgoal.objects.all()
@@ -332,6 +431,7 @@ class TaskViewSet(viewsets.ModelViewSet):
         assignee_id = self.request.query_params.get('assigneeId')
         tag_id = self.request.query_params.getlist('tagId')
         priority = self.request.query_params.get('priority')
+        goal_id = self.request.query_params.get('goalId')
 
         if project_id:
             queryset = queryset.filter(project_id=project_id)
@@ -343,6 +443,8 @@ class TaskViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(tag_id=tag_id)
         if priority:
             queryset = queryset.filter(priority=priority)
+        if goal_id:
+            queryset = queryset.filter(connected_goals__source_goal_id=goal_id)
 
         order_by = self.request.query_params.get('ordering')
         if order_by:

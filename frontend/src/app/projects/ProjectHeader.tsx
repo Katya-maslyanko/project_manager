@@ -10,6 +10,7 @@ import {
   SquareArrowOutUpRight,
   XCircle,
   BookOpenCheck,
+  Map,
 } from "lucide-react";
 import Breadcrumbs from "@/components/ui/breadcrumbs/Breadcrumbs";
 import SortDropdown from "@/components/ui/dropdown/SortDropdown";
@@ -149,6 +150,12 @@ const ProjectHeader: React.FC<Props> = ({
           <TabButton
             name="Хронология"
             icon={<Clock className="h-5 w-5" />}
+            setActiveTab={setActiveTab}
+            activeTab={activeTab}
+          />
+          <TabButton
+            name="Карта"
+            icon={<Map className="h-5 w-5" />}
             setActiveTab={setActiveTab}
             activeTab={activeTab}
           />

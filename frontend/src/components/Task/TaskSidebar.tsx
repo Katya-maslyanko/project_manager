@@ -317,27 +317,30 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
             <Users className="h-5 w-5" />
             <span>Исполнители:</span>
           </div>
-          <div className="flex -space-x-3 cursor-pointer" onClick={openAssigneeModal}>
+          <div
+            className="flex -space-x-3 cursor-pointer"
+            onClick={openAssigneeModal}
+          >
             {selectedAssignees.length > 0 ? (
-                selectedAssignees.map((id, idx) => {
-                    const user = users.find((u) => u.id === id);
-                    return user ? (
-                        <div key={user.id} className={`relative`}>
-                            <div className={`w-10 h-10 border-2 border-gray-100 rounded-full flex items-center justify-center overflow-hidden ${getTagColor(idx)}`}>
-                                {user.profile_image ? (
-                                    <img className="w-10 h-10 rounded-full" src={user.profile_image} alt={user.username} />
-                                ) : (
-                                    <span className="text-sm font-semibold">{user.username.charAt(0).toUpperCase()}</span>
-                                )}
-                            </div>
-                        </div>
-                    ) : null;
-                })
+              selectedAssignees.map((id, idx) => {
+                const user = users.find((u) => u.id === id);
+                return user ? (
+                  <div key={user.id} className={`relative`}>
+                    <div className={`w-10 h-10 border-2 border-gray-100 rounded-full flex items-center justify-center overflow-hidden ${getTagColor(idx)}`}>
+                      {user.profile_image ? (
+                        <img className="w-10 h-10 rounded-full" src={user.profile_image} alt={user.username} />
+                      ) : (
+                        <span className="text-sm font-semibold">{user.username.charAt(0).toUpperCase()}</span>
+                      )}
+                    </div>
+                  </div>
+                ) : null;
+              })
             ) : (
-                <span className="text-gray-500 text-sm">Нет исполнителей</span>
+              <span className="text-gray-500 text-sm">Нет исполнителей</span>
             )}
             <button className="pl-3 text-gray-500 hover:text-blue-600">
-                <Plus className="h-5 w-5" />
+              <Plus className="h-5 w-5" />
             </button>
           </div>
         </div>

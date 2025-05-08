@@ -1,6 +1,9 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import (
+    StickyNoteViewSet,
+    StrategicConnectionViewSet,
+    UserCursorPositionViewSet,
     UserViewSet,
     TeamViewSet,
     ProjectViewSet,
@@ -28,6 +31,9 @@ router.register(r'teams', TeamViewSet)
 router.register(r'projects', ProjectViewSet)
 router.register(r'project_goals', ProjectGoalViewSet)
 router.register(r'subgoals', SubgoalViewSet)
+router.register(r'sticky_notes', StickyNoteViewSet)
+router.register(r'strategic_connections', StrategicConnectionViewSet)
+router.register(r'cursor_positions', UserCursorPositionViewSet)
 router.register(r'tasks', TaskViewSet)
 router.register(r'subtasks', SubtaskViewSet)
 router.register(r'tags', TagViewSet)

@@ -37,7 +37,15 @@ class ProjectGoal(models.Model):
     project = models.ForeignKey(Project, related_name='goals', on_delete=models.CASCADE)
     title = models.CharField(max_length=200)
     description = models.TextField()
-    status = models.CharField(max_length=50)  # Например, "в процессе", "завершено"
+    status = models.CharField(max_length=50, choices=[
+        ('Новая', 'Новая'),
+        ('В процессе', 'В процессе'),
+        ('Завершено', 'Завершено'),
+    ], default='Новая')
+    position_x = models.FloatField(default=0.0)
+    position_y = models.FloatField(default=0.0)
+    color = models.CharField(max_length=7, default='#FFFFFF', help_text="Цвет узла в формате HEX")
+    progress = models.FloatField(default=0.0, help_text="Прогресс выполнения цели в процентах")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -45,9 +53,31 @@ class Subgoal(models.Model):
     goal = models.ForeignKey(ProjectGoal, related_name='subgoals', on_delete=models.CASCADE)
     title = models.CharField(max_length=200)
     description = models.TextField()
-    status = models.CharField(max_length=50)  # Например, "в процессе", "завершено"
+    status = models.CharField(max_length=50, choices=[
+        ('Новая', 'Новая'),
+        ('В процессе', 'В процессе'),
+        ('Завершено', 'Завершено'),
+    ], default='Новая')
+    position_x = models.FloatField(default=0.0)
+    position_y = models.FloatField(default=0.0)
+    color = models.CharField(max_length=7, default='#E0F7FA', help_text="Цвет узла в формате HEX")
+    progress = models.FloatField(default=0.0, help_text="Прогресс выполнения подцели в процентах")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    
+class StickyNote(models.Model):
+    project = models.ForeignKey(Project, related_name='sticky_notes', on_delete=models.CASCADE)
+    goal = models.ForeignKey(ProjectGoal, related_name='sticky_notes', on_delete=models.CASCADE, null=True, blank=True)
+    subgoal = models.ForeignKey(Subgoal, related_name='sticky_notes', on_delete=models.CASCADE, null=True, blank=True)
+    text = models.TextField()
+    author = models.ForeignKey(User, related_name='sticky_notes', on_delete=models.SET_NULL, null=True)
+    position_x = models.FloatField(default=0.0, help_text="X coordinate on strategic map")
+    position_y = models.FloatField(default=0.0, help_text="Y coordinate on strategic map")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Стикер для {self.author.username if self.author else 'Unknown'} в {self.created_at.strftime('%Y-%m-%d')}"
 
 class Tag(models.Model):
     name = models.CharField(max_length=100, unique=True)
@@ -113,6 +143,45 @@ class Notification(models.Model):
     is_read = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+class StrategicConnection(models.Model):
+    CONNECTION_TYPES = [
+        ('goal_to_subgoal', 'Цель к Подцели'),
+        ('goal_to_task', 'Цель к Задаче'),
+        ('subgoal_to_task', 'Подцель к Задаче'),
+        ('goal_to_goal', 'Цель к Цели'),
+        ('subgoal_to_subgoal', 'Подцель к Подцели'),
+        ('subgoal_to_subtask', 'Подцель к Подзадаче'),
+    ]
+
+    connection_type = models.CharField(max_length=50, choices=CONNECTION_TYPES)
+    source_goal = models.ForeignKey(ProjectGoal, related_name='outgoing_connections', on_delete=models.CASCADE, null=True, blank=True)
+    source_subgoal = models.ForeignKey(Subgoal, related_name='outgoing_sub_connections', on_delete=models.CASCADE, null=True, blank=True)
+    target_goal = models.ForeignKey(ProjectGoal, related_name='incoming_connections', on_delete=models.CASCADE, null=True, blank=True)
+    target_subgoal = models.ForeignKey(Subgoal, related_name='incoming_sub_connections', on_delete=models.CASCADE, null=True, blank=True)
+    target_task = models.ForeignKey(Task, related_name='connected_goals', on_delete=models.CASCADE, null=True, blank=True)
+    target_subtask = models.ForeignKey(Subtask, related_name='connected_subgoals', on_delete=models.CASCADE, null=True, blank=True)  # Добавляем поле для подзадач
+    label = models.CharField(max_length=100, blank=True, null=True, help_text="Связь между целями")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        source = self.source_goal.title if self.source_goal else (self.source_subgoal.title if self.source_subgoal else "Unknown Source")
+        target = self.target_goal.title if self.target_goal else (self.target_subgoal.title if self.target_subgoal else (self.target_task.title if self.target_task else "Unknown Target"))
+        return f"Связь ({self.connection_type}): {source} -> {target}"
+
+class UserCursorPosition(models.Model):
+    user = models.ForeignKey(User, related_name='cursor_positions', on_delete=models.CASCADE)
+    project = models.ForeignKey(Project, related_name='user_cursors', on_delete=models.CASCADE)
+    position_x = models.FloatField(default=0.0)
+    position_y = models.FloatField(default=0.0)
+    last_updated = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ('user', 'project')
+
+    def __str__(self):
+        return f"Курсор для {self.user.username} на ({self.position_x}, {self.position_y})"
 
 class File(models.Model):
     task = models.ForeignKey(Task, related_name='files', on_delete=models.CASCADE)
