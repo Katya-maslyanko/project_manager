@@ -6,7 +6,7 @@ from channels.auth import AuthMiddlewareStack
 from channels.routing import ProtocolTypeRouter, URLRouter
 from django.contrib.auth.models import User
 from django.core.asgi import get_asgi_application
-import tasks.routing  # Import the tasks module to resolve the undefined error
+import tasks.routing
 
 @database_sync_to_async
 def get_user_from_token(token):

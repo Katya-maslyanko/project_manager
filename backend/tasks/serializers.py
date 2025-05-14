@@ -496,7 +496,7 @@ class SubtaskSerializer(serializers.ModelSerializer):
     assignees = serializers.SerializerMethodField()
     assigned_to = UserSerializer(many=True, read_only=True)
     assigned_to_ids = serializers.PrimaryKeyRelatedField(
-        queryset=User .objects.all(),
+        queryset=User.objects.all(),
         many=True,
         write_only=True,
         required=False
@@ -519,9 +519,8 @@ class SubtaskSerializer(serializers.ModelSerializer):
         ]
 
     def get_assignees(self, obj):
-        if obj.task:
-            return UserSerializer(obj.task.assignees.all(), many=True).data
-        return []
+            print(f"Исполнители {obj.id}: {obj.assigned_to.all()}")
+            return UserSerializer(obj.assigned_to.all(), many=True).data
 
     def validate_assigned_to_ids(self, value):
         task = self.get_task()
@@ -539,11 +538,17 @@ class SubtaskSerializer(serializers.ModelSerializer):
         start_date = attrs.get('start_date')
         due_date = attrs.get('due_date')
 
-        if start_date and (start_date < task.start_date):
+        if not task.start_date or not task.due_date:
+            raise serializers.ValidationError("У основной задачи отсутствуют даты начала или завершения.")
+
+        if start_date and start_date < task.start_date:
             raise serializers.ValidationError("Дата начала подзадачи не может быть раньше даты начала основной задачи.")
 
-        if due_date and (due_date > task.due_date):
+        if due_date and due_date > task.due_date:
             raise serializers.ValidationError("Дата завершения подзадачи не может быть позже даты завершения основной задачи.")
+
+        if start_date and due_date and due_date < start_date:
+            raise serializers.ValidationError("Дата завершения подзадачи не может быть раньше даты начала.")
 
         return attrs
 
@@ -559,12 +564,17 @@ class SubtaskSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         users = validated_data.pop('assigned_to_ids', [])
+        if 'start_date' not in validated_data or validated_data['start_date'] is None:
+            validated_data['start_date'] = validated_data['task'].start_date
+        if 'due_date' not in validated_data or validated_data['due_date'] is None:
+            validated_data['due_date'] = validated_data['task'].due_date
         subtask = Subtask.objects.create(**validated_data)
         if users:
             subtask.assigned_to.set(users)
         return subtask
 
     def update(self, instance, validated_data):
+        print(f"Обновление {instance.id} дата: {validated_data}")
         for attr, val in validated_data.items():
             if attr == 'assigned_to_ids':
                 continue
@@ -576,6 +586,7 @@ class SubtaskSerializer(serializers.ModelSerializer):
             tag = validated_data.pop('tag_id', None)
             if tag:
                 instance.tag = tag
+        instance.save()
         return instance
     
     def get_stars(self, obj):
