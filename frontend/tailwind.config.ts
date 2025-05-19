@@ -23,12 +23,11 @@ const config: Config = {
           400: '#0078D7',
           500: '#1E324F',
         },
-        "dark-bg": '#101214',
-        "dark-secondary": '#2F343A',
-        "dark-tertiary": '#3B3F4E',
-        "blue-primary": '#0078D7',
-        "stroke-dark": '#333333',
-        
+        "dark-bg": "#1e2229",
+        "dark-border": "#343a46",
+        "dark-text": "#e5e7eb",
+        "dark-hover": "#2c323b",
+        "dark-accent": "#3b82f6",
       },
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',

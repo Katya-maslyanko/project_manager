@@ -86,15 +86,15 @@ const AdminDashboard: React.FC = () => {
   };
 
   return (
-    <div className="p-4 bg-gray-50 min-h-screen">
-      <div className="bg-white rounded-lg shadow-sm p-6 mb-6 flex justify-between items-center">
+    <div className="p-4 bg-gray-50 min-h-screen dark:bg-dark-bg dark:text-dark-text dark:border dark:border-gray-800">
+      <div className="bg-white rounded-lg shadow-sm p-6 mb-6 flex justify-between items-center dark:bg-dark-bg dark:text-dark-text dark:border dark:border-gray-800">
         <div>
           <h2 className="text-xl font-semibold mb-2">Привет, {user.first_name || user.username}!</h2>
           <p className="text-base text-gray-600">Вы администратор. Просмотрите состояние всей системы.</p>
         </div>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <div className="flex items-center justify-between p-4 rounded-lg shadow-sm bg-white">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 dark:bg-dark-bg dark:text-dark-text dark:border dark:border-gray-800">
+        <div className="flex items-center justify-between p-4 rounded-lg shadow-sm bg-white dark:bg-dark-bg dark:text-dark-text dark:border dark:border-gray-800">
           <div className="flex items-center justify-center w-12 h-12 bg-rose-100 rounded-lg">
             <FolderKanban size={22} className="text-rose-700" />
           </div>
@@ -103,7 +103,7 @@ const AdminDashboard: React.FC = () => {
             <div className="text-sm text-gray-500">Проектов</div>
           </div>
         </div>
-        <div className="flex items-center justify-between p-4 rounded-lg shadow-sm bg-white">
+        <div className="flex items-center justify-between p-4 rounded-lg shadow-sm bg-white dark:bg-dark-bg dark:text-dark-text dark:border dark:border-gray-800">
           <div className="flex items-center justify-center w-12 h-12 bg-yellow-100 rounded-lg">
             <Users size={22} className="text-yellow-700" />
           </div>
@@ -112,7 +112,7 @@ const AdminDashboard: React.FC = () => {
             <div className="text-sm text-gray-500">Команд</div>
           </div>
         </div>
-        <div className="flex items-center justify-between p-4 rounded-lg shadow-sm bg-white">
+        <div className="flex items-center justify-between p-4 rounded-lg shadow-sm bg-white dark:bg-dark-bg dark:text-dark-text dark:border dark:border-gray-800">
           <div className="flex items-center justify-center w-12 h-12 bg-green-100 rounded-lg">
             <Users size={22} className="text-green-700" />
           </div>
@@ -121,7 +121,7 @@ const AdminDashboard: React.FC = () => {
             <div className="text-sm text-gray-500">Участников</div>
           </div>
         </div>
-        <div className="flex items-center justify-between p-4 rounded-lg shadow-sm bg-white">
+        <div className="flex items-center justify-between p-4 rounded-lg shadow-sm bg-white dark:bg-dark-bg dark:text-dark-text dark:border dark:border-gray-800">
           <div className="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-lg">
             <Calendar size={22} className="text-blue-700" />
           </div>
@@ -132,7 +132,7 @@ const AdminDashboard: React.FC = () => {
         </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-        <div className="bg-white rounded-lg shadow-sm p-4 md:col-span-1 relative z-10">
+        <div className="bg-white rounded-lg shadow-sm p-4 md:col-span-1 relative z-10 dark:bg-dark-bg dark:text-dark-text dark:border dark:border-gray-800">
           <h2 className="text-lg font-semibold mb-4">Распределение задач</h2>
           <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
@@ -158,7 +158,7 @@ const AdminDashboard: React.FC = () => {
             <p>Распределение задач по статусам во всех проектах.</p>
           </div>
         </div>
-        <div className="bg-white rounded-lg shadow-sm p-4 md:col-span-1 relative z-10">
+        <div className="bg-white rounded-lg shadow-sm p-4 md:col-span-1 relative z-10 dark:bg-dark-bg dark:text-dark-text dark:border dark:border-gray-800">
           <h2 className="text-lg font-semibold mb-4">Распределение ролей</h2>
           <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
@@ -184,7 +184,7 @@ const AdminDashboard: React.FC = () => {
             <p>Распределение пользователей по ролям.</p>
           </div>
         </div>
-        <div className="bg-white rounded-lg shadow-sm p-4 md:col-span-1 relative z-10">
+        <div className="bg-white rounded-lg shadow-sm p-4 md:col-span-1 relative z-10 dark:bg-dark-bg dark:text-dark-text dark:border dark:border-gray-800">
           <h2 className="text-lg font-semibold mb-4">Общий прогресс задач</h2>
           <div className="mb-4 p-3 bg-blue-50 rounded-lg">
             <p className="text-sm text-blue-700">Общий процент выполнения задач: <span className="font-bold">{completionRate}%</span> ({totalTasksCompleted} из {totalTasksAssigned})</p>
@@ -199,7 +199,7 @@ const AdminDashboard: React.FC = () => {
           </div>
         </div>
       </div>
-      <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+      <div className="bg-white rounded-lg shadow-sm p-6 mb-6 dark:bg-dark-bg dark:text-dark-text dark:border dark:border-gray-800">
         <div className="flex items-center mb-4">
           <BarChart2 size={20} className="text-blue-600 mr-2" />
           <h2 className="text-lg font-semibold">Эффективность по проектам ({totalProjects})</h2>
@@ -223,7 +223,7 @@ const AdminDashboard: React.FC = () => {
           </div>
         )}
       </div>
-      <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
+      <div className="bg-white rounded-lg shadow-sm p-4 mb-6 dark:bg-dark-bg dark:text-dark-text dark:border dark:border-gray-800">
         <h2 className="text-lg font-semibold mb-4">Все проекты ({totalProjects})</h2>
         {allProjects.length === 0 ? (
           <p className="text-gray-500">Проекты отсутствуют.</p>
@@ -231,7 +231,7 @@ const AdminDashboard: React.FC = () => {
           <div className="overflow-y-auto max-h-64">
             <table className="w-full text-left">
               <thead>
-                <tr className="text-gray-600 text-sm bg-gray-100 border rounded-md">
+                <tr className="text-gray-600 text-sm bg-gray-100 border rounded-md dark:text-white dark:bg-gray-700 dark:border-gray-800">
                   <th className="py-3 px-4">Проект</th>
                   <th className="py-3 px-4">Куратор</th>
                   <th className="py-3 px-4">Сроки</th>
@@ -245,13 +245,13 @@ const AdminDashboard: React.FC = () => {
                     ? ((project.tasks_done / project.total_tasks) * 100).toFixed(1) 
                     : 0;
                   return (
-                    <tr key={project.id} className="border-t border-b cursor-pointer hover:bg-gray-50">
-                      <td className="py-2 px-4 border-r">{project.name}</td>
-                      <td className="py-2 px-4 border-r">{project.curator ? `${project.curator.first_name} ${project.curator.last_name}` : "Не указан"}</td>
-                      <td className="py-2 px-4 border-r">
+                    <tr key={project.id} className="border-t border-b cursor-pointer hover:bg-gray-50 dark:border-gray-800">
+                      <td className="py-2 px-4 border-r dark:border-gray-800">{project.name}</td>
+                      <td className="py-2 px-4 border-r dark:border-gray-800">{project.curator ? `${project.curator.first_name} ${project.curator.last_name}` : "Не указан"}</td>
+                      <td className="py-2 px-4 border-r dark:border-gray-800">
                         {formatDate(project.startDate)} - {formatDate(project.endDate)}
                       </td>
-                      <td className="py-2 px-4 border-r">
+                      <td className="py-2 px-4 border-r dark:border-gray-800">
                         {project.total_tasks} / {project.tasks_done}
                       </td>
                       <td className="py-2 px-4">
@@ -282,7 +282,7 @@ const AdminDashboard: React.FC = () => {
         )}
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-        <div className="bg-white rounded-lg shadow-sm p-4">
+        <div className="bg-white rounded-lg shadow-sm p-4 dark:bg-dark-bg dark:text-dark-text dark:border dark:border-gray-800">
           <div className="flex items-center mb-4">
             <Users size={20} className="text-blue-600 mr-2" />
             <h2 className="text-lg font-semibold">Все команды ({totalTeams})</h2>
@@ -294,10 +294,10 @@ const AdminDashboard: React.FC = () => {
                 const teamTasksDone = team.members_info.reduce((sum, member) => sum + member.analytics.tasks_done, 0);
                 const teamProgress = teamTasks > 0 ? ((teamTasksDone / teamTasks) * 100).toFixed(1) : 0;
                 return (
-                  <li key={team.id} className="p-4 rounded-xl bg-gray-50 border hover:shadow-sm transition-shadow">
+                  <li key={team.id} className="p-4 rounded-xl bg-gray-50 border hover:shadow-sm transition-shadow dark:bg-dark-bg dark:text-dark-text dark:border dark:border-gray-800">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center">
-                        <span className="font-bold text-base text-gray-800">{team.name}</span>
+                        <span className="font-bold text-base text-gray-800 dark:text-white">{team.name}</span>
                       </div>
                       <div className="flex items-center">
                         <span className="text-sm text-gray-500 mr-4">{team.members_info.length} участников</span>
@@ -327,7 +327,7 @@ const AdminDashboard: React.FC = () => {
             </button>
           )}
         </div>
-        <div className="bg-white rounded-lg shadow-sm p-4">
+        <div className="bg-white rounded-lg shadow-sm p-4 dark:bg-dark-bg dark:text-dark-text dark:border dark:border-gray-800">
           <div className="flex items-center mb-4">
             <Users size={20} className="text-blue-600 mr-2" />
             <h2 className="text-lg font-semibold">Все участники ({totalMembers})</h2>
@@ -335,7 +335,7 @@ const AdminDashboard: React.FC = () => {
           <div className="overflow-y-auto max-h-96">
             <table className="w-full text-left">
               <thead>
-                <tr className="text-gray-600 text-sm bg-gray-100 border rounded-md">
+                <tr className="text-gray-600 text-sm bg-gray-100 border rounded-md dark:text-white dark:bg-gray-700 dark:border-gray-800">
                   <th className="py-3 px-4">Имя</th>
                   <th className="py-3 px-4">Роль</th>
                   <th className="py-3 px-4">Email</th>
@@ -343,9 +343,9 @@ const AdminDashboard: React.FC = () => {
               </thead>
               <tbody>
                 {allUsers.slice(0, showAllMembers ? allUsers.length : 5).map(member => (
-                  <tr key={member.id} className="border-t border-b cursor-pointer hover:bg-gray-50">
-                    <td className="py-2 px-4 border-r">{member.first_name} {member.last_name}</td>
-                    <td className="py-2 px-4 border-r">{member.role_display || "Не указана"}</td>
+                  <tr key={member.id} className="border-t border-b cursor-pointer hover:bg-gray-50 dark:border-gray-800">
+                    <td className="py-2 px-4 border-r dark:border-gray-800">{member.first_name} {member.last_name}</td>
+                    <td className="py-2 px-4 border-r dark:border-gray-800">{member.role_display || "Не указана"}</td>
                     <td className="py-2 px-4">{member.email}</td>
                   </tr>
                 ))}

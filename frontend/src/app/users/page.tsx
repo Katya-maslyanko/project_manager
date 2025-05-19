@@ -59,7 +59,7 @@ const UserManagementPage: React.FC = () => {
 
   return (
     <InboxWrapper>
-      <div className="rounded-2xl px-4 dark:border-gray-800 dark:bg-white/[0.03] xl:px-6">
+      <div className="rounded-2xl px-4 dark:border-gray-800 xl:px-6">
         <Breadcrumbs items={breadcrumbsItems} />
         <h1 className="mt-4 text-3xl font-semibold">Управление пользователями</h1>
 

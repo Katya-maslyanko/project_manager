@@ -57,7 +57,7 @@ const SubtaskCard: React.FC<Props> = ({ subtask, onDragStart, onOpen, onStatusCh
 
   return (
     <div
-      className="bg-white rounded-md shadow-md p-4 mb-2 cursor-grab"
+      className="bg-white rounded-md shadow-md p-4 mb-2 cursor-grab dark:bg-dark-bg dark:border dark:border-gray-800 hover:bg-gray-100"
       draggable
       onDragStart={onDragStart}
       onClick={onOpen}

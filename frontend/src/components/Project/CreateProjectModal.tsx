@@ -12,6 +12,7 @@ const CreateProjectModal: React.FC = () => {
   const [startDate, setStartDate] = useState<string | null>(null);
   const [endDate, setEndDate] = useState<string | null>(null);
   const [selectedTeamIds, setSelectedTeamIds] = useState<number[]>([]);
+  const [isCpdProject, setIsCpdProject] = useState(false); // Новое состояние для галочки ЦПД
   const [searchTerm, setSearchTerm] = useState('');
   const [isTeamModalOpen, setIsTeamModalOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -31,10 +32,11 @@ const CreateProjectModal: React.FC = () => {
         startDate,
         endDate,
         teams_ids: selectedTeamIds,
+        is_cpd_project: isCpdProject,
       }).unwrap();
 
       closeModal();
-    } catch (err) {
+    } catch (err: any) {
       setError('Ошибка при создании проекта. Пожалуйста, проверьте введенные данные и попробуйте еще раз.');
       console.error('Ошибка при создании проекта:', err);
       if (err.data) {
@@ -89,7 +91,7 @@ const CreateProjectModal: React.FC = () => {
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="mt-1 block w-full border border-gray-200 dark:border-gray-700 rounded-md p-2 h-24 dark:bg-gray-700 dark .text-white"
+                className="mt-1 block w-full border border-gray-200 dark:border-gray-700 rounded-md p-2 h-24 dark:bg-gray-700 dark:text-white"
                 rows={4}
               />
             </div>
@@ -164,6 +166,17 @@ const CreateProjectModal: React.FC = () => {
                   </div>
                 )}
               </div>
+            </div>
+            <div className="mb-4">
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={isCpdProject}
+                  onChange={(e) => setIsCpdProject(e.target.checked)}
+                  className="form-checkbox border-gray-200 text-blue-500"
+                />
+                <span className="ml-2 text-gray-700 dark:text-gray-300">Создание проекта для Центра проектной деятельности</span>
+              </label>
             </div>
             <div className="flex justify-end mt-6">
               <button

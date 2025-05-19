@@ -118,7 +118,7 @@ const SubtaskList: React.FC<SubtaskListProps> = ({
   const getTagColor = (index: number) => tagColors[index % tagColors.length];
 
   return (
-    <div className="border-b border-gray-200 pb-4">
+    <div className="border-b border-gray-200 pb-4 dark:border-gray-800 dark:text-white">
       <h2 className="text-lg font-bold cursor-pointer transition-colors mb-1">
         Подзадачи <span className="text-base text-gray-300">{completedCount}/{subtasks.length}</span>
       </h2>
@@ -160,9 +160,9 @@ const SubtaskList: React.FC<SubtaskListProps> = ({
               </label>
               <span
                 className={`${subtask.status === "Завершено"
-                  ? "line-through text-gray-500"
-                  : "text-gray-800"
-                  } text-sm`}
+                  ? "line-through text-gray-500 dark:text-white"
+                  : "text-gray-800 dark:text-white"
+                  } text-sm dark:text-white`}
               >
                 {subtask.title}
               </span>

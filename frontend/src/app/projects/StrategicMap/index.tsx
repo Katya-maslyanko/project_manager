@@ -743,7 +743,7 @@ const StrategicMapInner: React.FC<StrategicMapProps> = ({ projectId }) => {
 
   return (
     <div
-      className="w-full h-[calc(100vh-230px)] relative bg-gray-50 cursor-none"
+      className="w-full h-[calc(100vh-230px)] relative bg-gray-50 cursor-none dark:bg-dark-bg"
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
     >

@@ -84,7 +84,7 @@ const ProjectManagerTeamsPage: React.FC = () => {
     console.error("Ошибка при загрузке команд:", error);
     return (
       <InboxWrapper>
-        <div className="px-4 dark:bg-white/[0.03] xl:px-6">
+        <div className="px-4 xl:px-6">
           <Breadcrumbs items={breadcrumbsItems} />
           <p className="p-4 text-red-500">Не удалось загрузить команды: {JSON.stringify(error)}</p>
           <button onClick={refetch} className="bg-blue-500 text-white rounded px-4 py-2">
@@ -97,27 +97,27 @@ const ProjectManagerTeamsPage: React.FC = () => {
   if (!teams.length) {
     return (
       <InboxWrapper>
-        <div className="px-4 dark:bg-white/[0.03] xl:px-6">
+        <div className="px-4 xl:px-6">
           <Breadcrumbs items={breadcrumbsItems} />
           <div className="flex items-center justify-between mt-4">
             <h1 className="text-3xl font-semibold">Ваши команды</h1>
             <div className="flex gap-2">
               <button
-                className="flex items-center px-4 py-2 text-base bg-blue-100 rounded-lg text-blue-700 hover:text-white hover:bg-blue-600 transition-colors dark:bg-dark-bg dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white"
+                className="flex items-center px-4 py-2 text-base bg-blue-100 rounded-lg text-blue-700 hover:text-white hover:bg-blue-600 transition-colors dark:bg-gray-700 dark:text-white dark:hover:text-white"
                 onClick={() => setIsAddTeamModalOpen(true)}
               >
                 <SquareArrowOutUpRight className="h-5 w-5 mr-2" />
                 Создать команду
               </button>
               <button
-                className="flex items-center px-4 py-2 text-base bg-green-100 rounded-lg text-green-700 hover:text-white hover:bg-green-600 transition-colors dark:bg-dark-bg dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white"
+                className="flex items-center px-4 py-2 text-base bg-green-100 rounded-lg text-green-700 hover:text-white hover:bg-green-600 transition-colors dark:bg-gray-700 dark:text-white dark:hover:bg-gray-800 dark:hover:text-white"
                 onClick={() => setIsInviteModalOpen(true)}
               >
                 <SquareArrowOutUpRight className="h-5 w-5 mr-2" />
                 Пригласить по Email
               </button>
               <button
-                className="flex items-center px-4 py-2 text-base bg-purple-100 rounded-lg text-purple-700 hover:text-white hover:bg-purple-600 transition-colors dark:bg-dark-bg dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white"
+                className="flex items-center px-4 py-2 text-base bg-purple-100 rounded-lg text-purple-700 hover:text-white hover:bg-purple-600 transition-colors dark:bg-gray-700 dark:text-white dark:hover:bg-gray-800 dark:hover:text-white"
                 onClick={() => setIsManageMembersModalOpen(true)}
               >
                 <SquareArrowOutUpRight className="h-5 w-5 mr-2" />
@@ -154,27 +154,27 @@ const ProjectManagerTeamsPage: React.FC = () => {
 
   return (
     <InboxWrapper>
-      <div className="px-4 dark:bg-white/[0.03] xl:px-6">
+      <div className="px-4 xl:px-6">
         <Breadcrumbs items={breadcrumbsItems} />
         <div className="flex items-center justify-between mt-4">
           <h1 className="text-3xl font-semibold">Ваши команды</h1>
           <div className="flex gap-2">
             <button
-              className="flex items-center px-4 py-2 text-base bg-blue-100 rounded-lg text-blue-700 hover:text-white hover:bg-blue-600 transition-colors dark:bg-dark-bg dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white"
+              className="flex items-center px-4 py-2 text-base bg-blue-100 rounded-lg text-blue-700 hover:text-white hover:bg-blue-600 transition-colors dark:bg-gray-700 dark:text-white dark:hover:bg-gray-800 dark:hover:text-white"
               onClick={() => setIsAddTeamModalOpen(true)}
             >
               <SquareArrowOutUpRight className="h-5 w-5 mr-2" />
               Создать команду
             </button>
             <button
-              className="flex items-center px-4 py-2 text-base bg-green-100 rounded-lg text-green-700 hover:text-white hover:bg-green-600 transition-colors dark:bg-dark-bg dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white"
+              className="flex items-center px-4 py-2 text-base bg-green-100 rounded-lg text-green-700 hover:text-white hover:bg-green-600 transition-colors dark:bg-gray-700 dark:text-white dark:hover:bg-gray-800 dark:hover:text-white"
               onClick={() => setIsInviteModalOpen(true)}
             >
               <SquareArrowOutUpRight className="h-5 w-5 mr-2" />
               Пригласить по Email
             </button>
             <button
-              className="flex items-center px-4 py-2 text-base bg-purple-100 rounded-lg text-purple-700 hover:text-white hover:bg-purple-600 transition-colors dark:bg-dark-bg dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white"
+              className="flex items-center px-4 py-2 text-base bg-purple-100 rounded-lg text-purple-700 hover:text-white hover:bg-purple-600 transition-colors dark:bg-gray-700 dark:text-white dark:hover:bg-gray-800 dark:hover:text-white"
               onClick={() => setIsManageMembersModalOpen(true)}
             >
               <SquareArrowOutUpRight className="h-5 w-5 mr-2" />
@@ -242,7 +242,7 @@ const ProjectManagerTeamsPage: React.FC = () => {
           />
         </div>
 
-        <div className="mt-6 sm:rounded-lg max-h-[60vh] overflow-y-auto">
+        <div className="mt-6 sm:rounded-md overflow-y-auto">
           <TeamTable members={filteredMembers} showAnalytics={true} />
           {filteredMembers.length === 0 && (
             <p className="py-4 px-4 text-center text-gray-500 dark:text-gray-400">Ничего не найдено</p>

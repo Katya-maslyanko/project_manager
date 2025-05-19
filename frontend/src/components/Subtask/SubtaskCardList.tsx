@@ -44,7 +44,7 @@ const SubtaskCard = ({ subtask, onDragStart, onOpen, onStatusChange }) => {
   };
 
   return (
-    <tr className="border-t border-b cursor-grab active:cursor-grabbing" 
+    <tr className="border-t border-b cursor-grab active:cursor-grabbing dark:border-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 dark:text-white transition-colors" 
         onClick={onOpen}
         onDragStart={(e) => onDragStart(e, subtask)}
         draggable>

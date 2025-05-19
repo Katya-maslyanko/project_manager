@@ -1,6 +1,8 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import (
+    PasswordResetConfirmView,
+    PasswordResetRequestView,
     StickyNoteViewSet,
     StrategicConnectionViewSet,
     UserCursorPositionViewSet,
@@ -23,6 +25,9 @@ from .views import (
     CustomTokenObtainPairView,
     UserDetailUpdateView,
     RegisterView,
+    Setup2FAView, 
+    Verify2FAView, 
+    Login2FAView
 )
 
 router = DefaultRouter()
@@ -51,6 +56,11 @@ urlpatterns = [
     path('auth/jwt/create/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('auth/users/me/', UserDetailUpdateView.as_view(), name='user-detail'),
     path('auth/logout/', LogoutView.as_view()),
+    path('auth/2fa/setup/', Setup2FAView.as_view(), name='setup-2fa'),
+    path('auth/2fa/verify/', Verify2FAView.as_view(), name='verify-2fa'),
+    path('auth/login-2fa/', Login2FAView.as_view(), name='login-2fa'),
+    path('auth/password/reset/', PasswordResetRequestView.as_view(), name='password-reset-request'),
+    path('auth/password/reset/confirm/', PasswordResetConfirmView.as_view(), name='password-reset-confirm'),
     path('auth/', include('djoser.urls')),
     path('auth/', include('djoser.urls.jwt')),
 ]

@@ -32,10 +32,10 @@ const getTagColor = (index: number) => tagColors[index % tagColors.length];
 
 const ProjectTeamMember: React.FC<ProjectTeamMemberProps> = ({ members }) => {
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 dark:border-gray-700 dark:bg-dark-bg dark:text-white">
       {members.length > 0 ? (
         <div className="mb-6">
-          <h2 className="text-lg font-semibold mb-3 text-gray-800 border-b pb-2">
+          <h2 className="text-lg font-semibold mb-3 text-gray-800 border-b pb-2 dark:text-white">
             Участники проекта
           </h2>
           <div className="overflow-x-auto sm:rounded-lg">

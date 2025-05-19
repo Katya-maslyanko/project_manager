@@ -282,7 +282,7 @@ const TaskList: React.FC<TaskListProps> = ({
       >
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center">
-            <span className="flex items-center px-2 py-1 text-sm border font-semibold border-yellow-200 bg-yellow-100 rounded-lg text-yellow-700 dark:border-yellow-600 dark:bg-yellow-900 dark:text-yellow-300 duration-200 transition-colors">
+            <span className="flex items-center px-2 py-1 text-sm border font-semibold border-yellow-200 bg-yellow-100 rounded-lg text-yellow-700 duration-200 transition-colors">
               <CircleCheck className="h-4 w-4 mr-2" />
               К исполнению
             </span>
@@ -336,7 +336,7 @@ const TaskList: React.FC<TaskListProps> = ({
       >
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center">
-            <span className="flex items-center px-2 py-1 text-sm border font-semibold border-purple-200 bg-purple-100 rounded-lg text-purple-700 dark:border-purple-600 dark:bg-purple-900 dark:text-purple-300 duration-200 transition-colors">
+            <span className="flex items-center px-2 py-1 text-sm border font-semibold border-purple-200 bg-purple-100 rounded-lg text-purple-700 duration-200 transition-colors">
               <LoaderCircle className="h-4 w-4 mr-2" />
               В процессе
             </span>
@@ -390,7 +390,7 @@ const TaskList: React.FC<TaskListProps> = ({
       >
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center">
-            <span className="flex items-center px-2 py-1 text-sm border font-semibold border-green-200 bg-green-100 rounded-lg text-green-700 dark:border-green-600 dark:bg-green-900 dark:text-green-300 duration-200 transition-colors">
+            <span className="flex items-center px-2 py-1 text-sm border font-semibold border-green-200 bg-green-100 rounded-lg text-green-700 duration-200 transition-colors">
               <BookCheck className="h-4 w-4 mr-2" />
               Завершено
             </span>

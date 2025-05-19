@@ -37,7 +37,7 @@ const TaskCardBoard = ({ task, onDragStart, onEdit, onStatusChange, onOpenSideba
 
   return (
     <div
-      className="bg-white rounded-md shadow-md p-4 mb-2 cursor-grab"
+      className="bg-white rounded-md shadow-md p-4 mb-2 cursor-grab dark:bg-dark-bg dark:border dark:border-gray-800"
       draggable
       onDragStart={(e) => onDragStart(e, task)}
       onClick={() => onOpenSidebar(task)}

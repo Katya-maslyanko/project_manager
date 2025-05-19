@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useLoginMutation } from "@/state/api";
+import { useLogin2FAMutation } from "@/state/api";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import Image from "next/image";
@@ -11,10 +11,12 @@ import { Eye, EyeOff } from "lucide-react";
 const SignIn = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [code, setCode] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
+  const [requires2FA, setRequires2FA] = useState(false);
   const router = useRouter();
-  const [login, { isLoading }] = useLoginMutation();
+  const [login2FA, { isLoading }] = useLogin2FAMutation();
   const { login: setAuth } = useAuth();
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -22,29 +24,35 @@ const SignIn = () => {
     setError("");
 
     try {
-      const response = await login({ email, password }).unwrap();
+      const response = await login2FA({ email, password, code }).unwrap();
       if (response.access && response.user) {
         await setAuth(response);
         router.push("/");
       } else {
-        setError("Ошибка входа. Проверьте логин и пароль.");
+        setError("Ошибка входа. Проверьте данные.");
       }
-    } catch (err) {
-      setError("Ошибка входа. Проверьте логин и пароль.");
+    } catch (err: any) {
+      if (err.data?.error === "Неверный код 2FA") {
+        setError("Неверный код 2FA.");
+      } else if (err.data?.error === "Неверные учетные данные") {
+        setError("Неверный email или пароль.");
+      } else {
+        setRequires2FA(true);
+        setError("Требуется код двухфакторной аутентификации.");
+      }
     }
   };
 
   useEffect(() => {
     const savedEmail = sessionStorage.getItem("email");
     const savedPassword = sessionStorage.getItem("password");
-  
+
     if (savedEmail) setEmail(savedEmail);
     if (savedPassword) setPassword(savedPassword);
-  
+
     sessionStorage.removeItem("email");
     sessionStorage.removeItem("password");
-  }, []);  
-  
+  }, []);
 
   return (
     <div className="flex min-h-screen">
@@ -56,7 +64,9 @@ const SignIn = () => {
           {error && <p className="text-red-500 mb-4">{error}</p>}
           <form onSubmit={handleLogin} className="space-y-6">
             <div>
-              <label className="block text-gray-700 font-bold text-base mb-2" htmlFor="email">Email <span className="text-red-500">*</span></label>
+              <label className="block text-gray-700 font-bold text-base mb-2" htmlFor="email">
+                Email <span className="text-red-500">*</span>
+              </label>
               <input
                 type="email"
                 placeholder="info@gmail.com"
@@ -68,7 +78,9 @@ const SignIn = () => {
               />
             </div>
             <div>
-              <label className="block text-gray-700 font-bold mb-2" htmlFor="password">Пароль *</label>
+              <label className="block text-gray-700 font-bold mb-2" htmlFor="password">
+                Пароль <span className="text-red-500">*</span>
+              </label>
               <div className="relative">
                 <input
                   type={showPassword ? "text" : "password"}
@@ -88,12 +100,29 @@ const SignIn = () => {
                 </button>
               </div>
             </div>
+            {requires2FA && (
+              <div>
+                <label className="block text-gray-700 font-bold mb-2" htmlFor="code">
+                  Код 2FA <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  placeholder="Введите код 2FA"
+                  value={code}
+                  onChange={(e) => setCode(e.target.value)}
+                  required
+                  className="w-full p-3 border border-gray-200 rounded-md placeholder:text-gray-400 focus:border-blue-300 focus:bg-blue-100"
+                />
+              </div>
+            )}
             <div className="flex items-center justify-between mb-6">
               <label className="flex items-center">
                 <input className="form-checkbox border-gray-200 text-blue-500" type="checkbox" />
                 <span className="ml-2 text-gray-500">Запомнить меня</span>
               </label>
-              <a className="text-blue-600" href="#">Забыли пароль?</a>
+              <Link href="/auth/reset-password" className="text-blue-600">
+                Забыли пароль?
+              </Link>
             </div>
             <button
               type="submit"

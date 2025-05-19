@@ -351,10 +351,10 @@ const TimeLineList: React.FC = () => {
   if (error) return <div className="text-red-500 text-center p-4 bg-red-50 rounded-lg">Ошибка загрузки: {JSON.stringify(error)}</div>;
 
   return (
-    <div className="px-4 xl:px-6 grid grid-cols-1 max-w-full">
+    <div className="px-4 xl:px-6 grid grid-cols-1 max-w-full dark:bg-dark-bg dark:text-white">
       <div className="overflow-x-auto sm:rounded-lg relative">
-        <div className="relative shadow-md rounded-xl overflow-hidden bg-white">
-          <div ref={ganttContainer} id="gantt" className="min-w-[1000px] w-full h-[600px] border border-gray-200" />
+        <div className="relative shadow-md rounded-xl overflow-hidden bg-white dark:bg-dark-bg dark:border-dark-border">
+          <div ref={ganttContainer} id="gantt" className="min-w-[1000px] w-full h-[600px] border border-gray-200 dark:border-dark-border dark:bg-dark-bg" />
           <div
             ref={resizeRef}
             className="absolute top-0 bottom-0 w-1 bg-gray-200 cursor-ew-resize hover:bg-blue-400 transition-colors duration-200 z-10 select-none"
@@ -369,7 +369,7 @@ const TimeLineList: React.FC = () => {
         </div>
         {contextMenu && (
           <div
-            className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-5 z-50"
+            className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-5 dark:bg-opacity-30 z-50"
             onClick={() => setContextMenu(null)}
           >
             <div

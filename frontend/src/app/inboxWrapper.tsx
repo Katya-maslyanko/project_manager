@@ -22,9 +22,11 @@ const InboxLayout: React.FC<InboxLayoutProps> = ({ children, onSearch }) => {
 
   return (
     <ProtectedLayout>
-      <div className="flex min-h-screen w-full bg-gray-50 text-gray-900">
+      <div className="flex min-h-screen w-full bg-gray-50 text-gray-900 dark:bg-dark-bg dark:text-dark-text">
         <Sidebar />
-        <main className={`flex-1 transition-all duration-300 ease-in-out ${mainContentMargin}`}>
+        <main
+          className={`flex-1 transition-all dark:bg-dark-bg duration-300 ease-in-out ${mainContentMargin}`}
+        >
           <Navbar onSearch={onSearch || (() => {})} />
           <div className="pt-6 mx-auto max-w-(--breakpoint-2xl) md:pt-6">{children}</div>
         </main>

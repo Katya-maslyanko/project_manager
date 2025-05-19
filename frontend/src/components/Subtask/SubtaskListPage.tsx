@@ -54,7 +54,7 @@ const SubtaskListPage: React.FC<Props> = ({ subtasks }) => {
   };
 
   return (
-    <div style={{ borderLeft: 'none' }} className="border border-gray-200 rounded-md p-4 grid grid-cols-1">
+    <div style={{ borderLeft: 'none' }} className="border border-gray-200 rounded-md p-4 grid grid-cols-1 dark:bg-dark-bg dark:border-gray-800">
       {/* К исполнению */}
       <div
         className="p-4 mb-6"
@@ -75,7 +75,7 @@ const SubtaskListPage: React.FC<Props> = ({ subtasks }) => {
         <div className="overflow-x-auto sm:rounded-lg">
           <table className="w-full text-left">
             <thead>
-              <tr className="text-gray-600 text-sm bg-gray-100 border rounded-md">
+              <tr className="text-gray-600 text-sm bg-gray-100 border rounded-md dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600">
                 <th className="py-3 px-4">Задача</th>
                 <th className="py-3 px-4">Описание</th>
                 <th className="py-3 px-4">Исполнители</th>
@@ -125,7 +125,7 @@ const SubtaskListPage: React.FC<Props> = ({ subtasks }) => {
         <div className="overflow-x-auto sm:rounded-lg">
           <table className="w-full text-left">
             <thead>
-              <tr className="text-gray-600 text-sm bg-gray-100 border rounded-md">
+              <tr className="text-gray-600 text-sm bg-gray-100 border rounded-md dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600">
                 <th className="py-3 px-4">Задача</th>
                 <th className="py-3 px-4">Описание</th>
                 <th className="py-3 px-4">Исполнители</th>
@@ -175,7 +175,7 @@ const SubtaskListPage: React.FC<Props> = ({ subtasks }) => {
         <div className="overflow-x-auto sm:rounded-lg">
           <table className="w-full text-left">
             <thead>
-              <tr className="text-gray-600 text-sm bg-gray-100 border rounded-md">
+              <tr className="text-gray-600 text-sm bg-gray-100 border rounded-md dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600">
                 <th className="py-3 px-4">Задача</th>
                 <th className="py-3 px-4">Описание</th>
                 <th className="py-3 px-4">Исполнители</th>

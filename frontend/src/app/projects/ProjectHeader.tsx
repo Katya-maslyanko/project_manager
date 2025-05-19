@@ -42,12 +42,12 @@ interface Member {
 }
 
 const tagColors = [
-  'bg-red-100 text-red-600',
-  'bg-yellow-100 text-yellow-600',
-  'bg-green-100 text-green-600',
-  'bg-blue-100 text-blue-600',
-  'bg-purple-100 text-purple-600',
-  'bg-pink-100 text-pink-600',
+  "bg-red-100 text-red-600",
+  "bg-yellow-100 text-yellow-600",
+  "bg-green-100 text-green-600",
+  "bg-blue-100 text-blue-600",
+  "bg-purple-100 text-purple-600",
+  "bg-pink-100 text-pink-600",
 ];
 
 const getTagColor = (index: number) => tagColors[index % tagColors.length];
@@ -163,7 +163,7 @@ const ProjectHeader: React.FC<Props> = ({
   };
 
   return (
-    <div className="px-4 xl:px-6">
+    <div className="px-4 xl:px-6 dark:bg-dark-bg">
       <Breadcrumbs items={breadcrumbsItems} />
       <div className="mb-5 flex items-center justify-between mt-4">
         <h1 className="text-3xl font-semibold text-gray-800 dark:text-white">
@@ -180,15 +180,15 @@ const ProjectHeader: React.FC<Props> = ({
                   title={`${member.first_name} ${member.last_name}`}
                 >
                   <span className="text-xs">
-                    {member.username ? member.username.charAt(0) : '?'}
+                    {member.username ? member.username.charAt(0) : "?"}
                   </span>
                 </div>
               ))
             ) : (
-              <span className="text-gray-500 text-sm">Нет участников</span>
+              <span className="text-gray-500 dark:text-gray-400 text-sm">Нет участников</span>
             )}
             {members && members.length > 5 && (
-              <div className="w-11 h-11 border-2 font-semibold border-gray-100 rounded-full dark:border-gray-800 flex items-center justify-center bg-gray-200 text-gray-600">
+              <div className="w-11 h-11 border-2 font-semibold border-gray-100 rounded-full dark:border-gray-800 flex items-center justify-center bg-gray-200 text-gray-600 dark:bg-dark-bg dark:text-gray-400">
                 <span className="text-xs">+{members.length - 5}</span>
               </div>
             )}
@@ -206,10 +206,10 @@ const ProjectHeader: React.FC<Props> = ({
       {showShareModal && (
         <div
           ref={modalRef}
-          className="absolute z-50 bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg w-96"
+          className="absolute z-50 bg-white dark:bg-dark-bg p-6 rounded-lg shadow-lg w-96 dark:border dark:border-gray-800"
           style={{ top: `${modalPosition.top}px`, left: `${modalPosition.left}px` }}
         >
-          <h2 className="text-xl font-semibold mb-4 text-gray-800 dark:text-white">
+          <h2 className="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-400">
             Поделиться проектом
           </h2>
           <input
@@ -224,7 +224,7 @@ const ProjectHeader: React.FC<Props> = ({
           {success && <p className="text-green-500 mb-4">{success}</p>}
           <div className="flex justify-end">
             <button
-              className="px-4 py-2 bg-blue-100 rounded-md text-blue-700 hover:bg-blue-600 hover:text-white disabled:bg-blue-400"
+              className="px-4 py-2 bg-blue-100 rounded-md text-blue-700 hover:bg-blue-600 hover:text-white disabled:bg-blue-400 dark:bg-dark-bg dark:border dark:border-gray-800 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white"
               onClick={handleShare}
               disabled={isLoading}
             >
@@ -235,7 +235,7 @@ const ProjectHeader: React.FC<Props> = ({
       )}
 
       <div className="flex items-center mb-4">
-        <div className="flex items-center border bg-gray-200 rounded-md">
+        <div className="flex items-center border dark:border-gray-800 bg-gray-200 dark:bg-dark-bg rounded-md">
           <TabButton
             name="Обзор"
             icon={<BookOpenCheck className="h-5 w-5" />}
@@ -274,9 +274,9 @@ const ProjectHeader: React.FC<Props> = ({
               activeFilters.tags.size ||
               activeFilters.assignedTo === "me" ||
               activeFilters.goalId
-                ? 'text-blue-600 bg-blue-100'
-                : 'text-gray-600'
-            } hover:text-gray-700 hover:bg-gray-100 transition-colors dark:border-gray-800 dark:bg-dark-bg dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white`}
+                ? "text-blue-600 bg-blue-100"
+                : "text-gray-600 dark:text-gray-400"
+            } hover:text-gray-700 hover:bg-gray-100 transition-colors dark:border-gray-800 dark:bg-dark-bg dark:hover:bg-gray-800 dark:hover:text-white`}
             onClick={() => setShowFilterDropdown((prev) => !prev)}
           >
             <ListFilter className="h-5 w-5 mr-2" />
@@ -300,8 +300,8 @@ const ProjectHeader: React.FC<Props> = ({
 
           <button
             className={`flex items-center px-4 py-2 text-base border border-gray-200 rounded-lg ${
-              activeSort ? 'text-blue-600 bg-blue-100' : 'text-gray-600'
-            } hover:text-gray-700 hover:bg-gray-100 transition-colors dark:border-gray-800 dark:bg-dark-bg dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white`}
+              activeSort ? "text-blue-600 bg-blue-100" : "text-gray-600 dark:text-gray-400"
+            } hover:text-gray-700 hover:bg-gray-100 transition-colors dark:border-gray-800 dark:bg-dark-bg dark:hover:bg-gray-800 dark:hover:text-white`}
             onClick={() => setShowSortDropdown((prev) => !prev)}
           >
             <ArrowDownUp className="h-5 w-5 mr-2" />
@@ -339,7 +339,9 @@ const TabButton: React.FC<TabButtonProps> = ({ name, icon, setActiveTab, activeT
   return (
     <button
       className={`flex items-center px-4 py-2 rounded-md transition duration-200 ${
-        isActive ? "bg-white text-blue-600" : "bg-gray-200 text-gray-600"
+        isActive
+          ? "bg-white text-blue-600 dark:bg-gray-800 dark:text-blue-400"
+          : "bg-gray-200 text-gray-600 dark:bg-dark-bg dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white"
       }`}
       onClick={() => setActiveTab(name)}
     >

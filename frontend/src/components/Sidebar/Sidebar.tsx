@@ -36,7 +36,7 @@ const AppSidebar: React.FC = () => {
     skip: authLoading || !user,
     refetchOnMountOrArgChange: true,
   });
-  
+
   const { data: myTeams = [], error: teamsError, isLoading: teamsLoading } = useGetMyTeamsQuery(undefined, {
     skip: authLoading || !user,
     refetchOnMountOrArgChange: true,
@@ -56,7 +56,7 @@ const AppSidebar: React.FC = () => {
     }
   }, [isExpanded, isMobileOpen]);
 
-  let filteredProjects: any[] = projects; 
+  let filteredProjects: any[] = projects;
 
   // Определяем элементы навигации в зависимости от роли пользователя
   const getNavItems = () => {
@@ -70,7 +70,7 @@ const AppSidebar: React.FC = () => {
       },
     ];
 
-    if (user.role === 'admin') {
+    if (user.role === "admin") {
       return [
         ...baseNavItems,
         {
@@ -79,7 +79,7 @@ const AppSidebar: React.FC = () => {
           path: "/users",
         },
       ];
-    } else if (user.role === 'project_manager') {
+    } else if (user.role === "project_manager") {
       return [
         ...baseNavItems,
         {
@@ -111,7 +111,7 @@ const AppSidebar: React.FC = () => {
 
   return (
     <aside
-      className={`fixed mt-16 flex flex-col lg:mt-0 top-0 px-5 left-0 bg-white dark:bg-gray-900 dark:border-gray-800 text-gray-900 h-screen transition-all duration-300 ease-in-out z-50 border-r border-gray-200 
+      className={`fixed mt-16 flex flex-col lg:mt-0 top-0 px-5 left-0 bg-white dark:bg-dark-bg dark:border-gray-800 text-gray-900 h-screen transition-all duration-300 ease-in-out z-50 border-r border-gray-200
         ${isExpanded || isMobileOpen ? "w-[290px]" : "w-[90px]"}
         ${isMobileOpen ? "translate-x-0" : "-translate-x-full"}
         lg:translate-x-0`}
@@ -127,7 +127,7 @@ const AppSidebar: React.FC = () => {
                 width={150}
                 height={40}
                 priority
-                style={{ width: 'auto', height: 'auto' }}
+                style={{ width: "auto", height: "auto" }}
               />
               <Image
                 className="hidden dark:block"
@@ -136,7 +136,7 @@ const AppSidebar: React.FC = () => {
                 width={150}
                 height={40}
                 priority
-                style={{ width: 'auto', height: 'auto' }}
+                style={{ width: "auto", height: "auto" }}
               />
             </>
           ) : (
@@ -146,7 +146,7 @@ const AppSidebar: React.FC = () => {
               width={32}
               height={32}
               priority
-              style={{ width: 'auto', height: 'auto' }}
+              style={{ width: "auto", height: "auto" }}
             />
           )}
         </Link>
@@ -158,8 +158,8 @@ const AppSidebar: React.FC = () => {
               <li key={nav.name}>
                 <Link
                   href={nav.path!}
-                  className={`flex items-center px-4 py-3 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-all duration-200 ease-in-out ${
-                    isActive(nav.path!) ? "bg-blue-600 text-white dark:bg-blue-800" : "text-gray-600 dark:text-gray-300"
+                  className={`flex items-center px-4 py-3 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-800 hover:text-gray-700 dark:hover:text-white transition-all duration-200 ease-in-out ${
+                    isActive(nav.path!) ? "bg-blue-600 text-white dark:bg-blue-800" : "text-gray-600 dark:text-gray-400"
                   }`}
                 >
                   <span className={`mr-2 ${isActive(nav.path!) ? "text-white" : "text-gray-500 dark:text-gray-400"}`}>
@@ -170,27 +170,49 @@ const AppSidebar: React.FC = () => {
               </li>
             ))}
           </ul>
-          {user && user.role !== 'admin' && (
-            <div className="border-t border-gray-200 dark:border-gray-700 my-4" />
+          {user && user.role !== "admin" && (
+            <div className="border-t border-gray-200 dark:border-gray-800 my-4" />
           )}
-          {user && user.role !== 'admin' && (
+          {user && user.role !== "admin" && (
             <div>
               <div className="flex items-center justify-between mb-3">
-                <h2 className={`text-gray-400 dark:text-gray-500 text-sm font-semibold uppercase flex items-center ${!(isExpanded || isMobileOpen) ? "justify-center w-full" : ""}`}>
+                <h2
+                  className={`text-gray-400 dark:text-gray-500 text-sm font-semibold uppercase flex items-center ${
+                    !(isExpanded || isMobileOpen) ? "justify-center w-full" : ""
+                  }`}
+                >
                   {(isExpanded || isMobileOpen) ? "Мои Проекты" : "..."}
                 </h2>
                 {(isExpanded || isMobileOpen) && canCreateProjects && (
-                  <button onClick={openModal} className="bg-blue-100 dark:bg-blue-900 rounded-lg p-1 w-8 h-8 flex items-center justify-center">
+                  <button
+                    onClick={openModal}
+                    className="bg-blue-100 dark:bg-dark-bg dark:border dark:border-gray-800 rounded-lg p-1 w-8 h-8 flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-800"
+                  >
                     <Plus className="text-blue-600 dark:text-blue-400 w-4 h-4" />
                   </button>
                 )}
               </div>
-              <button onClick={toggleProjects} className={`flex items-center justify-between w-full px-4 py-3 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-all duration-200 ease-in-out ${openProjects ? "bg-gray-200 dark:bg-gray-700" : ""}`}>
+              <button
+                onClick={toggleProjects}
+                className={`flex items-center justify-between w-full px-4 py-3 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-800 transition-all duration-200 ease-in-out ${
+                  openProjects ? "bg-gray-200 dark:bg-gray-800" : ""
+                }`}
+              >
                 <span className="flex items-center">
-                  <FolderKanban className={`mr-2 ${openProjects ? "text-blue-600 dark:text-blue-400" : "text-gray-500 dark:text-gray-400"}`} />
-                  {(isExpanded || isMobileOpen) && <span className={`text-lg ${openProjects ? "text-blue-600 dark:text-blue-400" : "text-gray-600 dark:text-gray-300"}`}>Проекты</span>}
+                  <FolderKanban
+                    className={`mr-2 ${openProjects ? "text-blue-600 dark:text-blue-400" : "text-gray-500 dark:text-gray-400"}`}
+                  />
+                  {(isExpanded || isMobileOpen) && (
+                    <span
+                      className={`text-lg ${openProjects ? "text-blue-600 dark:text-blue-400" : "text-gray-600 dark:text-gray-400"}`}
+                    >
+                      Проекты
+                    </span>
+                  )}
                 </span>
-                <ChevronDown className={`transition-transform duration-200 ${openProjects ? "rotate-180" : ""} text-gray-500 dark:text-gray-400`} />
+                <ChevronDown
+                  className={`transition-transform duration-200 ${openProjects ? "rotate-180" : ""} text-gray-500 dark:text-gray-400`}
+                />
               </button>
               {openProjects && (
                 <ul className="ml-4 mt-2 space-y-1">
@@ -203,8 +225,8 @@ const AppSidebar: React.FC = () => {
                       <li key={project.name} className="flex items-center">
                         <Link
                           href={`/projects/${project.id}`}
-                          className={`flex items-center w-full px-4 py-3 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-all duration-200 ease-in-out ${
-                            isActive(`/projects/${project.id}`) ? "bg-blue-600 text-white dark:bg-blue-800" : "text-gray-600 dark:text-gray-300"
+                          className={`flex items-center w-full px-4 py-3 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-800 hover:text-gray-700 dark:hover:text-white transition-all duration-200 ease-in-out ${
+                            isActive(`/projects/${project.id}`) ? "bg-blue-600 text-white dark:bg-blue-800" : "text-gray-600 dark:text-gray-400"
                           }`}
                         >
                           <span className={`mr-2 w-4 h-4 rounded ${projectColors[index % projectColors.length]}`} />

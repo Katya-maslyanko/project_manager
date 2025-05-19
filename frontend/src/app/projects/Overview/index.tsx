@@ -468,10 +468,10 @@ const ProjectOverviewPage: React.FC<{ projectId: number; refetch: () => void }> 
   const isCurator = project.curator?.id === user?.id;
 
   return (
-    <div className="p-6 bg-gray-50">
+    <div className="p-6 bg-gray-50 dark:bg-dark-bg">
       <div className="flex gap-4 mb-8">
         <div className="flex-1 flex gap-4">
-          <div className="flex items-center justify-between w-full p-4 rounded-lg shadow-sm bg-white">
+          <div className="flex items-center justify-between w-full p-4 rounded-lg shadow-sm bg-white dark:bg-dark-bg dark:text-dark-text dark:border dark:border-gray-800">
             <div className="flex items-center justify-center w-11 h-11 bg-blue-100 rounded-lg">
               <Clock size={20} className="text-blue-700" />
             </div>
@@ -480,7 +480,7 @@ const ProjectOverviewPage: React.FC<{ projectId: number; refetch: () => void }> 
               <div className="text-xs text-gray-500">Всего задач</div>
             </div>
           </div>
-          <div className="flex items-center justify-between w-full p-4 rounded-lg shadow-sm bg-white">
+          <div className="flex items-center justify-between w-full p-4 rounded-lg shadow-sm bg-white dark:bg-dark-bg dark:text-dark-text dark:border dark:border-gray-800">
             <div className="flex items-center justify-center w-11 h-11 bg-rose-100 rounded-lg">
               <Calendar size={20} className="text-rose-700" />
             </div>
@@ -489,7 +489,7 @@ const ProjectOverviewPage: React.FC<{ projectId: number; refetch: () => void }> 
               <div className="text-xs text-gray-500">Всего подзадач</div>
             </div>
           </div>
-          <div className="flex items-center justify-between w-full p-4 rounded-lg shadow-sm bg-white">
+          <div className="flex items-center justify-between w-full p-4 rounded-lg shadow-sm bg-white dark:bg-dark-bg dark:text-dark-text dark:border dark:border-gray-800">
             <div className="flex items-center justify-center w-11 h-11 bg-yellow-100 rounded-lg">
               <CircleCheck size={20} className="text-yellow-700" />
             </div>
@@ -498,7 +498,7 @@ const ProjectOverviewPage: React.FC<{ projectId: number; refetch: () => void }> 
               <div className="text-xs text-gray-500">Новые</div>
             </div>
           </div>
-          <div className="flex items-center justify-between w-full p-4 rounded-lg shadow-sm bg-white">
+          <div className="flex items-center justify-between w-full p-4 rounded-lg shadow-sm bg-white dark:bg-dark-bg dark:text-dark-text dark:border dark:border-gray-800">
             <div className="flex items-center justify-center w-11 h-11 bg-purple-100 rounded-lg">
               <LoaderCircle size={20} className="text-purple-700" />
             </div>
@@ -507,7 +507,7 @@ const ProjectOverviewPage: React.FC<{ projectId: number; refetch: () => void }> 
               <div className="text-xs text-gray-500">В процессе</div>
             </div>
           </div>
-          <div className="flex items-center justify-between w-full p-4 rounded-lg shadow-sm bg-white">
+          <div className="flex items-center justify-between w-full p-4 rounded-lg shadow-sm bg-white dark:bg-dark-bg dark:text-dark-text dark:border dark:border-gray-800">
             <div className="flex items-center justify-center w-11 h-11 bg-green-100 rounded-lg">
               <BookCheck size={20} className="text-green-700" />
             </div>
@@ -670,7 +670,7 @@ const ProjectOverviewPage: React.FC<{ projectId: number; refetch: () => void }> 
           </div>
         </div>
         <div className="flex-1 max-w-full">
-          <div className="bg-white rounded-lg shadow-sm p-4">
+          <div className="bg-white rounded-md shadow-md p-4 border dark:bg-dark-bg dark:text-white dark:border-gray-800">
             <ProjectTeamMember members={project.members_info || []} />
           </div>
         </div>

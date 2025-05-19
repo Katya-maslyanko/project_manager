@@ -3,7 +3,9 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.contrib.auth import get_user_model, authenticate
 from django.db.models import Sum, Count
+from django_otp.plugins.otp_totp.models import TOTPDevice
 from .models import ProjectInvitation, ProjectTeam, StickyNote, StrategicConnection, UserCursorPosition, UserProfile, Team, Project, ProjectGoal, Subgoal, Task, Subtask, Tag, Comment, Notification, File, Setting, ActivityLog, UserTeamRelation, ProjectMember
+from .utils import create_cpd_tasks
 
 User = get_user_model()
 
@@ -235,10 +237,11 @@ class ProjectSerializer(serializers.ModelSerializer):
     tasks_in_progress = serializers.IntegerField(read_only=True)
     tasks_done = serializers.IntegerField(read_only=True)
     members_info = serializers.SerializerMethodField(read_only=True)
+    is_cpd_project = serializers.BooleanField(default=False)
 
     class Meta:
         model = Project
-        fields = ['id', 'name', 'description', 'teams', 'teams_ids', 'curator', 'curator_id', 
+        fields = ['id', 'name', 'description', 'teams', 'teams_ids', 'is_cpd_project', 'curator', 'curator_id', 
                   'startDate', 'endDate', 'created_at', 'updated_at', 
                   'total_tasks', 'total_subtasks', 'tasks_new', 'tasks_in_progress', 'tasks_done', 'members_info']
 
@@ -307,8 +310,18 @@ class ProjectSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         teams = validated_data.pop('teams', [])
+        is_cpd_project = validated_data.pop('is_cpd_project', False)
+        curator = validated_data.pop('curator', None)
+        print("Валидация:", validated_data)
+        print("Команды:", teams)
         project = Project.objects.create(**validated_data)
-        project.teams.set(teams)
+        if teams:
+            project.teams.set(teams)
+        if curator:
+            project.curator = curator
+            project.save()
+        if is_cpd_project:
+            create_cpd_tasks(project)
         return project
 
     def update(self, instance, validated_data):
@@ -680,3 +693,23 @@ class ProjectInvitationSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProjectInvitation
         fields = ['id', 'project', 'email', 'token', 'created_at', 'is_used', 'invited_by']
+
+class TOTPDeviceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TOTPDevice
+        fields = ['id', 'name', 'confirmed']
+
+class UserProfile2FASerializer(serializers.ModelSerializer):
+    totp_enabled = serializers.BooleanField()
+    totp_device = TOTPDeviceSerializer(read_only=True)
+
+    class Meta:
+        model = UserProfile
+        fields = ['totp_enabled', 'totp_device']
+
+class PasswordResetRequestSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+class PasswordResetConfirmSerializer(serializers.Serializer):
+    token = serializers.UUIDField()
+    new_password = serializers.CharField(min_length=6)

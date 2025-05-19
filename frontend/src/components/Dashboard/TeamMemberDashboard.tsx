@@ -97,7 +97,7 @@ const TeamMemberDashboard: React.FC = () => {
     const isActive = activeTab === name;
     return (
       <button
-        className={`flex items-center px-4 py-2 rounded-md transition duration-200 ${isActive ? "bg-white text-blue-600" : "bg-gray-200 text-gray-600"}`}
+        className={`flex items-center px-4 py-2 rounded-md transition duration-200 ${isActive ? "bg-white text-blue-600 dark:bg-gray-800 dark:text-blue-400" : "bg-gray-200 text-gray-600 dark:bg-dark-bg dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white"}`}
         onClick={() => setActiveTab(name)}
       >
         {icon && React.cloneElement(icon as React.ReactElement, { className: "mr-2 h-5 w-5" })}
@@ -107,20 +107,20 @@ const TeamMemberDashboard: React.FC = () => {
   };
 
   return (
-    <div className="p-4 bg-gray-50 min-h-screen">
-      <div className="bg-white rounded-lg shadow-sm p-6 mb-6 flex justify-between">
+    <div className="p-4 bg-gray-50 min-h-screen dark:bg-dark-bg dark:text-dark-text dark:border dark:border-gray-800">
+      <div className="bg-white rounded-lg shadow-sm p-6 mb-6 flex justify-between dark:bg-dark-bg dark:text-dark-text dark:border dark:border-gray-800">
         <div>
             <h2 className="text-xl font-semibold mb-2">Привет, {user.first_name || user.username}!</h2>
             <p className="text-base text-gray-600">Давайте начнем работу! У вас есть подзадачи, которые ждут вашего внимания.</p>
         </div>
         <Link href="http://localhost:3000/my-tasks">
-          <button className="flex items-center px-4 py-2 text-base border border-gray-200 rounded-lg text-gray-600 hover:text-gray-700 hover:bg-gray-100 transition-colors">
+          <button className="flex items-center px-4 py-2 text-base border border-gray-200 rounded-lg text-gray-600 hover:text-gray-700 hover:bg-gray-100 transition-colors dark:bg-gray-700 dark:text-white dark:border-gray-800">
             Просмотр всех задач
           </button>
         </Link>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <div className="flex items-center justify-between p-4 rounded-lg shadow-sm bg-white">
+        <div className="flex items-center justify-between p-4 rounded-lg shadow-sm bg-white dark:bg-dark-bg dark:text-dark-text dark:border dark:border-gray-800">
           <div className="flex items-center justify-center w-12 h-12 bg-rose-100 rounded-lg">
             <Calendar size={22} className="text-rose-700" />
           </div>
@@ -129,7 +129,7 @@ const TeamMemberDashboard: React.FC = () => {
             <div className="text-sm text-gray-500">Всего подзадач</div>
           </div>
         </div>
-        <div className="flex items-center justify-between p-4 rounded-lg shadow-sm bg-white">
+        <div className="flex items-center justify-between p-4 rounded-lg shadow-sm bg-white dark:bg-dark-bg dark:text-dark-text dark:border dark:border-gray-800">
           <div className="flex items-center justify-center w-12 h-12 bg-yellow-100 rounded-lg">
             <CircleCheck size={22} className="text-yellow-700" />
           </div>
@@ -138,7 +138,7 @@ const TeamMemberDashboard: React.FC = () => {
             <div className="text-sm text-gray-500">Новые подзадачи</div>
           </div>
         </div>
-        <div className="flex items-center justify-between p-4 rounded-lg shadow-sm bg-white">
+        <div className="flex items-center justify-between p-4 rounded-lg shadow-sm bg-whit dark:bg-dark-bg dark:text-dark-text dark:border dark:border-gray-800">
           <div className="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-lg">
             <LoaderCircle size={22} className="text-blue-700" />
           </div>
@@ -147,7 +147,7 @@ const TeamMemberDashboard: React.FC = () => {
             <div className="text-sm text-gray-500">Подзадачи в процессе</div>
           </div>
         </div>
-        <div className="flex items-center justify-between p-4 rounded-lg shadow-sm bg-white">
+        <div className="flex items-center justify-between p-4 rounded-lg shadow-sm bg-white dark:bg-dark-bg dark:text-dark-text dark:border dark:border-gray-800">
           <div className="flex items-center justify-center w-12 h-12 bg-green-100 rounded-lg">
             <BookCheck size={22} className="text-green-700" />
           </div>
@@ -158,9 +158,9 @@ const TeamMemberDashboard: React.FC = () => {
         </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-        <div className="bg-white rounded-lg shadow-sm p-4 md:col-span-2">
+        <div className="bg-white rounded-lg shadow-sm p-4 md:col-span-2 dark:bg-dark-bg dark:text-gray-40">
           <h2 className="text-lg font-semibold mb-4">Мои подзадачи ({totalSubtasks})</h2>
-          <div className="flex items-center border bg-gray-200 rounded-md mb-4 max-w-full">
+          <div className="flex items-center border bg-gray-200 rounded-md mb-4 max-w-full dark:border-gray-800 dark:bg-dark-bg">
             <TabButton name="Новые" setActiveTab={setActiveTab} activeTab={activeTab} />
             <TabButton name="В процессе" setActiveTab={setActiveTab} activeTab={activeTab} />
             <TabButton name="Завершено" setActiveTab={setActiveTab} activeTab={activeTab} />
@@ -168,7 +168,7 @@ const TeamMemberDashboard: React.FC = () => {
           <div className="overflow-y-auto max-h-64">
             <table className="w-full text-left">
               <thead>
-                <tr className="text-gray-600 text-sm bg-gray-100 border rounded-md">
+                <tr className="text-gray-600 text-sm bg-gray-100 border rounded-md dark:bg-dark-bg dark:border-gray-800 dark:text-gray-400">
                   <th className="py-3 px-4">Подзадача</th>
                   <th className="py-3 px-4">Сроки</th>
                 </tr>
@@ -178,8 +178,8 @@ const TeamMemberDashboard: React.FC = () => {
                   const isChecked = subtask.status === 'Завершено';
                   const isOverdue = subtask.due_date && new Date(subtask.due_date) < new Date() && subtask.status !== "Завершено";
                   return (
-                    <tr key={subtask.id} className="border-t border-b cursor-pointer hover:bg-gray-50">
-                      <td className="py-2 pl-2 border-r">
+                    <tr key={subtask.id} className="border-t border-b cursor-pointer hover:bg-gray-50 dark:text-white dark:bg-gray-700 dark:border-gray-800">
+                      <td className="py-2 pl-2 border-r dark:border-gray-800">
                         <div className="flex items-center">
                           <div className="cursor-pointer">
                             <GripVertical className="h-5 w-5 text-gray-500 hover:text-gray-700" />
@@ -205,7 +205,7 @@ const TeamMemberDashboard: React.FC = () => {
                           </div>
                         </div>
                       </td>
-                      <td className="py-2 px-4 border-r w-full">
+                      <td className="py-2 px-4 border-r  dark:border-gray-800 w-full">
                         <div className="flex items-center space-x-2">
                           <span className={isOverdue ? "text-red-400 font-semibold" : ""}>
                             {formatDate(subtask.start_date)} - {formatDate(subtask.due_date)}
@@ -219,7 +219,7 @@ const TeamMemberDashboard: React.FC = () => {
             </table>
           </div>
         </div>
-        <div className="bg-white rounded-lg shadow-sm p-4 md:col-span-1 z-10">
+        <div className="bg-white rounded-lg shadow-sm p-4 md:col-span-1 z-10 dark:bg-dark-bg dark:text-dark-text dark:border dark:border-gray-800">
           <h2 className="text-lg font-semibold mb-4">Эффективность по подзадачам</h2>
           <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
@@ -248,7 +248,7 @@ const TeamMemberDashboard: React.FC = () => {
           </div>
         </div>
       </div>
-      <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+      <div className="bg-white rounded-lg shadow-sm p-6 mb-6 dark:bg-dark-bg dark:text-dark-text dark:border dark:border-gray-800">
         <h2 className="text-lg font-semibold mb-4">Анализ вашей работы</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <div className="bg-gradient-to-r from-blue-50 to-blue-100 p-4 rounded-lg">
@@ -273,7 +273,7 @@ const TeamMemberDashboard: React.FC = () => {
         </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white rounded-lg shadow-sm p-4">
+        <div className="bg-white rounded-lg shadow-sm p-4 dark:bg-dark-bg dark:text-dark-text dark:border dark:border-gray-800">
           <div className="flex items-center mb-4">
             <FolderKanban size={20} className="text-blue-600 mr-2" />
             <h2 className="text-lg font-semibold">Проекты ({projects.length})</h2>
@@ -281,13 +281,13 @@ const TeamMemberDashboard: React.FC = () => {
           <ul className="space-y-3">
             {projects.length > 0 ? (
               projects.map((project) => (
-                <li key={project.id} className="p-4 rounded-xl bg-gray-50 border border-gray-200 hover:shadow-sm transition-shadow">
+                <li key={project.id} className="p-4 rounded-xl bg-gray-50 border border-gray-200 hover:shadow-sm transition-shadow dark:bg-dark-bg dark:text-dark-text dark:border dark:border-gray-800">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center">
                       <div className="relative flex items-center justify-center w-11 h-11 bg-blue-600 rounded-lg overflow-hidden mr-3">
-                        <span className="text-xl font-bold text-white">{project.name?.charAt(0) || 'П'}</span>
+                        <span className="text-xl font-bold text-white dark:text-white">{project.name?.charAt(0) || 'П'}</span>
                       </div>
-                      <span className="font-bold text-base text-gray-800">{project.name}</span>
+                      <span className="font-bold text-base text-gray-800 dark:text-white">{project.name}</span>
                     </div>
                     <div className="flex -space-x-2 rtl:space-x-reverse">
                       {project.members_info && project.members_info.length > 0 ? (
@@ -317,7 +317,7 @@ const TeamMemberDashboard: React.FC = () => {
             )}
           </ul>
         </div>
-        <div className="bg-white rounded-lg shadow-sm p-4">
+        <div className="bg-white rounded-lg shadow-sm p-4 dark:bg-dark-bg dark:text-dark-text dark:border dark:border-gray-800">
           <div className="flex items-center mb-4">
             <Users size={20} className="text-blue-600 mr-2" />
             <h2 className="text-lg font-semibold">Команды ({teams.length})</h2>
@@ -325,9 +325,9 @@ const TeamMemberDashboard: React.FC = () => {
           <ul className="space-y-3">
             {teams.length > 0 ? (
               teams.map((team) => (
-                <li key={team.id} className="p-4 rounded-xl bg-gray-50 border border-gray-200 hover:shadow-sm transition-shadow">
+                <li key={team.id} className="p-4 rounded-xl bg-gray-50 border border-gray-200 hover:shadow-sm transition-shadow dark:bg-dark-bg dark:text-dark-text dark:border dark:border-gray-800">
                   <div className="flex items-center justify-between">
-                    <span className="font-bold text-base text-gray-800">{team.name}</span>
+                    <span className="font-bold text-base text-gray-800 dark:text-white">{team.name}</span>
                     <div className="flex -space-x-2 rtl:space-x-reverse">
                       {team.members_info && team.members_info.length > 0 ? (
                         team.members_info.slice(0, 5).map((member, idx) => (

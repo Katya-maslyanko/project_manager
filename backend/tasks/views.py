@@ -5,6 +5,8 @@ from rest_framework.decorators import action
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError
+from django.utils import timezone
+from datetime import timedelta
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -16,6 +18,11 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework.generics import RetrieveUpdateAPIView
 from rest_framework.filters import OrderingFilter
 from rest_framework.exceptions import NotFound, ValidationError
+from django_otp.plugins.otp_totp.models import TOTPDevice
+from django_otp import devices_for_user
+from qrcode import make as make_qr
+from io import BytesIO
+import base64
 from uuid import UUID
 import os
 import subprocess
@@ -28,6 +35,7 @@ from django.core.mail import send_mail
 from django.conf import settings
 from django.db.models import Count, Q
 from .models import (
+    PasswordResetToken,
     ProjectInvitation,
     ProjectTeam,
     StickyNote,
@@ -51,6 +59,8 @@ from .models import (
     ProjectMember
 )
 from .serializers import (
+    PasswordResetConfirmSerializer,
+    PasswordResetRequestSerializer,
     StickyNoteSerializer,
     StrategicConnectionSerializer,
     UserCursorPositionSerializer,
@@ -643,3 +653,124 @@ class UserTeamRelationViewSet(viewsets.ModelViewSet):
 class ProjectMemberViewSet(viewsets.ModelViewSet):
     queryset = ProjectMember.objects.all()
     serializer_class = ProjectMemberSerializer
+
+class Setup2FAView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        user = request.user
+        profile = user.userprofile
+
+        if profile.totp_enabled:
+            return Response({'error': '2FA уже включена'}, status=400)
+
+        device = TOTPDevice.objects.create(user=user, name='default', confirmed=False)
+        qr_code_url = device.config_url
+        qr = make_qr(qr_code_url)
+        buffer = BytesIO()
+        qr.save(buffer, format="PNG")
+        qr_code = base64.b64encode(buffer.getvalue()).decode()
+
+        profile.totp_enabled = True
+        profile.save()
+
+        return Response({
+            'qr_code': f'data:image/png;base64,{qr_code}',
+            'device_id': device.id
+        })
+
+class Verify2FAView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        user = request.user
+        code = request.data.get('code')
+        device_id = request.data.get('device_id')
+
+        try:
+            device = TOTPDevice.objects.get(id=device_id, user=user, confirmed=False)
+            if device.verify_token(code):
+                device.confirmed = True
+                device.save()
+                return Response({'message': '2FA успешно подтверждена'})
+            else:
+                return Response({'error': 'Неверный код'}, status=400)
+        except TOTPDevice.DoesNotExist:
+            return Response({'error': 'Устройство не найдено'}, status=400)
+
+class Login2FAView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        email = request.data.get('email')
+        password = request.data.get('password')
+        code = request.data.get('code')
+
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            return Response({'error': 'Неверные учетные данные'}, status=400)
+
+        user = authenticate(username=user.username, password=password)
+        if not user:
+            return Response({'error': 'Неверные учетные данные'}, status=400)
+
+        if user.userprofile.totp_enabled:
+            devices = devices_for_user(user)
+            for device in devices:
+                if device.verify_token(code):
+                    refresh = RefreshToken.for_user(user)
+                    return Response({
+                        'refresh': str(refresh),
+                        'access': str(refresh.access_token),
+                        'user': UserSerializer(user).data
+                    })
+            return Response({'error': 'Неверный код 2FA'}, status=400)
+        refresh = RefreshToken.for_user(user)
+        return Response({
+            'refresh': str(refresh),
+            'access': str(refresh.access_token),
+            'user': UserSerializer(user).data
+        })
+    
+class PasswordResetRequestView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        serializer = PasswordResetRequestSerializer(data=request.data)
+        if serializer.is_valid():
+            email = serializer.validated_data['email']
+            try:
+                user = User.objects.get(email=email)
+                token = PasswordResetToken.objects.create(user=user)
+                frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:3000')
+                reset_link = f"{frontend_url}/auth/reset-password/confirm?token={token.token}"
+                subject = "Сброс пароля"
+                message = f"Перейдите по ссылке для сброса пароля: {reset_link}"
+                send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [email])
+                return Response({'message': 'Ссылка для сброса пароля отправлена на ваш email'})
+            except User.DoesNotExist:
+                return Response({'error': 'Пользователь с таким email не найден'}, status=400)
+        return Response(serializer.errors, status=400)
+
+class PasswordResetConfirmView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        serializer = PasswordResetConfirmSerializer(data=request.data)
+        if serializer.is_valid():
+            token = serializer.validated_data['token']
+            new_password = serializer.validated_data['new_password']
+            try:
+                reset_token = PasswordResetToken.objects.get(token=token)
+                if not reset_token.is_valid():
+                    return Response({'error': 'Токен недействителен или истек'}, status=400)
+                user = reset_token.user
+                user.set_password(new_password)
+                user.save()
+                reset_token.is_used = True
+                reset_token.save()
+                return Response({'message': 'Пароль успешно изменен'})
+            except PasswordResetToken.DoesNotExist:
+                return Response({'error': 'Недействительный токен'}, status=400)
+        return Response(serializer.errors, status=400)

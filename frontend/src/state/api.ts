@@ -52,6 +52,7 @@ export interface Project {
   tasks_done: number;
   total_subtasks: number;
   members_info: Member[];
+  is_cpd_project?: boolean;
 }
 
 export interface Assignee {
@@ -642,6 +643,40 @@ export const api = createApi({
       }),
       invalidatesTags: ["Projects"],
     }),
+    setup2FA: build.mutation<{ qr_code: string; device_id: number }, void>({
+      query: () => ({
+        url: 'auth/2fa/setup/',
+        method: 'POST',
+      }),
+    }),
+    verify2FA: build.mutation<{ message: string }, { code: string; device_id: number }>({
+      query: ({ code, device_id }) => ({
+        url: 'auth/2fa/verify/',
+        method: 'POST',
+        body: { code, device_id },
+      }),
+    }),
+    login2FA: build.mutation<AuthResponse, { email: string; password: string; code?: string }>({
+      query: (credentials) => ({
+        url: 'auth/login-2fa/',
+        method: 'POST',
+        body: credentials,
+      }),
+    }),
+    requestPasswordReset: build.mutation<{ message: string }, { email: string }>({
+      query: ({ email }) => ({
+        url: 'auth/password/reset/',
+        method: 'POST',
+        body: { email },
+      }),
+    }),
+    confirmPasswordReset: build.mutation<{ message: string }, { token: string; new_password: string }>({
+      query: ({ token, new_password }) => ({
+        url: 'auth/password/reset/confirm/',
+        method: 'POST',
+        body: { token, new_password },
+      }),
+    }),
   }),
 });
 
@@ -706,4 +741,9 @@ export const {
   useMarkAllNotificationsAsReadMutation,
   useInviteProjectMemberMutation,
   useAcceptProjectInvitationMutation,
+  useSetup2FAMutation,
+  useVerify2FAMutation,
+  useLogin2FAMutation,
+  useRequestPasswordResetMutation,
+  useConfirmPasswordResetMutation,
 } = api;

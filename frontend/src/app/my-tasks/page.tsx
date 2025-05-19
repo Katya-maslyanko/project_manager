@@ -27,7 +27,7 @@ const MeTasksPage: React.FC = () => {
     <InboxWrapper>
       <div className="px-4 xl:px-6">
         <Breadcrumbs items={breadcrumbs} />
-        <div className="mb-5 flex items-center justify-between mt-4">
+        <div className="mb-5 flex items-center justify-between mt-4 dark:bg-dark-bg dark:border-gray-800">
           <h1 className="text-3xl font-semibold text-gray-800 dark:text-white">
             Мои задачи
           </h1>

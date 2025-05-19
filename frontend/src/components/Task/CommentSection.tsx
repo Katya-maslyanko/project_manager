@@ -94,7 +94,7 @@ const CommentsSection: React.FC<CommentsSectionProps> = ({ taskId }) => {
           )}
           <textarea
             ref={textareaRef}
-            className="w-full border border-gray-200 rounded-md shadow-sm p-2"
+            className="w-full border border-gray-200 rounded-md shadow-sm p-2 dark:border-gray-800 dark:bg-gray-700 dark:text-white"
             rows={3}
             value={editingCommentId ? editingContent : newComment}
             onChange={(e) =>

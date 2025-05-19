@@ -155,12 +155,12 @@ const SubtaskSidebar: React.FC<SubtaskSidebarProps> = ({ subtask, onClose, onCom
 
   return (
     <div>
-      <div className="fixed right-0 top-0 bottom-0 w-[500px] bg-white shadow-lg z-40 flex flex-col p-4 overflow-y-auto">
-        <div className="flex items-center justify-between pb-4 border-b border-gray-200 mb-4">
+      <div className="fixed right-0 top-0 bottom-0 w-[500px] bg-white shadow-lg z-40 flex flex-col p-4 overflow-y-auto dark:bg-dark-bg dark:border-gray-800">
+        <div className="flex items-center justify-between pb-4 border-b border-gray-200 mb-4 dark:border-gray-800">
           <button
             onClick={handleCompleteClick}
             className={`group flex items-center gap-2 py-3 px-4 rounded-lg transition-colors border ${
-              isCompleted ? "border-green-200 bg-green-200 text-green-700 cursor-default" : "border-gray-200 text-gray-600 hover:bg-gray-200"
+              isCompleted ? "border-green-200 bg-green-200 text-green-700 cursor-default" : "border-gray-200 dark:border-gray-800 text-gray-600 hover:bg-gray-200"
             }`}
             disabled={isCompleted}
           >

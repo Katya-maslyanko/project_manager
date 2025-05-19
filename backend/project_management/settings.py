@@ -46,6 +46,8 @@ INSTALLED_APPS = [
     'tasks',
     'corsheaders',
     'channels',
+    'django_otp',
+    'django_otp.plugins.otp_totp',
 ]
 
 MIDDLEWARE = [

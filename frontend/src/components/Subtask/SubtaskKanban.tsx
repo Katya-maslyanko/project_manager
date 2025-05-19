@@ -72,7 +72,7 @@ const SubtaskKanbanPage: React.FC<Props> = ({ subtasks }) => {
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4">
       {/* К исполнению */}
       <div
-        className="p-4 border border-gray-200 rounded-md"
+        className="p-4 border border-gray-200 rounded-md dark:border-gray-800 dark:bg-dark-bg"
         onDragOver={(e) => e.preventDefault()}
         onDrop={(e) => handleDrop(e, 'Новая')}
       >
@@ -101,17 +101,17 @@ const SubtaskKanbanPage: React.FC<Props> = ({ subtasks }) => {
                 onDragStart={() => setDraggedSubtask(subtask)}
               />
             ))}
-          <button className="text-gray-600 font-semibold mt-2 p-3 w-full rounded-md bg-gray-100 flex items-center justify-center"
+          <button className="text-gray-600 font-semibold mt-2 p-3 w-full rounded-md bg-gray-100 flex items-center justify-center dark:bg-gray-700 dark:text-white"
             onClick={openAddSubtaskModal}
           >
-            <Plus className="text-gray-600 w-5 h-5 mr-2" /> Добавить задачу
+            <Plus className="text-gray-600 w-5 h-5 mr-2 dark:text-white" /> Добавить задачу
           </button>
         </div>
       </div>
 
       {/* В процессе */}
       <div
-        className="p-4 border border-gray-200 rounded-md"
+        className="p-4 border border-gray-200 rounded-md dark:border-gray-800 dark:bg-dark-bg"
         onDragOver={(e) => e.preventDefault()}
         onDrop={(e) => handleDrop(e, 'В процессе')}
       >
@@ -139,17 +139,17 @@ const SubtaskKanbanPage: React.FC<Props> = ({ subtasks }) => {
               />
             ))}
           <button
-            className="text-gray-600 font-semibold mt-2 p-3 w-full rounded-md bg-gray-100 flex items-center justify-center"
+            className="text-gray-600 font-semibold mt-2 p-3 w-full rounded-md bg-gray-100 flex items-center justify-center dark:bg-gray-700 dark:text-white"
             onClick={openAddSubtaskModal}
           >
-            <Plus className="text-gray-600 w-5 h-5 mr-2" /> Добавить задачу
+            <Plus className="text-gray-600 w-5 h-5 mr-2 dark:text-white" /> Добавить задачу
           </button>
         </div>
       </div>
 
       {/* Завершено */}
       <div
-        className="p-4 border border-gray-200 rounded-md"
+        className="p-4 border border-gray-200 rounded-md dark:border-gray-800 dark:bg-dark-bg"
         onDragOver={(e) => e.preventDefault()}
         onDrop={(e) => handleDrop(e, 'Завершено')}
       >
@@ -177,10 +177,10 @@ const SubtaskKanbanPage: React.FC<Props> = ({ subtasks }) => {
               />
             ))}
           <button
-            className="text-gray-600 font-semibold mt-2 p-3 w-full rounded-md bg-gray-100 flex items-center justify-center"
+            className="text-gray-600 font-semibold mt-2 p-3 w-full rounded-md bg-gray-100 flex items-center justify-center dark:bg-gray-700 dark:text-white"
             onClick={openAddSubtaskModal}
           >
-            <Plus className="text-gray-600 w-5 h-5 mr-2" /> Добавить задачу
+            <Plus className="text-gray-600 w-5 h-5 mr-2 dark:text-white" /> Добавить задачу
           </button>
         </div>
       </div>

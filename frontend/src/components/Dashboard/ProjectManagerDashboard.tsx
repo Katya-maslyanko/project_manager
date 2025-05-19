@@ -69,34 +69,34 @@ const ProjectManagerDashboard: React.FC = () => {
     return new Date(dateString).toLocaleDateString('ru-RU', options);
   };
 
-  // Получение данных активности для выбранного проекта
-  const { data: activityLogs = [], isLoading: activityLoading } = useGetActivityLogsByProjectQuery(
-    { projectId: selectedProjectId || undefined },
-    { skip: !selectedProjectId }
-  );
+  // // Получение данных активности для выбранного проекта
+  // const { data: activityLogs = [], isLoading: activityLoading } = useGetActivityLogsByProjectQuery(
+  //   { projectId: selectedProjectId || undefined },
+  //   { skip: !selectedProjectId }
+  // );
 
-  // Подготовка данных для графика активности
-  const activityData = useMemo(() => {
-    const today = new Date();
-    const startDate = new Date(today);
-    startDate.setFullYear(today.getFullYear() - 1); // Последний год
-    const days = Math.ceil((today.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
-    const grid = Array.from({ length: days }, (_, i) => {
-      const date = new Date(startDate);
-      date.setDate(startDate.getDate() + i);
-      return { date: date.toISOString().split('T')[0], count: 0 };
-    });
+  // // Подготовка данных для графика активности
+  // const activityData = useMemo(() => {
+  //   const today = new Date();
+  //   const startDate = new Date(today);
+  //   startDate.setFullYear(today.getFullYear() - 1); // Последний год
+  //   const days = Math.ceil((today.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+  //   const grid = Array.from({ length: days }, (_, i) => {
+  //     const date = new Date(startDate);
+  //     date.setDate(startDate.getDate() + i);
+  //     return { date: date.toISOString().split('T')[0], count: 0 };
+  //   });
 
-    activityLogs.forEach(log => {
-      const logDate = new Date(log.day).toISOString().split('T')[0];
-      const dayIndex = grid.findIndex(day => day.date === logDate);
-      if (dayIndex >= 0) {
-        grid[dayIndex].count += log.activity_count;
-      }
-    });
+  //   // activityLogs.forEach(log => {
+  //   //   const logDate = new Date(log.day).toISOString().split('T')[0];
+  //   //   const dayIndex = grid.findIndex(day => day.date === logDate);
+  //   //   if (dayIndex >= 0) {
+  //   //     grid[dayIndex].count += log.activity_count;
+  //   //   }
+  //   // });
 
-    return grid;
-  }, [activityLogs]);
+  //   return grid;
+  // }, [selectedProjectId]);
 
   // Определение цвета ячейки на основе количества активности
   const getActivityColor = (count: number) => {
@@ -108,15 +108,15 @@ const ProjectManagerDashboard: React.FC = () => {
   };
 
   return (
-    <div className="p-4 bg-gray-50 min-h-screen">
-      <div className="bg-white rounded-lg shadow-sm p-6 mb-6 flex justify-between items-center">
+    <div className="p-4 bg-gray-50 min-h-screen dark:bg-dark-bg dark:text-dark-text dark:border dark:border-gray-800">
+      <div className="bg-white rounded-lg shadow-sm p-6 mb-6 flex justify-between items-cente dark:bg-dark-bg dark:text-dark-text dark:border dark:border-gray-800">
         <div>
           <h2 className="text-xl font-semibold mb-2">Привет, {user.first_name || user.username}!</h2>
           <p className="text-base text-gray-600">Давайте проверим прогресс ваших проектов и команд.</p>
         </div>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <div className="flex items-center justify-between p-4 rounded-lg shadow-sm bg-white">
+        <div className="flex items-center justify-between p-4 rounded-lg shadow-sm bg-white dark:bg-dark-bg dark:text-dark-text dark:border dark:border-gray-800">
           <div className="flex items-center justify-center w-12 h-12 bg-rose-100 rounded-lg">
             <FolderKanban size={22} className="text-rose-700" />
           </div>
@@ -125,7 +125,7 @@ const ProjectManagerDashboard: React.FC = () => {
             <div className="text-sm text-gray-500">Проектов</div>
           </div>
         </div>
-        <div className="flex items-center justify-between p-4 rounded-lg shadow-sm bg-white">
+        <div className="flex items-center justify-between p-4 rounded-lg shadow-sm bg-white dark:bg-dark-bg dark:text-dark-text dark:border dark:border-gray-800">
           <div className="flex items-center justify-center w-12 h-12 bg-yellow-100 rounded-lg">
             <Users size={22} className="text-yellow-700" />
           </div>
@@ -134,7 +134,7 @@ const ProjectManagerDashboard: React.FC = () => {
             <div className="text-sm text-gray-500">Команд</div>
           </div>
         </div>
-        <div className="flex items-center justify-between p-4 rounded-lg shadow-sm bg-white">
+        <div className="flex items-center justify-between p-4 rounded-lg shadow-sm bg-white dark:bg-dark-bg dark:text-dark-text dark:border dark:border-gray-800">
           <div className="flex items-center justify-center w-12 h-12 bg-green-100 rounded-lg">
             <Users size={22} className="text-green-700" />
           </div>
@@ -143,7 +143,7 @@ const ProjectManagerDashboard: React.FC = () => {
             <div className="text-sm text-gray-500">Участников</div>
           </div>
         </div>
-        <div className="flex items-center justify-between p-4 rounded-lg shadow-sm bg-white">
+        <div className="flex items-center justify-between p-4 rounded-lg shadow-sm bg-white dark:bg-dark-bg dark:text-dark-text dark:border dark:border-gray-800">
           <div className="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-lg">
             <Calendar size={22} className="text-blue-700" />
           </div>
@@ -154,15 +154,15 @@ const ProjectManagerDashboard: React.FC = () => {
         </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-        <div className="bg-white rounded-lg shadow-sm p-4 md:col-span-2">
+        <div className="bg-white rounded-lg shadow-sm p-4 md:col-span-2 dark:bg-dark-bg dark:text-dark-text dark:border dark:border-gray-800">
           <h2 className="text-lg font-semibold mb-4">Мои проекты ({totalProjects})</h2>
           {projects.length === 0 ? (
             <p className="text-gray-500">Проекты отсутствуют. Вы не являетесь куратором ни одного проекта.</p>
           ) : (
-            <div className="overflow-y-auto max-h-64">
+            <div className="overflow-y-auto max-h-84">
               <table className="w-full text-left">
                 <thead>
-                  <tr className="text-gray-600 text-sm bg-gray-100 border rounded-md">
+                  <tr className="text-gray-600 text-sm bg-gray-100 dark:text-white dark:bg-gray-700 dark:border-gray-800 border rounded-md">
                     <th className="py-3 px-4">Проект</th>
                     <th className="py-3 px-4">Сроки</th>
                     <th className="py-3 px-4">Задачи (Всего/Завершено)</th>
@@ -176,12 +176,12 @@ const ProjectManagerDashboard: React.FC = () => {
                       ? ((project.tasks_done / project.total_tasks) * 100).toFixed(1) 
                       : 0;
                     return (
-                      <tr key={project.id} className="border-t border-b cursor-pointer hover:bg-gray-50">
-                        <td className="py-2 px-4 border-r">{project.name}</td>
-                        <td className="py-2 px-4 border-r">
+                      <tr key={project.id} className="border-t border-b cursor-pointer hover:bg-gray-50 dark:border-gray-800">
+                        <td className="py-2 px-4 border-r dark:border-gray-800">{project.name}</td>
+                        <td className="py-2 px-4 border-r dark:border-gray-800">
                           {formatDate(project.startDate)} - {formatDate(project.endDate)}
                         </td>
-                        <td className="py-2 px-4 border-r">
+                        <td className="py-2 px-4 border-r dark:border-gray-800">
                           {project.total_tasks} / {project.tasks_done}
                         </td>
                         <td className="py-2 px-4">
@@ -211,7 +211,7 @@ const ProjectManagerDashboard: React.FC = () => {
             </div>
           )}
         </div>
-        <div className="bg-white rounded-lg shadow-sm p-4 md:col-span-1 relative z-10">
+        <div className="bg-white rounded-lg shadow-sm p-4 md:col-span-1 relative z-10 dark:bg-dark-bg dark:text-dark-text dark:border dark:border-gray-800">
           <h2 className="text-lg font-semibold mb-4">Распределение задач</h2>
           <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
@@ -238,7 +238,7 @@ const ProjectManagerDashboard: React.FC = () => {
           </div>
         </div>
       </div>
-      <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+      <div className="bg-white rounded-lg shadow-sm p-6 mb-6 dark:bg-dark-bg dark:text-dark-text dark:border dark:border-gray-800">
         <h2 className="text-lg font-semibold mb-4">Эффективность по проектам</h2>
         {projectChartData.length === 0 ? (
           <p className="text-gray-500 text-center">Данные по проектам отсутствуют.</p>
@@ -301,7 +301,7 @@ const ProjectManagerDashboard: React.FC = () => {
         </div>
       )} */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-        <div className="bg-white rounded-lg shadow-sm p-4">
+        <div className="bg-white rounded-lg shadow-sm p-4 dark:bg-dark-bg dark:text-dark-text dark:border dark:border-gray-800">
           <div className="flex items-center mb-4">
             <Users size={20} className="text-blue-600 mr-2" />
             <h2 className="text-lg font-semibold">Мои команды ({totalTeams})</h2>
@@ -313,10 +313,10 @@ const ProjectManagerDashboard: React.FC = () => {
                 const teamTasksDone = team.members_info.reduce((sum, member) => sum + member.analytics.tasks_done, 0);
                 const teamProgress = teamTasks > 0 ? ((teamTasksDone / teamTasks) * 100).toFixed(1) : 0;
                 return (
-                  <li key={team.id} className="p-4 rounded-xl bg-gray-50 border hover:shadow-sm transition-shadow">
+                  <li key={team.id} className="p-4 rounded-xl bg-gray-50 border hover:shadow-sm transition-shadow dark:bg-dark-bg dark:text-white dark:border dark:border-gray-800">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center">
-                        <span className="font-bold text-base text-gray-800">{team.name}</span>
+                        <span className="font-bold text-base text-gray-800 dark:text-while">{team.name}</span>
                       </div>
                       <div className="flex items-center">
                         <span className="text-sm text-gray-500 mr-4">{team.members_info.length} участников</span>
@@ -338,7 +338,7 @@ const ProjectManagerDashboard: React.FC = () => {
             )}
           </ul>
         </div>
-        <div className="bg-white rounded-lg shadow-sm p-4">
+        <div className="bg-white rounded-lg shadow-sm p-4 dark:bg-dark-bg dark:text-dark-text dark:border dark:border-gray-800">
           <div className="flex items-center mb-4">
             <Users size={20} className="text-blue-600 mr-2" />
             <h2 className="text-lg font-semibold">Участники ({totalMembers})</h2>
@@ -349,7 +349,7 @@ const ProjectManagerDashboard: React.FC = () => {
           <div className="overflow-y-auto max-h-64">
             <table className="w-full text-left">
               <thead>
-                <tr className="text-gray-600 text-sm bg-gray-100 border rounded-md">
+                <tr className="text-gray-600 text-sm bg-gray-100 border dark:text-white dark:bg-gray-700 rounded-md dark:border-gray-800">
                   <th className="py-3 px-4">Имя</th>
                   <th className="py-3 px-4">Роль</th>
                   <th className="py-3 px-4">Задачи (Всего/Завершено)</th>
@@ -362,10 +362,10 @@ const ProjectManagerDashboard: React.FC = () => {
                     ? ((member.analytics.tasks_done / member.analytics.total_tasks) * 100).toFixed(1) 
                     : 0;
                   return (
-                    <tr key={member.id} className="border-t border-b cursor-pointer hover:bg-gray-50">
-                      <td className="py-2 px-4 border-r">{member.first_name} {member.last_name}</td>
-                      <td className="py-2 px-4 border-r">{member.role_display || "Не указана"}</td>
-                      <td className="py-2 px-4 border-r">{member.analytics.total_tasks} / {member.analytics.tasks_done}</td>
+                    <tr key={member.id} className="border-t border-b cursor-pointer hover:bg-gray-50 dark:border-gray-800">
+                      <td className="py-2 px-4 border-r dark:border-gray-800">{member.first_name} {member.last_name}</td>
+                      <td className="py-2 px-4 border-r dark:border-gray-800">{member.role_display || "Не указана"}</td>
+                      <td className="py-2 px-4 border-r dark:border-gray-800">{member.analytics.total_tasks} / {member.analytics.tasks_done}</td>
                       <td className="py-2 px-4">
                         <div className="flex items-center justify-between">
                           <div className="w-full bg-gray-200 rounded-full h-2.5">
