@@ -160,13 +160,13 @@ SIMPLE_JWT = {
     "AUTH_TOKEN_CLASSES": ("rest_framework_simplejwt.tokens.AccessToken",),
 }
 
-EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
-EMAIL_HOST = 'smtp.gmail.com'
+BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.mail.ru'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'katyamaslyanko3@gmail.com'
-EMAIL_HOST_PASSWORD = 'Kat-tan2823825333'
-DEFAULT_FROM_EMAIL = 'katyamaslyanko3@gmail.com'
+EMAIL_HOST_USER = 'maslyanko03@list.ru'
+EMAIL_HOST_PASSWORD = 'brgcVAvnmmAT2m3WJXhv'
+DEFAULT_FROM_EMAIL = 'maslyanko03@list.ru'
 FRONTEND_URL = 'http://localhost:3000'
 
 DJOSER = {
@@ -189,3 +189,7 @@ CHANNEL_LAYERS = {
         },
     },
 }
+
+# SECURE_SSL_REDIRECT = True
+# SESSION_COOKIE_SECURE = True
+# CSRF_COOKIE_SECURE = True

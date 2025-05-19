@@ -627,6 +627,21 @@ export const api = createApi({
       }),
       invalidatesTags: [{ type: "Notifications", id: "LIST" }],
     }),
+    inviteProjectMember: build.mutation<{ message: string }, { projectId: number; email: string }>({
+      query: ({ projectId, email }) => ({
+        url: `projects/${projectId}/invite/`,
+        method: "POST",
+        body: { email },
+      }),
+      invalidatesTags: ["Projects"],
+    }),
+    acceptProjectInvitation: build.mutation<{ message: string }, { token: string }>({
+      query: ({ token }) => ({
+        url: `projects/accept-invitation/${token}/`,
+        method: "POST",
+      }),
+      invalidatesTags: ["Projects"],
+    }),
   }),
 });
 
@@ -689,4 +704,6 @@ export const {
   useGetNotificationsQuery,
   useMarkNotificationAsReadMutation,
   useMarkAllNotificationsAsReadMutation,
+  useInviteProjectMemberMutation,
+  useAcceptProjectInvitationMutation,
 } = api;

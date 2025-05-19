@@ -7,13 +7,24 @@ import { ThemeToggleButton } from "@/components/common/ThemeToggleButton";
 import NotificationDropdown from "@/components/header/NotificationDropdown";
 import { useSidebar } from "@/context/SidebarContext";
 
-const AppHeader: React.FC = () => {
+interface AppHeaderProps {
+  onSearch: (query: string) => void;
+}
+
+const AppHeader: React.FC<AppHeaderProps> = ({ onSearch }) => {
   const { isMobileOpen, toggleSidebar } = useSidebar();
   const [notifying, setNotifying] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleToggle = () => {
     toggleSidebar();
+  };
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const query = e.target.value;
+    setSearchQuery(query);
+    onSearch(query);
   };
 
   useEffect(() => {
@@ -51,9 +62,11 @@ const AppHeader: React.FC = () => {
         <div className="flex items-center border rounded px-4 py-2 dark:bg-dark-bg dark:text-gray-400 dark:border-gray-800 transition-all duration-300 ease-in-out" style={{ width: "323px", borderRadius: "4px" }}>
           <input
             type="text"
-            placeholder="Поиск"
+            placeholder="Поиск задач"
             className="outline-none w-full text-sm dark:bg-dark-bg dark:text-gray-400 focus:outline-none"
             ref={inputRef}
+            value={searchQuery}
+            onChange={handleSearchChange}
           />
           <Search className="text-gray-500 ml-2" />
         </div>

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { GripVertical, Flag, Pencil } from "lucide-react";
 
-const TaskCard = ({ task, onDragStart, onEdit, onStatusChange, onOpenSidebar, onDelete }) => {
+const TaskCard = ({ task, onDragStart, onEdit, onStatusChange, onOpenSidebar, onDelete, searchQuery, }) => {
   const [isChecked, setIsChecked] = useState(task.status === 'Завершено');
   const [previousStatus, setPreviousStatus] = useState(task.status);
   const [isOverdue, setIsOverdue] = useState(false);
@@ -42,8 +42,15 @@ const TaskCard = ({ task, onDragStart, onEdit, onStatusChange, onOpenSidebar, on
     return tagColors[index % tagColors.length];
   };
 
+  const isHighlighted = searchQuery && task.title?.toLowerCase().includes(searchQuery.toLowerCase());
+
   return (
-    <tr className="border-t border-b cursor-grab active:cursor-grabbing" 
+    <tr
+      className={`border-t border-b cursor-grab active:cursor-grabbing hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors ${
+        isHighlighted
+          ? "bg-blue-50 dark:bg-blue-900/50 dark:border-blue-500"
+          : ""
+      }`}
     onClick={() => onOpenSidebar(task)}
     onDragStart={(e) => onDragStart(e, task)}
     draggable

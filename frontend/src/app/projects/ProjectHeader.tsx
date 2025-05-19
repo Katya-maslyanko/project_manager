@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Clock,
   ListFilter,
@@ -14,7 +14,8 @@ import {
 } from "lucide-react";
 import Breadcrumbs from "@/components/ui/breadcrumbs/Breadcrumbs";
 import SortDropdown from "@/components/ui/dropdown/SortDropdown";
-import FilterDropdownAdvanced from "@/components/ui/dropdown/FilterDropdown";
+import FilterDropdownAdvanced, { FilterOptions } from "@/components/ui/dropdown/FilterDropdownAdvanced";
+import { useInviteProjectMemberMutation } from "@/state/api";
 
 type BreadcrumbItem = {
   label: string;
@@ -23,11 +24,14 @@ type BreadcrumbItem = {
 
 type Props = {
   projectName: string;
+  projectId: number | null;
   activeTab: string;
   setActiveTab: (tabName: string) => void;
   onSelectSort: (value: string) => void;
-  onApplyFilter: (filters: any) => void;
+  onApplyFilter: (filters: FilterOptions) => void;
   members: Member[];
+  refetch: () => void;
+  onSearch: (query: string) => void;
 };
 
 interface Member {
@@ -50,11 +54,14 @@ const getTagColor = (index: number) => tagColors[index % tagColors.length];
 
 const ProjectHeader: React.FC<Props> = ({
   projectName,
+  projectId,
   activeTab,
   setActiveTab,
   onSelectSort,
   onApplyFilter,
   members,
+  refetch,
+  onSearch,
 }) => {
   const breadcrumbsItems: BreadcrumbItem[] = [
     { label: "Главная", href: "/" },
@@ -63,27 +70,96 @@ const ProjectHeader: React.FC<Props> = ({
 
   const [showSortDropdown, setShowSortDropdown] = useState(false);
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
-  const [activeFilters, setActiveFilters] = useState<any>({});
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [email, setEmail] = useState("");
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [modalPosition, setModalPosition] = useState({ top: 0, left: 0 });
+
+  const [inviteMember, { isLoading }] = useInviteProjectMemberMutation();
+  const shareButtonRef = useRef<HTMLButtonElement>(null);
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  const [activeFilters, setActiveFilters] = useState<FilterOptions>({
+    tags: new Set(),
+    priorities: new Set(),
+    assignedTo: "all",
+  });
   const [activeSort, setActiveSort] = useState<string | null>(null);
 
-  const handleApplyFilter = (filters: any) => {
+  // Обработчик клика вне модального окна
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (modalRef.current && !modalRef.current.contains(event.target as Node) && showShareModal) {
+        setShowShareModal(false);
+        setEmail("");
+        setError("");
+        setSuccess("");
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showShareModal]);
+
+  const handleShareButtonClick = () => {
+    if (shareButtonRef.current) {
+      const rect = shareButtonRef.current.getBoundingClientRect();
+      setModalPosition({
+        top: rect.bottom + window.scrollY + 8,
+        left: rect.left + window.scrollX - 218,
+      });
+      setShowShareModal(true);
+    }
+  };
+
+  const handleApplyFilter = (filters: FilterOptions) => {
+    console.log("Filters applied in ProjectHeader:", filters);
     setActiveFilters(filters);
     onApplyFilter(filters);
+    setShowFilterDropdown(false);
+    refetch();
   };
 
   const handleSelectSort = (value: string) => {
     setActiveSort(value);
     onSelectSort(value);
+    setShowSortDropdown(false);
+    refetch();
   };
 
   const clearFilters = () => {
-    setActiveFilters({});
-    onApplyFilter({});
+    setActiveFilters({ tags: new Set(), priorities: new Set(), assignedTo: "all" });
+    onApplyFilter({ tags: new Set(), priorities: new Set(), assignedTo: "all" });
+    refetch();
   };
 
   const clearSort = () => {
     setActiveSort(null);
     onSelectSort("");
+    refetch();
+  };
+
+  const handleShare = async () => {
+    if (!projectId) {
+      setError("ID проекта отсутствует");
+      return;
+    }
+    if (!email) {
+      setError("Введите email");
+      return;
+    }
+    setError("");
+    setSuccess("");
+
+    try {
+      const result = await inviteMember({ projectId, email }).unwrap();
+      setSuccess(result.message);
+      setEmail("");
+      setTimeout(() => setShowShareModal(false), 2000);
+    } catch (err: any) {
+      setError(err?.data?.error || "Ошибка при отправке приглашения");
+    }
   };
 
   return (
@@ -98,8 +174,8 @@ const ProjectHeader: React.FC<Props> = ({
           <div className="flex -space-x-2 rtl:space-x-reverse">
             {members && members.length > 0 ? (
               members.slice(0, 5).map((member, index) => (
-                <div 
-                  key={member.id} 
+                <div
+                  key={member.id}
                   className={`w-11 h-11 border-2 font-semibold border-gray-100 rounded-full dark:border-gray-800 flex items-center justify-center ${getTagColor(index)}`}
                   title={`${member.first_name} ${member.last_name}`}
                 >
@@ -118,22 +194,53 @@ const ProjectHeader: React.FC<Props> = ({
             )}
           </div>
           <button
+            ref={shareButtonRef}
             className="flex items-center px-4 py-2 text-base border bg-blue-100 rounded-lg text-blue-700 hover:text-white hover:bg-blue-600 duration-200 transition-colors dark:border-gray-800 dark:bg-dark-bg dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white"
-            onClick={() => console.log("Share clicked")}
+            onClick={handleShareButtonClick}
           >
             <SquareArrowOutUpRight className="h-5 w-5 mr-2" />
             Делиться
           </button>
         </div>
       </div>
+      {showShareModal && (
+        <div
+          ref={modalRef}
+          className="absolute z-50 bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg w-96"
+          style={{ top: `${modalPosition.top}px`, left: `${modalPosition.left}px` }}
+        >
+          <h2 className="text-xl font-semibold mb-4 text-gray-800 dark:text-white">
+            Поделиться проектом
+          </h2>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Введите email"
+            className="w-full p-2 border rounded-md mb-4 dark:bg-gray-700 dark:text-white dark:border-gray-600"
+            disabled={isLoading}
+          />
+          {error && <p className="text-red-500 mb-4">{error}</p>}
+          {success && <p className="text-green-500 mb-4">{success}</p>}
+          <div className="flex justify-end">
+            <button
+              className="px-4 py-2 bg-blue-100 rounded-md text-blue-700 hover:bg-blue-600 hover:text-white disabled:bg-blue-400"
+              onClick={handleShare}
+              disabled={isLoading}
+            >
+              {isLoading ? "Отправка..." : "Отправить"}
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="flex items-center mb-4">
         <div className="flex items-center border bg-gray-200 rounded-md">
           <TabButton
-              name="Обзор"
-              icon={<BookOpenCheck className="h-5 w-5" />}
-              setActiveTab={setActiveTab}
-              activeTab={activeTab}
+            name="Обзор"
+            icon={<BookOpenCheck className="h-5 w-5" />}
+            setActiveTab={setActiveTab}
+            activeTab={activeTab}
           />
           <TabButton
             name="Список"
@@ -162,29 +269,39 @@ const ProjectHeader: React.FC<Props> = ({
         </div>
         <div className="flex items-center ml-auto space-x-2">
           <button
-            className={`flex items-center px-4 py-2 text-base border border-gray-200 rounded-lg ${Object.keys(activeFilters).length ? 'text-blue-600 bg-blue-100' : 'text-gray-600'} hover:text-gray-700 hover:bg-gray-100 transition-colors dark:border-gray-800 dark:bg-dark-bg dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white`}
+            className={`flex items-center px-4 py-2 text-base border border-gray-200 rounded-lg ${
+              activeFilters.priorities.size ||
+              activeFilters.tags.size ||
+              activeFilters.assignedTo === "me" ||
+              activeFilters.goalId
+                ? 'text-blue-600 bg-blue-100'
+                : 'text-gray-600'
+            } hover:text-gray-700 hover:bg-gray-100 transition-colors dark:border-gray-800 dark:bg-dark-bg dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white`}
             onClick={() => setShowFilterDropdown((prev) => !prev)}
           >
-            <ListFilter className="h-5 w-5 mr-2 " />
+            <ListFilter className="h-5 w-5 mr-2" />
             Фильтр
-            {Object.keys(activeFilters).length > 0 && (
+            {(activeFilters.priorities.size ||
+              activeFilters.tags.size ||
+              activeFilters.assignedTo === "me" ||
+              activeFilters.goalId) && (
               <XCircle className="h-4 w-4 ml-2 text-red-600 cursor-pointer" onClick={clearFilters} />
             )}
           </button>
-          {showFilterDropdown && (
-            <div className ="absolute z-20 mt-14 right-0 translate-x-[-355px]">
+          {showFilterDropdown && projectId && (
+            <div className="absolute z-20 mt-14 right-0 translate-x-[-355px]">
               <FilterDropdownAdvanced
-                onApply={(filters) => {
-                  handleApplyFilter(filters);
-                  setShowFilterDropdown(false);
-                }}
+                onApply={handleApplyFilter}
                 onClose={() => setShowFilterDropdown(false)}
+                projectId={projectId}
               />
             </div>
           )}
 
           <button
-            className={`flex items-center px-4 py-2 text-base border border-gray-200 rounded-lg ${activeSort ? 'text-blue-600 bg-blue-100' : 'text-gray-600'} hover:text-gray-700 hover:bg-gray-100 transition-colors dark:border-gray-800 dark:bg-dark-bg dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white`}
+            className={`flex items-center px-4 py-2 text-base border border-gray-200 rounded-lg ${
+              activeSort ? 'text-blue-600 bg-blue-100' : 'text-gray-600'
+            } hover:text-gray-700 hover:bg-gray-100 transition-colors dark:border-gray-800 dark:bg-dark-bg dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white`}
             onClick={() => setShowSortDropdown((prev) => !prev)}
           >
             <ArrowDownUp className="h-5 w-5 mr-2" />
@@ -196,10 +313,7 @@ const ProjectHeader: React.FC<Props> = ({
           {showSortDropdown && (
             <div className="absolute z-20 mt-14 right-0 translate-x-[-215px]">
               <SortDropdown
-                onSelectSort={(value) => {
-                  handleSelectSort(value);
-                  setShowSortDropdown(false);
-                }}
+                onSelectSort={handleSelectSort}
                 activeSort={activeSort}
                 onClearSort={clearSort}
                 onClose={() => setShowSortDropdown(false)}

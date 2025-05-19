@@ -1,4 +1,6 @@
-import React, { useState, useEffect } from "react";
+"use client";
+
+import React, { useState } from "react";
 import TaskCard from "@/components/Task/TaskCardList";
 import {
   useGetTasksQuery,
@@ -6,31 +8,58 @@ import {
   useUpdateSubTaskStatusMutation,
   useDeleteTaskMutation,
   useUpdateTaskMutation,
-  Subtask,
   useDeleteSubtaskMutation,
   useUpdateSubtaskMutation,
   useGetUsersQuery,
 } from "@/state/api";
 import { useParams } from "next/navigation";
-import { Task } from "@/state/api";
+import { Task, Subtask } from "@/state/api";
 import TaskSidebar from "@/components/Task/TaskSidebar";
 import SubtaskSidebar from "@/components/Subtask/SubtaskSidebar";
 import EditTaskModal from "@/components/Task/EditTaskModal";
 import DeleteConfirmationModal from "@/components/Task/modal/DeleteConfirmationModal";
 import AddTaskModal from "@/components/Task/AddTaskModal";
+import { useAuth } from "@/context/AuthContext";
 import { Plus, CircleCheck, LoaderCircle, BookCheck } from "lucide-react";
+import { FilterOptions } from "@/components/ui/dropdown/FilterDropdownAdvanced";
 
-const TaskList: React.FC<{ projectId: number }> = ({ projectId }) => {
+interface TaskListProps {
+  projectId: number;
+  filters?: FilterOptions;
+  sort?: string;
+  searchQuery?: string;
+}
+
+const TaskList: React.FC<TaskListProps> = ({
+  projectId,
+  filters = { tags: new Set(), priorities: new Set(), assignedTo: "all" },
+  sort,
+  searchQuery = "",
+}) => {
   const { id } = useParams();
+  const { user, isAuthenticated } = useAuth();
+
+  // console.log("фил:", filters);
+
+  const queryParams: any = { projectId: Number(id) };
+  if (filters?.priorities?.size > 0) queryParams.priority = Array.from(filters.priorities).join(",");
+  if (filters?.tags?.size > 0) queryParams.tagId = Array.from(filters.tags);
+  if (filters?.assignedTo === "me" && isAuthenticated && user) queryParams.assignedTo = "me";
+  if (filters?.goalId) queryParams.goalId = filters.goalId;
+  if (sort) queryParams.ordering = sort;
+  if (searchQuery) queryParams.title = searchQuery;
+
+  // console.log("параметрн:", queryParams);
+
   const {
     data: tasks = [],
     data: subtasks = [],
     error,
     isLoading,
     refetch,
-  } = useGetTasksQuery({ projectId: Number(id) }, {
-    pollingInterval: 10000,
-  });;
+  } = useGetTasksQuery(queryParams);
+  console.log("Tasks from server:", tasks);
+
   const [updateTaskStatus] = useUpdateTaskStatusMutation();
   const [updateSubTaskStatus] = useUpdateSubTaskStatusMutation();
   const [deleteTask] = useDeleteTaskMutation();
@@ -46,10 +75,70 @@ const TaskList: React.FC<{ projectId: number }> = ({ projectId }) => {
   const [isAddModalOpen, setAddModalOpen] = useState(false);
   const [draggedTask, setDraggedTask] = useState<Task | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
-  const [currentTaskStatus, setCurrentTaskStatus] = useState<string>("Новая"); 
+  const [currentTaskStatus, setCurrentTaskStatus] = useState<string>("Новая");
   const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null);
   const selectedTask = tasks.find((t) => t.id === selectedTaskId) || null;
   const [selectedSubtask, setSelectedSubtask] = useState<Subtask | null>(null);
+
+  // Функция для фильтрации и сортировки задач внутри статуса
+  const filterAndSortTasks = (tasks: Task[], status: string) => {
+    let filteredTasks = tasks.filter(task => task.status === status);
+
+    if (searchQuery) {
+      filteredTasks = filteredTasks.filter((task) =>
+        task.title.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+    if (filters?.priorities?.size > 0) {
+      filteredTasks = filteredTasks.filter(task => filters.priorities.has(task.priority));
+    }
+    if (filters?.tags?.size > 0) {
+      filteredTasks = filteredTasks.filter(task => task.tag && filters.tags.has(task.tag.id));
+    }
+    if (filters?.assignedTo === "me" && isAuthenticated && user) {
+      filteredTasks = filteredTasks.filter(task =>
+        task.assignees.some(assignee => assignee.id === user.id)
+      );
+    }
+    if (filters?.goalId) {
+      filteredTasks = filteredTasks.filter(task =>
+        task.connected_goals?.some(goal => goal.id === filters.goalId)
+      );
+    }
+
+    if (sort) {
+      filteredTasks.sort((a, b) => {
+        const isDescending = sort.startsWith('-');
+        const field = isDescending ? sort.slice(1) : sort;
+
+        let valueA, valueB;
+        switch (field) {
+          case 'priority':
+            const priorityOrder = { 'Высокий': 3, 'Средний': 2, 'Низкий': 1 };
+            valueA = priorityOrder[a.priority as keyof typeof priorityOrder] || 0;
+            valueB = priorityOrder[b.priority as keyof typeof priorityOrder] || 0;
+            break;
+          case 'created_at':
+            valueA = new Date(a.created_at).getTime();
+            valueB = new Date(b.created_at).getTime();
+            break;
+          case 'due_date':
+            valueA = a.due_date ? new Date(a.due_date).getTime() : 0;
+            valueB = b.due_date ? new Date(b.due_date).getTime() : 0;
+            break;
+          case 'points':
+            valueA = a.points || 0;
+            valueB = b.points || 0;
+            break;
+          default:
+            return 0;
+        }
+        return isDescending ? valueB - valueA : valueA - valueB;
+      });
+    }
+
+    return filteredTasks;
+  };
 
   const handleDragStart = (e: React.DragEvent<HTMLTableRowElement>, task: Task) => {
     console.log("Drag started for task:", task.id);
@@ -62,6 +151,7 @@ const TaskList: React.FC<{ projectId: number }> = ({ projectId }) => {
     setIsUpdating(true);
     try {
       await updateTaskStatus({ id: taskId, status: newStatus }).unwrap();
+      refetch();
     } catch (error) {
       console.error("Error updating task status:", error);
     } finally {
@@ -87,7 +177,7 @@ const TaskList: React.FC<{ projectId: number }> = ({ projectId }) => {
     } catch (error) {
       console.error("Ошибка при обновлении задачи:", error);
     }
-  };  
+  };
 
   const handleDeleteTask = (task: Task) => {
     setSelectedTaskId(task.id);
@@ -118,18 +208,18 @@ const TaskList: React.FC<{ projectId: number }> = ({ projectId }) => {
     setTaskSidebarOpen(true);
     setSubtaskSidebarOpen(false);
   };
-  
+
   const openSubtaskSidebar = (subtask: Subtask) => {
     setSelectedSubtask(subtask);
     setSubtaskSidebarOpen(true);
     setTaskSidebarOpen(false);
   };
-  
+
   const closeTaskSidebar = () => {
     setTaskSidebarOpen(false);
     setSelectedTaskId(null);
   };
-  
+
   const closeSubtaskSidebar = () => {
     setSubtaskSidebarOpen(false);
     setSelectedSubtask(null);
@@ -146,16 +236,16 @@ const TaskList: React.FC<{ projectId: number }> = ({ projectId }) => {
         console.error("Ошибка при удалении задачи:", error);
       }
     }
-  };  
+  };
 
   const handleSubtaskEdit = async (fields: Partial<Subtask>) => {
     if (!selectedSubtask) return;
-      try {
-        await updateSubtask({ id: selectedSubtask.id, ...fields }).unwrap();
-        refetch();
-      } catch (error) {
-        console.error("Ошибка при обновлении подзадачи:", error);
-      }
+    try {
+      await updateSubtask({ id: selectedSubtask.id, ...fields }).unwrap();
+      refetch();
+    } catch (error) {
+      console.error("Ошибка при обновлении подзадачи:", error);
+    }
   };
 
   const handleSubtaskDelete = async () => {
@@ -170,17 +260,21 @@ const TaskList: React.FC<{ projectId: number }> = ({ projectId }) => {
   };
 
   if (isLoading) {
-    return <p>Загрузка задач...</p>;
+    return <p className="text-gray-600 dark:text-gray-400">Загрузка задач...</p>;
   }
 
   if (error) {
     console.error("Ошибка при загрузке задач:", error);
-    return <p>Ошибка при загрузке задач: {JSON.stringify(error)}</p>;
+    return <p className="text-red-500 dark:text-red-400">Ошибка при загрузке задач: {JSON.stringify(error)}</p>;
   }
 
+  const newTasks = filterAndSortTasks(tasks, 'Новая');
+  const inProgressTasks = filterAndSortTasks(tasks, 'В процессе');
+  const completedTasks = filterAndSortTasks(tasks, 'Завершено');
+
   return (
-    <div style={{ borderLeft: 'none' }} className="border border-gray-200 rounded-md p-4 grid grid-cols-1">
-      {/* <!-- К исполнению --> */}
+    <div style={{ borderLeft: 'none' }} className="border border-gray-200 rounded-md p-4 grid grid-cols-1 dark:border-gray-600 dark:bg-dark-bg">
+      {/* К исполнению */}
       <div
         className="p-4 mb-6"
         onDragOver={handleDragOver}
@@ -188,70 +282,19 @@ const TaskList: React.FC<{ projectId: number }> = ({ projectId }) => {
       >
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center">
-            <span className="flex items-center px-2 py-1 text-sm border font-semibold border-yellow-200 bg-yellow-100 rounded-lg text-yellow-700 duration-200 transition-colors">
+            <span className="flex items-center px-2 py-1 text-sm border font-semibold border-yellow-200 bg-yellow-100 rounded-lg text-yellow-700 dark:border-yellow-600 dark:bg-yellow-900 dark:text-yellow-300 duration-200 transition-colors">
               <CircleCheck className="h-4 w-4 mr-2" />
               К исполнению
             </span>
-            <span className="text-sm bg-gray-200 border text-gray-600 ml-2 px-2 py-1 rounded">
-              {tasks.filter(task => task.status === 'Новая').length}
+            <span className="text-sm bg-gray-200 border text-gray-600 ml-2 px-2 py-1 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300">
+              {newTasks.length}
             </span>
           </div>
         </div>
         <div className="overflow-x-auto sm:rounded-lg">
-          <table className={`w-full text-left`}>
+          <table className="w-full text-left">
             <thead>
-              <tr className="text-gray-600 text-sm bg-gray-100 border rounded-md">
-                <th className="py-3 px-4">Задача</th>
-                <th className="py-3 px-4">Описание</th>
-                <th className="py-3 px-4">Исполнители</th>
-                <th className="py-3 px-4 min-w-[270px] overflow-hidden text-ellipsis whitespace-nowrap]">Срок выполнения</th>
-                <th className="py-3 px-4">Приоритет</th>
-                <th className="py-3 px-4">Тэг</th>
-                <th className="py-3 px-4">Прогресс</th>
-              </tr>
-            </thead>
-            <tbody className="text-gray-700 text-sm">
-              {tasks.filter(task => task.status === 'Новая').map(task => (
-                <TaskCard
-                  key={task.id}
-                  task={task}
-                  onDragStart={handleDragStart}
-                  onEdit={() => handleEditTask(task)}
-                  onDelete={() => handleDeleteTask(task)}
-                  onStatusChange={handleStatusChange}
-                  onOpenSidebar={openTaskSidebar}
-                />
-              ))}
-            </tbody>
-          </table>
-          <button className=" text-gray-600 font-semibold mt-2 mb-2 p-1 flex items-center justify-center"
-          onClick={() => openAddTaskModal("Новая")}>
-                <Plus className="text-gray-600 w-5 h-5" /> Добавить задачу
-           </button>
-        </div>
-      </div>
-
-      {/* <!-- В процессе --> */}
-      <div
-        className="p-4 mb-6"
-        onDragOver={handleDragOver}
-        onDrop={(e) => handleDrop(e, 'В процессе')}
-      >
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center">
-            <span className="flex items-center px-2 py-1 text-sm border font-semibold border-purple-200 bg-purple-100 rounded-lg text-purple-700 duration-200 transition-colors">
-              <LoaderCircle className="h-4 w-4 mr-2" />
-              В процессе
-            </span>
-            <span className="text-sm bg-gray-200 border text-gray-600 ml-2 px-2 py-1 rounded">
-              {tasks.filter(task => task.status === 'В процессе').length}
-            </span>
-          </div>
-        </div>
-        <div className="overflow-x-auto sm:rounded-lg">
-          <table className={`w-full text-left`}>
-            <thead>
-              <tr className="text-gray-600 text-sm bg-gray-100 border">
+              <tr className="text-gray-600 text-sm bg-gray-100 border rounded-md dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600">
                 <th className="py-3 px-4">Задача</th>
                 <th className="py-3 px-4">Описание</th>
                 <th className="py-3 px-4">Исполнители</th>
@@ -261,8 +304,8 @@ const TaskList: React.FC<{ projectId: number }> = ({ projectId }) => {
                 <th className="py-3 px-4">Прогресс</th>
               </tr>
             </thead>
-            <tbody className="text-gray-700 text-sm">
-              {tasks.filter(task => task.status === 'В процессе').map(task => (
+            <tbody className="text-gray-700 text-sm dark:text-gray-300">
+              {newTasks.map(task => (
                 <TaskCard
                   key={task.id}
                   task={task}
@@ -271,18 +314,75 @@ const TaskList: React.FC<{ projectId: number }> = ({ projectId }) => {
                   onDelete={() => handleDeleteTask(task)}
                   onStatusChange={handleStatusChange}
                   onOpenSidebar={openTaskSidebar}
+                  searchQuery={searchQuery}
                 />
               ))}
             </tbody>
           </table>
-          <button className=" text-gray-600 font-semibold mt-2 mb-2 p-1 flex items-center justify-center"
-          onClick={() => openAddTaskModal("В процессе")}>
-                <Plus className="text-gray-600 w-5 h-5" /> Добавить задачу
-           </button>
+          <button
+            className="text-gray-600 font-semibold mt-2 mb-2 p-1 flex items-center justify-center dark:text-gray-300"
+            onClick={() => openAddTaskModal("Новая")}
+          >
+            <Plus className="text-gray-600 w-5 h-5 dark:text-gray-300" /> Добавить задачу
+          </button>
         </div>
       </div>
 
-      {/* <!-- Завершено --> */}
+      {/* В процессе */}
+      <div
+        className="p-4 mb-6"
+        onDragOver={handleDragOver}
+        onDrop={(e) => handleDrop(e, 'В процессе')}
+      >
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center">
+            <span className="flex items-center px-2 py-1 text-sm border font-semibold border-purple-200 bg-purple-100 rounded-lg text-purple-700 dark:border-purple-600 dark:bg-purple-900 dark:text-purple-300 duration-200 transition-colors">
+              <LoaderCircle className="h-4 w-4 mr-2" />
+              В процессе
+            </span>
+            <span className="text-sm bg-gray-200 border text-gray-600 ml-2 px-2 py-1 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300">
+              {inProgressTasks.length}
+            </span>
+          </div>
+        </div>
+        <div className="overflow-x-auto sm:rounded-lg">
+          <table className="w-full text-left">
+            <thead>
+              <tr className="text-gray-600 text-sm bg-gray-100 border dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600">
+                <th className="py-3 px-4">Задача</th>
+                <th className="py-3 px-4">Описание</th>
+                <th className="py-3 px-4">Исполнители</th>
+                <th className="py-3 px-4 min-w-[270px] overflow-hidden text-ellipsis whitespace-nowrap">Срок выполнения</th>
+                <th className="py-3 px-4">Приоритет</th>
+                <th className="py-3 px-4">Тэг</th>
+                <th className="py-3 px-4">Прогресс</th>
+              </tr>
+            </thead>
+            <tbody className="text-gray-700 text-sm dark:text-gray-300">
+              {inProgressTasks.map(task => (
+                <TaskCard
+                  key={task.id}
+                  task={task}
+                  onDragStart={handleDragStart}
+                  onEdit={() => handleEditTask(task)}
+                  onDelete={() => handleDeleteTask(task)}
+                  onStatusChange={handleStatusChange}
+                  onOpenSidebar={openTaskSidebar}
+                  searchQuery={searchQuery}
+                />
+              ))}
+            </tbody>
+          </table>
+          <button
+            className="text-gray-600 font-semibold mt-2 mb-2 p-1 flex items-center justify-center dark:text-gray-300"
+            onClick={() => openAddTaskModal("В процессе")}
+          >
+            <Plus className="text-gray-600 w-5 h-5 dark:text-gray-300" /> Добавить задачу
+          </button>
+        </div>
+      </div>
+
+      {/* Завершено */}
       <div
         className="p-4 mb-6"
         onDragOver={handleDragOver}
@@ -290,30 +390,30 @@ const TaskList: React.FC<{ projectId: number }> = ({ projectId }) => {
       >
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center">
-            <span className="flex items-center px-2 py-1 text-sm border font-semibold border-green-200 bg-green-100 rounded-lg text-green-700 duration-200 transition-colors">
+            <span className="flex items-center px-2 py-1 text-sm border font-semibold border-green-200 bg-green-100 rounded-lg text-green-700 dark:border-green-600 dark:bg-green-900 dark:text-green-300 duration-200 transition-colors">
               <BookCheck className="h-4 w-4 mr-2" />
               Завершено
             </span>
-            <span className="text-sm bg-gray-200 border text-gray-600 ml-2 px-2 py-1 rounded">
-              {tasks.filter(task => task.status === 'Завершено').length}
+            <span className="text-sm bg-gray-200 border text-gray-600 ml-2 px-2 py-1 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300">
+              {completedTasks.length}
             </span>
           </div>
         </div>
         <div className="overflow-x-auto sm:rounded-lg">
-          <table className={`w-full text-left`}>
+          <table className="w-full text-left">
             <thead>
-              <tr className="text-gray-600 text-sm bg-gray-100 border">
+              <tr className="text-gray-600 text-sm bg-gray-100 border dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600">
                 <th className="py-3 px-4">Задача</th>
                 <th className="py-3 px-4">Описание</th>
                 <th className="py-3 px-4">Исполнители</th>
-                <th className="py-3 px-4 min-w-[270px] overflow-hidden text-ellipsis whitespace-nowrapp">Срок выполнения</th>
+                <th className="py-3 px-4 min-w-[270px] overflow-hidden text-ellipsis whitespace-nowrap">Срок выполнения</th>
                 <th className="py-3 px-4">Приоритет</th>
                 <th className="py-3 px-4">Тэг</th>
                 <th className="py-3 px-4">Прогресс</th>
               </tr>
             </thead>
-            <tbody className="text-gray-700 text-sm">
-              {tasks.filter(task => task.status === 'Завершено').map(task => (
+            <tbody className="text-gray-700 text-sm dark:text-gray-300">
+              {completedTasks.map(task => (
                 <TaskCard
                   key={task.id}
                   task={task}
@@ -322,22 +422,27 @@ const TaskList: React.FC<{ projectId: number }> = ({ projectId }) => {
                   onDelete={() => handleDeleteTask(task)}
                   onStatusChange={handleStatusChange}
                   onOpenSidebar={openTaskSidebar}
+                  searchQuery={searchQuery}
+
                 />
               ))}
             </tbody>
           </table>
-          <button className=" text-gray-600 font-semibold mt-2 mb-2 p-1 flex items-center justify-center"
-          onClick={() => openAddTaskModal("Завершено")}>
-                <Plus className="text-gray-600 w-5 h-5" /> Добавить задачу
-           </button>
+          <button
+            className="text-gray-600 font-semibold mt-2 mb-2 p-1 flex items-center justify-center dark:text-gray-300"
+            onClick={() => openAddTaskModal("Завершено")}
+          >
+            <Plus className="text-gray-600 w-5 h-5 dark:text-gray-300" /> Добавить задачу
+          </button>
         </div>
       </div>
+
       {/* Боковая панель задач */}
       {isTaskSidebarOpen && selectedTask && (
         <TaskSidebar
-          task={tasks.find(t => t.id === selectedTaskId) || null}
+          task={selectedTask}
           onClose={closeTaskSidebar}
-          onDelete={() => handleDeleteTask(tasks.find(t => t.id === selectedTaskId)!)}
+          onDelete={() => handleDeleteTask(selectedTask)}
           onComplete={async () => {
             await updateTaskStatus({
               id: selectedTask.id,

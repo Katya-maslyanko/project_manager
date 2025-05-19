@@ -16,10 +16,19 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework.generics import RetrieveUpdateAPIView
 from rest_framework.filters import OrderingFilter
 from rest_framework.exceptions import NotFound, ValidationError
+from uuid import UUID
+import os
+import subprocess
+from django.http import FileResponse, HttpResponse
+from django.shortcuts import get_object_or_404
+from rest_framework.views import APIView
+import tempfile
+import logging
 from django.core.mail import send_mail
 from django.conf import settings
 from django.db.models import Count, Q
 from .models import (
+    ProjectInvitation,
     ProjectTeam,
     StickyNote,
     StrategicConnection,
@@ -210,7 +219,7 @@ class TeamViewSet(viewsets.ModelViewSet):
             return Response({'message': f'Приглашение отправлено на {email}'}, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({'error': f'Ошибка при отправке приглашения: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
+logger = logging.getLogger(__name__)
 class ProjectViewSet(viewsets.ModelViewSet):
     queryset = Project.objects.all()
     serializer_class = ProjectSerializer
@@ -310,6 +319,68 @@ class ProjectViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(queryset, many=True)
         # print(f"Returning projects data: {serializer.data}")
         return Response(serializer.data)
+
+    @action(detail=True, methods=['post'], url_path='invite')
+    def invite_member(self, request, pk=None):
+        project = self.get_object()
+        email = request.data.get('email')
+
+        if not email:
+            return Response({'error': 'Email обязателен'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            invitation = ProjectInvitation.objects.create(
+                project=project,
+                email=email,
+                invited_by=request.user
+            )
+            frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:3000')
+            invite_link = f"{frontend_url}/projects/{project.id}?invitation_token={invitation.token}"
+            subject = f"Приглашение в проект {project.name}"
+            message = f"Вы были приглашены в проект {project.name}. Перейдите по ссылке для присоединения: {invite_link}"
+            from_email = settings.DEFAULT_FROM_EMAIL
+            recipient_list = [email]
+
+            logger.info(f"Отправка email на {email} для проекта {project.name}")
+            send_mail(subject, message, from_email, recipient_list, fail_silently=False)
+            logger.info(f"Email успешно отправлен на {email}")
+
+            return Response({'message': f'Приглашение отправлено на {email}'}, status=status.HTTP_200_OK)
+        except Exception as e:
+            logger.error(f"Ошибка при отправке email на {email}: {str(e)}")
+            return Response({'error': f'Ошибка при отправке приглашения: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    @action(detail=True, methods=['post'], url_path='accept-invitation')
+    def accept_invitation(self, request, pk=None):
+        project = self.get_object()
+        user = request.user
+        token = request.query_params.get('invitation_token')
+
+        if not token:
+            return Response({'error': 'Токен приглашения обязателен'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            UUID(token)
+            invitation = ProjectInvitation.objects.filter(
+                project=project,
+                token=token,
+                email=user.email,
+                is_used=False
+            ).first()
+
+            if not invitation:
+                return Response({'error': 'Приглашение не найдено, уже использовано или недействительно'}, status=status.HTTP_400_BAD_REQUEST)
+            project.members.add(user)
+            invitation.is_used = True
+            invitation.save()
+
+            logger.info(f"Пользователь {user.email} принял приглашение в проект {project.name}")
+            return Response({'message': f'Вы успешно присоединились к проекту {project.name}'}, status=status.HTTP_200_OK)
+        except ValueError:
+            return Response({'error': 'Недействительный токен приглашения'}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            logger.error(f"Ошибка при принятии приглашения для {user.email}: {str(e)}")
+            return Response({'error': f'Ошибка при принятии приглашения: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class ProjectGoalViewSet(viewsets.ModelViewSet):
     queryset = ProjectGoal.objects.all()
@@ -425,6 +496,7 @@ class TaskViewSet(viewsets.ModelViewSet):
     filter_backends = (OrderingFilter,)
 
     def get_queryset(self):
+        # print(self.request.query_params)
         queryset = super().get_queryset()
         project_id = self.request.query_params.get('projectId')
         status = self.request.query_params.get('status')
@@ -432,24 +504,32 @@ class TaskViewSet(viewsets.ModelViewSet):
         tag_id = self.request.query_params.getlist('tagId')
         priority = self.request.query_params.get('priority')
         goal_id = self.request.query_params.get('goalId')
+        assigned_to = self.request.query_params.get('assignedTo')
 
         if project_id:
             queryset = queryset.filter(project_id=project_id)
         if status:
-            queryset = queryset.filter(status=status)
+            queryset = queryset.filter(status__in=status.split(','))
         if assignee_id:
             queryset = queryset.filter(assignees__id=assignee_id)
         if tag_id:
-            queryset = queryset.filter(tag_id=tag_id)
+            queryset = queryset.filter(tag__id__in=tag_id)
         if priority:
-            queryset = queryset.filter(priority=priority)
+            queryset = queryset.filter(priority__in=priority.split(','))
         if goal_id:
             queryset = queryset.filter(connected_goals__source_goal_id=goal_id)
+        if assigned_to == 'me' and self.request.user.is_authenticated:
+            queryset = queryset.filter(assignees=self.request.user)
 
         order_by = self.request.query_params.get('ordering')
-        if order_by:
-            order_fields = order_by.split(',')
-            queryset = queryset.order_by(*order_fields)
+        valid_order_fields = [
+            'priority', '-priority',
+            'created_at', '-created_at',
+            'due_date', '-due_date',
+            'points', '-points'
+        ]
+        if order_by and order_by in valid_order_fields:
+            queryset = queryset.order_by(*order_by.split(','))
 
         return queryset
 

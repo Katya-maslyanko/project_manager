@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.contrib.auth import get_user_model, authenticate
 from django.db.models import Sum, Count
-from .models import ProjectTeam, StickyNote, StrategicConnection, UserCursorPosition, UserProfile, Team, Project, ProjectGoal, Subgoal, Task, Subtask, Tag, Comment, Notification, File, Setting, ActivityLog, UserTeamRelation, ProjectMember
+from .models import ProjectInvitation, ProjectTeam, StickyNote, StrategicConnection, UserCursorPosition, UserProfile, Team, Project, ProjectGoal, Subgoal, Task, Subtask, Tag, Comment, Notification, File, Setting, ActivityLog, UserTeamRelation, ProjectMember
 
 User = get_user_model()
 
@@ -519,7 +519,7 @@ class SubtaskSerializer(serializers.ModelSerializer):
         ]
 
     def get_assignees(self, obj):
-            print(f"Исполнители {obj.id}: {obj.assigned_to.all()}")
+            # print(f"Исполнители {obj.id}: {obj.assigned_to.all()}")
             return UserSerializer(obj.assigned_to.all(), many=True).data
 
     def validate_assigned_to_ids(self, value):
@@ -675,3 +675,8 @@ class ProjectMemberSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProjectMember
         fields = '__all__'
+
+class ProjectInvitationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProjectInvitation
+        fields = ['id', 'project', 'email', 'token', 'created_at', 'is_used', 'invited_by']
