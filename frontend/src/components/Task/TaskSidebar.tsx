@@ -21,6 +21,7 @@ import {
   useGetSubtasksByTaskIdQuery,
   useGetProjectByIdQuery,
   Subtask,
+  useGetTaskByIdQuery,
 } from "@/state/api";
 import AddAssigneeModal from "./modal/AddAssigneeModal";
 import DeleteConfirmationModal from "./modal/DeleteConfirmationModal";
@@ -77,6 +78,7 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
   const [isAssigneeModalOpen, setAssigneeModalOpen] = useState(false);
   const [isDeleteConfirmationOpen, setDeleteConfirmationOpen] = useState(false);
   const [isOverdue, setIsOverdue] = useState(false);
+  const { refetch } = useGetTaskByIdQuery(task?.id || 0, { skip: !task });
 
   useEffect(() => {
     if (task) {
@@ -101,6 +103,7 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
       try {
         await updateTask({ id: task.id, ...fields });
         onEdit && onEdit(fields);
+        refetch();
       } catch (error) {
         console.error("Ошибка обновления:", error);
       }
@@ -127,6 +130,7 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
         </span>
       );
     }
+    refetch();
     return (
       <span className="mr-1 px-2 py-1 rounded bg-gray-200 text-gray-700 text-xs">
         Нет тега

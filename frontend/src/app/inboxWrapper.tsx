@@ -17,18 +17,18 @@ const InboxLayout: React.FC<InboxLayoutProps> = ({ children, onSearch }) => {
   const mainContentMargin = isMobileOpen
     ? "ml-0"
     : isExpanded || isHovered
-    ? "lg:ml-[290px]"
-    : "lg:ml-[90px]";
+    ? "sm:ml-[0px] lg:ml-[290px]"
+    : "sm:ml-[0px] lg:ml-[90px]";
 
   return (
     <ProtectedLayout>
       <div className="flex min-h-screen w-full bg-gray-50 text-gray-900 dark:bg-dark-bg dark:text-dark-text">
         <Sidebar />
         <main
-          className={`flex-1 transition-all dark:bg-dark-bg duration-300 ease-in-out ${mainContentMargin}`}
+          className={`flex-1 transition-all dark:bg-dark-bg duration-300 ease-in-out ml-0 ${mainContentMargin}`}
         >
           <Navbar onSearch={onSearch || (() => {})} />
-          <div className="pt-6 mx-auto max-w-(--breakpoint-2xl) md:pt-6">{children}</div>
+          <div className="pt-6 mx-auto max-w-(--breakpoint-7xl) md:pt-6">{children}</div>
         </main>
       </div>
     </ProtectedLayout>

@@ -43,16 +43,22 @@ const Projects = () => {
   };
 
   if (!project) {
-    return <p className="text-red-500 dark:text-red-400">Проект не найден</p>;
+    return (
+      <div className="flex items-center justify-center p-4 min-h-screen">
+        <p className="text-red-500 dark:text-red-400 text-sm sm:text-base">Проект не найден</p>
+      </div>
+    );
   }
 
   return (
     <InboxWrapper onSearch={handleSearch}>
-      <div>
+      <div className="">
         {isLoading ? (
-          <p className="text-gray-600 dark:text-gray-400">Загрузка проектов...</p>
+          <p className="text-gray-600 dark:text-gray-400 text-sm sm:text-base">Загрузка проектов...</p>
         ) : error ? (
-          <p className="text-red-500 dark:text-red-400">Ошибка при загрузке проектов: {JSON.stringify(error)}</p>
+          <p className="text-red-500 dark:text-red-400 text-sm sm:text-base">
+            Ошибка при загрузке проектов: {JSON.stringify(error)}
+          </p>
         ) : (
           <>
             <ProjectHeader
@@ -66,13 +72,19 @@ const Projects = () => {
               onSearch={handleSearch}
               refetch={refetch}
             />
-            {activeTab === "Обзор" && projectId && <Overview projectId={projectId} refetch={refetch} />}
-            {activeTab === "Список" && projectId && (
-              <TaskList projectId={projectId} filters={filters} sort={sort} searchQuery={searchQuery} />
-            )}
-            {activeTab === "Доска" && projectId && <KanbanBoard projectId={projectId} />}
-            {activeTab === "Хронология" && projectId && <TimeLine projectId={projectId} />}
-            {activeTab === "Карта" && projectId && <StrategicMap projectId={projectId} />}
+            <div className="mt-2 sm:mt-4">
+              {activeTab === "Обзор" && projectId && <Overview projectId={projectId} refetch={refetch} />}
+              {activeTab === "Список" && projectId && (
+                <TaskList projectId={projectId} filters={filters} sort={sort} searchQuery={searchQuery} />
+              )}
+              {activeTab === "Доска" && projectId && <KanbanBoard projectId={projectId} />}
+              {activeTab === "Хронология" && projectId && <TimeLine projectId={projectId} />}
+              {activeTab === "Карта" && projectId && (
+                <div className="hidden sm:block">
+                  <StrategicMap projectId={projectId} />
+                </div>
+              )}
+            </div>
           </>
         )}
       </div>

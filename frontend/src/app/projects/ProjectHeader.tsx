@@ -163,10 +163,10 @@ const ProjectHeader: React.FC<Props> = ({
   };
 
   return (
-    <div className="px-4 xl:px-6 dark:bg-dark-bg">
+    <div className="px-4 sm:px-2 md:px-2 mx-auto xl:px-6 dark:bg-dark-bg">
       <Breadcrumbs items={breadcrumbsItems} />
-      <div className="mb-5 flex items-center justify-between mt-4">
-        <h1 className="text-3xl font-semibold text-gray-800 dark:text-white">
+      <div className="mb-5 flex flex-col sm:flex-row items-start sm:items-center justify-between lg:justify-between sm:justify-start mt-4 sm:space-y-0 sm:gap-72">
+        <h1 className="text-2xl sm:text-3xl font-semibold text-gray-800 dark:text-white">
           {projectName}
         </h1>
         <div className="flex items-center space-x-4">
@@ -234,8 +234,8 @@ const ProjectHeader: React.FC<Props> = ({
         </div>
       )}
 
-      <div className="flex items-center mb-4">
-        <div className="flex items-center border dark:border-gray-800 bg-gray-200 dark:bg-dark-bg rounded-md">
+  <div className="flex flex-col sm:flex-row items-center mb-4 gap-4 sm:gap-2">
+    <div className="flex items-center border dark:border-gray-800 bg-gray-200 dark:bg-dark-bg rounded-md">
           <TabButton
             name="Обзор"
             icon={<BookOpenCheck className="h-5 w-5" />}
@@ -289,7 +289,7 @@ const ProjectHeader: React.FC<Props> = ({
             )}
           </button>
           {showFilterDropdown && projectId && (
-            <div className="absolute z-20 mt-14 right-0 translate-x-[-355px]">
+            <div className="absolute z-20 mt-14 right-0 sm:right-0 sm:left-auto sm:w-80 translate-x-[-355px]">
               <FilterDropdownAdvanced
                 onApply={handleApplyFilter}
                 onClose={() => setShowFilterDropdown(false)}
@@ -311,7 +311,7 @@ const ProjectHeader: React.FC<Props> = ({
             )}
           </button>
           {showSortDropdown && (
-            <div className="absolute z-20 mt-14 right-0 translate-x-[-215px]">
+            <div className="absolute z-20 mt-14 right-0 sm:right-0 sm:left-auto sm:w-80 translate-x-[-215px]">
               <SortDropdown
                 onSelectSort={handleSelectSort}
                 activeSort={activeSort}
@@ -338,15 +338,16 @@ const TabButton: React.FC<TabButtonProps> = ({ name, icon, setActiveTab, activeT
 
   return (
     <button
-      className={`flex items-center px-4 py-2 rounded-md transition duration-200 ${
+      className={`flex items-center px-4 lg:px-4 lg:py-2 sm:px-2 py-2 sm:py-1.5 rounded-md transition duration-200 ${
         isActive
           ? "bg-white text-blue-600 dark:bg-gray-800 dark:text-blue-400"
           : "bg-gray-200 text-gray-600 dark:bg-dark-bg dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white"
       }`}
       onClick={() => setActiveTab(name)}
+      title={name}
     >
       {icon}
-      <span className="ml-2 text-base">{name}</span>
+      <span className="ml-2 text-base sm:hidden lg:block">{name}</span>
     </button>
   );
 };

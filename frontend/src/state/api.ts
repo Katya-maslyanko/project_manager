@@ -268,11 +268,11 @@ export const api = createApi({
       providesTags: (result) =>
         result ? result.map(({ id }) => ({ type: "Tasks", id })) : [{ type: "Tasks", id: "LIST" }],
     }),
-    updateTask: build.mutation<Task, Partial<Task>>({
-      query: ({ id, ...rest }) => ({
-        url: `tasks/${id}/`,
+    updateTask: build.mutation<Task, Partial<Task> & { id: number }>({
+      query: ({ id, ...patch }) => ({
+        url: `/tasks/${id}/`,
         method: "PATCH",
-        body: rest,
+        body: patch,
       }),
       invalidatesTags: ["Tasks"],
     }),

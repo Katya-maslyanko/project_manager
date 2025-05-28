@@ -44,7 +44,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({ onSearch }) => {
   return (
     <header className="sticky top-0 z-40 flex w-full items-center justify-between p-4 bg-white border-b border-gray-200 dark:bg-dark-bg dark:border-gray-800 transition-all duration-300 ease-in-out">
       <button
-        className="items-center justify-center w-12 h-12 rounded-lg lg:flex lg:h-11 lg:w-11 lg:border text-gray-500 transition-colors bg-white border border-gray-200 hover:text-dark-900 hover:bg-gray-100 hover:text-gray-700 dark:border-gray-800 dark:bg-dark-bg dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white"
+        className="flex items-center justify-center w-12 h-12 rounded-lg lg:flex lg:h-11 lg:w-11 lg:border text-gray-500 transition-colors bg-white border border-gray-200 hover:text-dark-900 hover:bg-gray-100 hover:text-gray-700 dark:border-gray-800 dark:bg-dark-bg dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white"
         onClick={handleToggle}
         aria-label="Toggle Sidebar"
       >
