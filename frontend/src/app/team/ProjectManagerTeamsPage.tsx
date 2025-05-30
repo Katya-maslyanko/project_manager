@@ -1,14 +1,15 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useGetMyTeamsQuery, useInviteMemberMutation, useCreateTeamMutation, useUpdateTeamMutation } from '@/state/api';
-import { Loader, SquareArrowOutUpRight } from 'lucide-react';
+import { useGetMyTeamsQuery, useInviteMemberMutation, useCreateTeamMutation, useUpdateTeamMutation, useDeleteTeamMutation } from '@/state/api';
+import { Ellipsis, Loader, SquareArrowOutUpRight } from 'lucide-react';
 import InboxWrapper from '@/app/inboxWrapper';
 import Breadcrumbs from "@/components/ui/breadcrumbs/Breadcrumbs";
 import AddTeamModal from '@/components/Team/AddTeamModal';
 import InviteMemberModal from '@/components/Team/InviteMemberForm';
 import ManageTeamMembersModal from '@/components/Team/modal/ManageTeamMembersModal';
 import TeamTable from '@/components/Team/TeamTable';
+import { useRouter } from 'next/navigation';
 
 type BreadcrumbItem = {
   label: string;
@@ -21,6 +22,7 @@ const breadcrumbsItems: BreadcrumbItem[] = [
 ];
 
 const ProjectManagerTeamsPage: React.FC = () => {
+  const router = useRouter();
   const { data: teams = [], isLoading, error, refetch } = useGetMyTeamsQuery(undefined, {
     refetchOnMountOrArgChange: true,
   });
@@ -30,8 +32,10 @@ const ProjectManagerTeamsPage: React.FC = () => {
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [isManageMembersModalOpen, setIsManageMembersModalOpen] = useState(false);
   const [inviteMember] = useInviteMemberMutation();
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [createTeam] = useCreateTeamMutation();
   const [updateTeam] = useUpdateTeamMutation();
+  const [deleteTeam] = useDeleteTeamMutation();
 
   const [editingField, setEditingField] = useState<string | null>(null);
   const [values, setValues] = useState<{
@@ -74,6 +78,19 @@ const ProjectManagerTeamsPage: React.FC = () => {
       refetch();
     } catch (err) {
       console.error('Ошибка при добавлении участников:', err);
+    }
+  };
+
+  const handleDeleteTeam = async () => {
+    if (currentTeam && confirm('Вы уверены, что хотите удалить эту команду?')) {
+      try {
+        await deleteTeam(currentTeam.id).unwrap();
+        setIsDropdownOpen(false);
+        router.push('/team');
+        refetch();
+      } catch (err) {
+        console.error('Ошибка при удалении команды:', err);
+      }
     }
   };
 
@@ -180,6 +197,28 @@ const ProjectManagerTeamsPage: React.FC = () => {
               <SquareArrowOutUpRight className="h-5 w-5 mr-2" />
               Добавить участника
             </button>
+            <div className="relative">
+              <button
+                className="ml-4 p-2 rounded hover:bg-gray-100 text-gray-500 dark:hover:bg-gray-700 dark:text-gray-400"
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              >
+                <Ellipsis className="h-5 w-5" />
+              </button>
+              {isDropdownOpen && (
+                <div className="absolute right-0 mt-2 w-48 bg-white shadow-lg rounded-md z-50 dark:bg-gray-800">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsDropdownOpen(false);
+                      handleDeleteTeam();
+                    }}
+                    className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-md dark:text-red-400 dark:hover:bg-red-900"
+                  >
+                    Удалить команду
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 

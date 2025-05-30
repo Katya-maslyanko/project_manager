@@ -332,7 +332,7 @@ const AdminDashboard: React.FC = () => {
             <Users size={20} className="text-blue-600 mr-2" />
             <h2 className="text-lg font-semibold">Все участники ({totalMembers})</h2>
           </div>
-          <div className="overflow-y-auto max-h-96">
+          <div className="overflow-y-auto max-h-86">
             <table className="w-full text-left">
               <thead>
                 <tr className="text-gray-600 text-sm bg-gray-100 border rounded-md dark:text-white dark:bg-gray-700 dark:border-gray-800">

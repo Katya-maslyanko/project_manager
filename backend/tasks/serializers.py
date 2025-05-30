@@ -650,8 +650,8 @@ class NotificationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Notification
         fields = ['id', 'user', 'message', 'is_read', 'created_at', 'updated_at', 
-                 'project', 'task', 'subtask', 'comment', 'team', 'goal', 
-                 'subgoal', 'sticky_note']
+                  'project', 'task', 'subtask', 'comment', 'team', 'goal', 
+                  'subgoal', 'sticky_note']
     
     def to_representation(self, instance):
         representation = super().to_representation(instance)

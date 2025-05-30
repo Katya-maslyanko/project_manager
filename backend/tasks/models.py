@@ -7,6 +7,7 @@ from django.dispatch import receiver
 from django.db.models.signals import post_save, m2m_changed
 import uuid
 from django_otp.plugins.otp_totp.models import TOTPDevice
+from tasks.middleware import get_current_user
 
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
@@ -57,6 +58,10 @@ class ProjectGoal(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.__original_status = self.status
+
 class Subgoal(models.Model):
     goal = models.ForeignKey(ProjectGoal, related_name='subgoals', on_delete=models.CASCADE)
     title = models.CharField(max_length=200)
@@ -72,6 +77,10 @@ class Subgoal(models.Model):
     progress = models.FloatField(default=0.0, help_text="Прогресс выполнения подцели в процентах")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.__original_status = self.status
     
 class StickyNote(models.Model):
     project = models.ForeignKey(Project, related_name='sticky_notes', on_delete=models.CASCADE)
@@ -113,6 +122,10 @@ class Task(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     points = models.IntegerField(null=True, blank=True)
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.__original_status = self.status
+
 class Subtask(models.Model):
     STATUS_CHOICES = [
         ('Новая', 'Новая'),
@@ -136,6 +149,10 @@ class Subtask(models.Model):
 
     def get_possible_assignees(self):
         return self.task.assignees.all()
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.__original_status = self.status
 
 class Comment(models.Model):
     task = models.ForeignKey(Task, related_name='comments', on_delete=models.CASCADE, null=True, blank=True)
@@ -250,9 +267,10 @@ class Notification(models.Model):
 
     @receiver(post_save, sender=Task)
     def create_task_notification(sender, instance, created, **kwargs):
-        request = getattr(settings, 'CURRENT_REQUEST', None)
-        current_user = request.user if request and hasattr(request, 'user') and request.user.is_authenticated else None
-        
+        current_user = get_current_user()
+        project = instance.project
+        curator = project.curator
+
         if created:
             for assignee in instance.assignees.all():
                 if current_user and assignee == current_user:
@@ -260,6 +278,13 @@ class Notification(models.Model):
                 Notification.objects.create(
                     user=assignee,
                     message=f"Вы назначены на задачу '{instance.title}' в проекте '{instance.project.name}'",
+                    project=instance.project,
+                    task=instance
+                )
+            if curator and current_user != curator:
+                Notification.objects.create(
+                    user=curator,
+                    message=f"Создана новая задача '{instance.title}' в проекте '{instance.project.name}'",
                     project=instance.project,
                     task=instance
                 )
@@ -274,12 +299,20 @@ class Notification(models.Model):
                         project=instance.project,
                         task=instance
                     )
+                if curator and current_user != curator:
+                    Notification.objects.create(
+                        user=curator,
+                        message=f"Статус задачи '{instance.title}' изменён на '{instance.status}' в проекте '{instance.project.name}'",
+                        project=instance.project,
+                        task=instance
+                    )
 
     @receiver(post_save, sender=Subtask)
     def create_subtask_notification(sender, instance, created, **kwargs):
-        request = getattr(settings, 'CURRENT_REQUEST', None)
-        current_user = request.user if request and hasattr(request, 'user') and request.user.is_authenticated else None
-        
+        current_user = get_current_user()
+        project = instance.task.project
+        curator = project.curator
+
         if created:
             for assignee in instance.assigned_to.all():
                 if current_user and assignee == current_user:
@@ -288,6 +321,14 @@ class Notification(models.Model):
                     user=assignee,
                     message=f"Вы назначены на подзадачу '{instance.title}' в задаче '{instance.task.title}'",
                     project=instance.task.project,
+                    subtask=instance,
+                    task=instance.task
+                )
+            if curator and current_user != curator:
+                Notification.objects.create(
+                    user=curator,
+                    message=f"Создана новая подзадача '{instance.title}' в задаче '{instance.task.title}' проекта '{project.name}'",
+                    project=project,
                     subtask=instance,
                     task=instance.task
                 )
@@ -300,6 +341,14 @@ class Notification(models.Model):
                         user=assignee,
                         message=f"Статус подзадачи '{instance.title}' изменён на '{instance.status}'",
                         project=instance.task.project,
+                        subtask=instance,
+                        task=instance.task
+                    )
+                if curator and current_user != curator:
+                    Notification.objects.create(
+                        user=curator,
+                        message=f"Статус подзадачи '{instance.title}' изменён на '{instance.status}' в задаче '{instance.task.title}' проекта '{project.name}'",
+                        project=project,
                         subtask=instance,
                         task=instance.task
                     )
@@ -325,9 +374,7 @@ class Notification(models.Model):
 
     @receiver(post_save, sender=UserTeamRelation)
     def create_team_invitation_notification(sender, instance, created, **kwargs):
-        request = getattr(settings, 'CURRENT_REQUEST', None)
-        current_user = request.user if request and hasattr(request, 'user') and request.user.is_authenticated else None
-        
+        current_user = get_current_user()        
         if created:
             if current_user and instance.user == current_user:
                 return
@@ -339,9 +386,7 @@ class Notification(models.Model):
 
     @receiver(post_save, sender=ProjectGoal)
     def create_goal_notification(sender, instance, created, **kwargs):
-        request = getattr(settings, 'CURRENT_REQUEST', None)
-        current_user = request.user if request and hasattr(request, 'user') and request.user.is_authenticated else None
-        
+        current_user = get_current_user()        
         if not created and instance.status != instance.__original_status:
             project = instance.project
             users = set(project.teams.values_list('userteamrelation__user', flat=True))
@@ -358,9 +403,7 @@ class Notification(models.Model):
 
     @receiver(post_save, sender=Subgoal)
     def create_subgoal_notification(sender, instance, created, **kwargs):
-        request = getattr(settings, 'CURRENT_REQUEST', None)
-        current_user = request.user if request and hasattr(request, 'user') and request.user.is_authenticated else None
-        
+        current_user = get_current_user()        
         if not created and instance.status != instance.__original_status:
             project = instance.goal.project
             users = set(project.teams.values_list('userteamrelation__user', flat=True))
@@ -388,6 +431,71 @@ class Notification(models.Model):
                     message=f"Новый стикер от {instance.author.username} в проекте '{project.name}'",
                     project=project,
                     sticky_note=instance
+                )
+    @receiver(m2m_changed, sender=Task.assignees.through)
+    def task_assignee_changed(sender, instance, action, pk_set, **kwargs):
+        current_user = get_current_user()
+        if action == "post_add":
+            for user_id in pk_set:
+                assignee = User.objects.get(pk=user_id)
+                if current_user and assignee == current_user:
+                    continue
+                is_main_assignee = instance.assignees.count() == 1 and instance.assignees.first() == assignee
+                message = (
+                    f"Вы назначены главным исполнителем задачи '{instance.title}' в проекте '{instance.project.name}'"
+                    if is_main_assignee
+                    else f"Вы назначены на задачу '{instance.title}' в проекте '{instance.project.name}'"
+                )
+                Notification.objects.create(
+                    user=assignee,
+                    message=message,
+                    project=instance.project,
+                    task=instance
+                )
+        elif action == "post_remove":
+            for user_id in pk_set:
+                assignee = User.objects.get(pk=user_id)
+                if current_user and assignee == current_user:
+                    continue
+                Notification.objects.create(
+                    user=assignee,
+                    message=f"Вы удалены из исполнителей задачи '{instance.title}' в проекте '{instance.project.name}'",
+                    project=instance.project,
+                    task=instance
+                )
+
+    @receiver(m2m_changed, sender=Subtask.assigned_to.through)
+    def subtask_assignee_changed(sender, instance, action, pk_set, **kwargs):
+        current_user = get_current_user()
+        if action == "post_add":
+            for user_id in pk_set:
+                assignee = User.objects.get(pk=user_id)
+                if current_user and assignee == current_user:
+                    continue
+                is_main_assignee = instance.assigned_to.count() == 1 and instance.assigned_to.first() == assignee
+                message = (
+                    f"Вы назначены главным исполнителем подзадачи '{instance.title}' в задаче '{instance.task.title}'"
+                    if is_main_assignee
+                    else f"Вы назначены на подзадачу '{instance.title}' в задаче '{instance.task.title}'"
+                )
+                Notification.objects.create(
+                    user=assignee,
+                    message=message,
+                    project=instance.task.project,
+                    subtask=instance,
+                    task=instance.task
+                )
+        elif action == "post_remove":
+            for user_id in pk_set:
+                assignee = User.objects.get(pk=user_id)
+                if current_user and assignee == current_user:
+                    continue
+                Notification.objects.create(
+                    user=assignee,
+                    message=f"Вы удалены из исполнителей подзадачи '{instance.title}' в задаче '{instance.task.title}'",
+                    project=instance.task.project,
+                    subtask=instance,
+                    task=instance.task
                 )
 
     def track_original_status(sender, instance, **kwargs):

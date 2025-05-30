@@ -1,18 +1,12 @@
-from threading import local
-from django.conf import settings
+# middleware.py
+import threading
+from django.utils.deprecation import MiddlewareMixin
 
-_thread_locals = local()
+_thread_locals = threading.local()
 
-class CurrentRequestMiddleware:
-    def __init__(self, get_response):
-        self.get_response = get_response
+def get_current_user():
+    return getattr(_thread_locals, 'user', None)
 
-    def __call__(self, request):
-        _thread_locals.request = request
-        response = self.get_response(request)
-        return response
-
-def get_current_request():
-    return getattr(_thread_locals, 'request', None)
-
-settings.CURRENT_REQUEST = get_current_request
+class CurrentUserMiddleware(MiddlewareMixin):
+    def process_request(self, request):
+        _thread_locals.user = request.user

@@ -17,7 +17,7 @@ interface Props {
 }
 
 const SubtaskListPage: React.FC<Props> = ({ subtasks }) => {
-  const { data: users = [] } = useGetUsersQuery();
+  const { data: users = [], refetch } = useGetUsersQuery();
   const [updateStatus] = useUpdateSubTaskStatusMutation();
   const [deleteSubtask] = useDeleteSubtaskMutation();
   const [updateSubtask] = useUpdateSubtaskMutation();
@@ -33,24 +33,29 @@ const SubtaskListPage: React.FC<Props> = ({ subtasks }) => {
       await updateStatus({ id: draggedSubtask.id, status });
       setDraggedSubtask(null);
     }
+    refetch();
   };
 
   const openSubtaskSidebar = (subtask: Subtask) => {
     setSelectedSubtask(subtask);
     setIsSubtaskSidebarOpen(true);
+    refetch();
   };
 
   const closeSubtaskSidebar = () => {
     setIsSubtaskSidebarOpen(false);
     setSelectedSubtask(null);
+    refetch();
   };
 
   const openAddSubtaskModal = () => {
     setIsAddSubtaskModalOpen(true);
+    refetch();
   };
 
   const closeAddSubtaskModal = () => {
     setIsAddSubtaskModalOpen(false);
+    refetch();
   };
 
   return (

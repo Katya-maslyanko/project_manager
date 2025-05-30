@@ -36,7 +36,7 @@ const SortDropdown: React.FC<SortDropdownProps> = ({ onSelectSort, activeSort, o
 
   return (
     <div
-      className="absolute z-20 mt-2 w-56 rounded-md bg-white shadow-lg p-4"
+      className="absolute z-20 mt-2 ml-[280px] w-56 rounded-md bg-white shadow-lg p-4"
       ref={dropdownRef}
     >
       <div className="flex justify-between items-center mb-4">

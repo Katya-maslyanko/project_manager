@@ -128,16 +128,20 @@ const ProjectHeader: React.FC<Props> = ({
     refetch();
   };
 
-  const clearFilters = () => {
+  const clearFilters = (e: React.MouseEvent) => {
+    e.stopPropagation();
     setActiveFilters({ tags: new Set(), priorities: new Set(), assignedTo: "all" });
     onApplyFilter({ tags: new Set(), priorities: new Set(), assignedTo: "all" });
     refetch();
+    setShowFilterDropdown(false);
   };
 
-  const clearSort = () => {
+  const clearSort = (e: React.MouseEvent) => {
+    e.stopPropagation();
     setActiveSort(null);
     onSelectSort("");
     refetch();
+    setShowSortDropdown(false);
   };
 
   const handleShare = async () => {
@@ -285,7 +289,7 @@ const ProjectHeader: React.FC<Props> = ({
               activeFilters.tags.size ||
               activeFilters.assignedTo === "me" ||
               activeFilters.goalId) && (
-              <XCircle className="h-4 w-4 ml-2 text-red-600 cursor-pointer" onClick={clearFilters} />
+              <XCircle className="h-4 w-4 ml-2 text-red-600 cursor-pointer" onClick={(e) => clearFilters(e)} />
             )}
           </button>
           {showFilterDropdown && projectId && (
@@ -307,7 +311,7 @@ const ProjectHeader: React.FC<Props> = ({
             <ArrowDownUp className="h-5 w-5 mr-2" />
             Сортировка
             {activeSort && (
-              <XCircle className="h-4 w-4 ml-2 text-red-600 cursor-pointer" onClick={clearSort} />
+              <XCircle className="h-4 w-4 ml-2 text-red-600 cursor-pointer" onClick={(e) => clearSort(e)} />
             )}
           </button>
           {showSortDropdown && (
@@ -315,7 +319,9 @@ const ProjectHeader: React.FC<Props> = ({
               <SortDropdown
                 onSelectSort={handleSelectSort}
                 activeSort={activeSort}
-                onClearSort={clearSort}
+                onClearSort={() => {
+                  clearSort(new MouseEvent("click") as unknown as React.MouseEvent);
+                }}
                 onClose={() => setShowSortDropdown(false)}
               />
             </div>

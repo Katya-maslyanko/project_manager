@@ -210,7 +210,7 @@ const SubtaskList: React.FC<SubtaskListProps> = ({
                         {subtask.assigned_to.slice(0, 2).map((user, idx) => {
                           console.log("Rendering assignee:", user);
                           return (
-                            <div key={user.id} className="relative">
+                            <div key={user.id} className="relative group">
                               <div
                                 className={`w-10 h-10 border-2 border-gray-100 rounded-full flex items-center justify-center overflow-hidden ${getTagColor(idx)}`}
                               >
@@ -226,6 +226,11 @@ const SubtaskList: React.FC<SubtaskListProps> = ({
                                   </span>
                                 )}
                               </div>
+                              <span
+                                className="absolute hidden group-hover:block bg-gray-800 text-white text-xs rounded py-1 px-2 button-3 left-1/2 -translate-x-1/2 whitespace-nowrap z-10"
+                              >
+                                {`${user.first_name || ''} ${user.last_name || ''}`.trim() || user.username}
+                              </span>
                             </div>
                           );
                         })}

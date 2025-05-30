@@ -201,7 +201,7 @@ const NotificationDropdown: React.FC<{ projectId: number | null }> = ({ projectI
                 {isLoading ? (
                 <li className="p-4 text-gray-500 dark:text-gray-400 text-center">Загрузка...</li>
                 ) : error ? (
-                <li className="p-4 text-red-500 dark:text-red-400 text-center">Ошибка загрузки уведомлений</li>
+                <li className="p-4 text-red-500 dark:text-red-400 text-center">Ошибка загрузки уведомлений: {JSON.stringify(error, null, 2)}</li>
                 ) : notifications.length === 0 ? (
                 <li className="p-4 text-gray-500 dark:text-gray-400 text-center">Нет уведомлений</li>
                 ) : (

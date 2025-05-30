@@ -79,7 +79,7 @@ const FilterDropdownAdvanced: React.FC<FilterDropdownAdvancedProps> = ({ onApply
 
   return (
     <div
-      className="absolute z-20 mt-2 w-96 rounded-md bg-white shadow-lg p-4 border border-gray-200 dark:bg-dark-bg dark:border-gray-600"
+      className="absolute z-20 mt-2 ml-[135px] w-96 rounded-md bg-white shadow-lg p-4 border border-gray-200 dark:bg-dark-bg dark:border-gray-600"
       ref={dropdownRef}
     >
       <div className="flex justify-between items-center mb-4">

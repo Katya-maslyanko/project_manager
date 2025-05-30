@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Plus, Trash2 } from 'lucide-react';
 import { useUpdateTeamMutation } from '@/state/api';
 import AddMemberModal from './AddMemberModal';
@@ -26,25 +26,32 @@ const ManageTeamMembersModal: React.FC<ManageTeamMembersModalProps> = ({
   const [members, setMembers] = useState<number[]>(currentMembers);
   const [updateTeam, { isLoading, error }] = useUpdateTeamMutation();
 
+  // Синхронизация состояния members с currentMembers
+  useEffect(() => {
+    setMembers(currentMembers);
+  }, [currentMembers]);
+
   const handleRemoveMember = async (userId: number) => {
     const updatedMembers = members.filter(id => id !== userId);
-    setMembers(updatedMembers);
     try {
       await updateTeam({ id: teamId, members: updatedMembers }).unwrap();
+      setMembers(updatedMembers);
       if (onSuccess) onSuccess();
     } catch (err) {
       console.error('Ошибка при удалении участника:', err);
+      // Можно добавить уведомление для пользователя о неудаче
     }
   };
 
   const handleSelectMembers = async (selectedMemberIds: number[]) => {
     const updatedMembers = [...members, ...selectedMemberIds];
-    setMembers(updatedMembers);
     try {
       await updateTeam({ id: teamId, members: updatedMembers }).unwrap();
+      setMembers(updatedMembers);
       if (onSuccess) onSuccess();
     } catch (err) {
       console.error('Ошибка при добавлении участников:', err);
+      // Можно добавить уведомление для пользователя о неудаче
     }
   };
 

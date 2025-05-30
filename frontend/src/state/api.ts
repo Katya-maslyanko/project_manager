@@ -56,6 +56,8 @@ export interface Project {
 }
 
 export interface Assignee {
+  last_name: string;
+  first_name: string;
   id: number;
   username: string;
   profile_image: string | null;
@@ -204,9 +206,16 @@ export interface Notification {
   task?: { id: number; title: string };
   subtask?: { id: number; title: string };
   comment?: {
-    id: number;
-    content: string;
-    user: User;
+      id: number;
+      content: string;
+      user: {
+          id: number;
+          username: string;
+          email: string;
+          first_name: string;
+          last_name: string;
+          profile_image?: string;
+      };
   };
   team?: { id: number; name: string };
   goal?: { id: number; title: string };
@@ -473,6 +482,13 @@ export const api = createApi({
       }),
       invalidatesTags: (result, error, { id }) => [{ type: 'Teams', id }],
     }),
+    deleteTeam: build.mutation<void, number>({
+      query: (id) => ({
+        url: `teams/${id}/`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['Teams'],
+    }),
     inviteMember: build.mutation<void, { teamId: number; email: string }>({
       query: ({ teamId, email }) => ({
         url: `teams/${teamId}/invite/`,
@@ -608,28 +624,31 @@ export const api = createApi({
       invalidatesTags: ["StrategicConnections"],
     }),
     getNotifications: build.query<Notification[], void>({
-      query: () => "notifications/",
+      query: () => {
+          console.log("Fetching notifications...");
+          return "notifications/";
+      },
       providesTags: (result) =>
-        result
-          ? result.map(({ id }) => ({ type: "Notifications" as const, id }))
-          : [{ type: "Notifications", id: "LIST" }],
-    }),
-    markNotificationAsRead: build.mutation<void, number>({
-      query: (id) => ({
-        url: `notifications/${id}/mark-read/`,
-        method: "POST",
-      }),
-      invalidatesTags: (result, error, id) => [
-        { type: "Notifications", id },
-        { type: "Notifications", id: "LIST" },
-      ],
+          result
+              ? result.map(({ id }) => ({ type: "Notifications", id }))
+              : [{ type: "Notifications", id: "LIST" }],
+  }),
+      markNotificationAsRead: build.mutation<void, number>({
+        query: (id) => ({
+            url: `notifications/${id}/mark-read/`,
+            method: "POST",
+        }),
+        invalidatesTags: (result, error, id) => [
+            { type: "Notifications", id },
+            { type: "Notifications", id: "LIST" },
+        ],
     }),
     markAllNotificationsAsRead: build.mutation<void, void>({
-      query: () => ({
-        url: "notifications/mark-all-read/",
-        method: "POST",
-      }),
-      invalidatesTags: [{ type: "Notifications", id: "LIST" }],
+        query: () => ({
+            url: "notifications/mark-all-read/",
+            method: "POST",
+        }),
+        invalidatesTags: [{ type: "Notifications", id: "LIST" }],
     }),
     inviteProjectMember: build.mutation<{ message: string }, { projectId: number; email: string }>({
       query: ({ projectId, email }) => ({
@@ -749,4 +768,5 @@ export const {
   useLogin2FAMutation,
   useRequestPasswordResetMutation,
   useConfirmPasswordResetMutation,
+  useDeleteTeamMutation
 } = api;

@@ -20,6 +20,7 @@ const CommentsSection: React.FC<CommentsSectionProps> = ({ taskId }) => {
     data: comments = [],
     isLoading,
     isError,
+    refetch,
   } = useGetCommentsByTaskIdQuery({ taskId });
 
   const [newComment, setNewComment] = useState("");
@@ -32,6 +33,13 @@ const CommentsSection: React.FC<CommentsSectionProps> = ({ taskId }) => {
   const [createComment] = useCreateCommentMutation();
   const [updateComment] = useUpdateCommentMutation();
   const [deleteComment] = useDeleteCommentMutation();
+
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      refetch();
+    }, 1000);
+    return () => clearInterval(intervalId);
+  }, [refetch]);
 
   const handleCommentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
