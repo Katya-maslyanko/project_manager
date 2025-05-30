@@ -264,9 +264,17 @@ export const api = createApi({
       providesTags: ["Tasks"],
     }),
     getTasks: build.query<Task[], { projectId: number }>({
-      query: ({ projectId }) => `tasks/?projectId=${projectId}`,
+      query: ({ projectId, ...params }) => {
+        const queryString = new URLSearchParams(params).toString();
+        return `tasks/?projectId=${projectId}${queryString ? `&${queryString}` : ''}`;
+      },
       providesTags: (result) =>
-        result ? result.map(({ id }) => ({ type: "Tasks", id })) : [{ type: "Tasks", id: "LIST" }],
+        result
+          ? [
+              ...result.map(({ id }) => ({ type: "Tasks" as const, id })),
+              { type: "Tasks", id: "LIST" },
+            ]
+          : [{ type: "Tasks", id: "LIST" }],
     }),
     updateTask: build.mutation<Task, Partial<Task> & { id: number }>({
       query: ({ id, ...patch }) => ({
@@ -277,23 +285,15 @@ export const api = createApi({
       invalidatesTags: ["Tasks"],
     }),
     updateTaskStatus: build.mutation<Task, { id: number; status: string }>({
-      query: ({ id, status }) => {
-        console.log("Sending PATCH request for task", id, "with status:", status);
-        return {
-          url: `tasks/${id}/`,
-          method: "PATCH",
-          body: { status },
-        };
-      },
-      invalidatesTags: ["Tasks"],
-      onQueryStarted: async (arg, { queryFulfilled }) => {
-        try {
-          const { data } = await queryFulfilled;
-          console.log("Task updated successfully:", data);
-        } catch (error) {
-          console.error("Error updating task:", error);
-        }
-      },
+      query: ({ id, status }) => ({
+        url: `tasks/${id}/`,
+        method: "PATCH",
+        body: { status },
+      }),
+      invalidatesTags: (result, error, { id }) => [
+        { type: "Tasks", id },
+        { type: "Tasks", id: "LIST" },
+      ],
     }),
     updateSubTaskStatus: build.mutation<Subtask, { id: number; status: string }>({
       query: ({ id, status }) => ({
@@ -301,7 +301,10 @@ export const api = createApi({
         method: "PATCH",
         body: { status },
       }),
-      invalidatesTags: ["Subtasks"],
+      invalidatesTags: (result, error, { id }) => [
+        { type: "Subtasks", id },
+        { type: "Subtasks", id: "LIST" },
+      ],
     }),
     createTask: build.mutation<Task, Partial<Task>>({
       query: (task) => ({

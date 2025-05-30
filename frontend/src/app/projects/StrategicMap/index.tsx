@@ -60,11 +60,11 @@ interface StrategicMapProps {
 }
 
 const StrategicMapInner: React.FC<StrategicMapProps> = ({ projectId }) => {
-  const { data: tasks = [], isLoading: tasksLoading } = useGetTasksQuery({ projectId }, { pollingInterval: 30000 });
-  const { data: goals = [], isLoading: goalsLoading } = useGetProjectGoalsQuery({ projectId }, { pollingInterval: 30000 });
-  const { data: initialStickies = [], isLoading: stickiesLoading } = useGetStickyNotesQuery({ projectId }, { pollingInterval: 30000 });
-  const { data: connections = [], isLoading: connectionsLoading, refetch: refetchConnections } = useGetStrategicConnectionsQuery({ projectId }, { pollingInterval: 30000 });
-  const { data: subgoals = [], isLoading: subgoalsLoading } = useGetSubGoalsQuery({ goalId: goals.length > 0 ? goals[0].id : 0 }, { pollingInterval: 30000 });
+  const { data: tasks = [], isLoading: tasksLoading } = useGetTasksQuery({ projectId }, { pollingInterval: 1000 });
+  const { data: goals = [], isLoading: goalsLoading } = useGetProjectGoalsQuery({ projectId }, { pollingInterval: 1000 });
+  const { data: initialStickies = [], isLoading: stickiesLoading } = useGetStickyNotesQuery({ projectId }, { pollingInterval: 1000 });
+  const { data: connections = [], isLoading: connectionsLoading, refetch: refetchConnections } = useGetStrategicConnectionsQuery({ projectId }, { pollingInterval: 1000 });
+  const { data: subgoals = [], isLoading: subgoalsLoading } = useGetSubGoalsQuery({ goalId: goals.length > 0 ? goals[0].id : 0 }, { pollingInterval: 1000 });
   const [createStickyNote] = useCreateStickyNoteMutation();
   const [updateGoal] = useUpdateProjectGoalMutation();
   const [createConnection] = useCreateStrategicConnectionMutation();
@@ -336,10 +336,14 @@ const StrategicMapInner: React.FC<StrategicMapProps> = ({ projectId }) => {
     setNodes(computedNodes);
     setEdges(computedEdges);
     setStickies(initialStickies);
-}, [computedNodes, computedEdges, initialStickies]);
-  // useEffect(() => {
-  //   setStickies(initialStickies);
-  // }, [initialStickies]);
+}, [computedNodes]);
+  useEffect(() => {
+    setStickies(initialStickies);
+  }, [initialStickies]);
+
+  useEffect(() => {
+    setEdges(computedEdges);
+  }, [computedEdges]);
 
   const throttledSendCursorUpdate = useMemo(
     () =>
@@ -625,6 +629,7 @@ const StrategicMapInner: React.FC<StrategicMapProps> = ({ projectId }) => {
       const newEdges: Edge[] = [];
       const newPendingConnections: StrategicConnection[] = [];
       for (const taskId of taskIds) {
+        const tempConnectionId = `temp-${Date.now()}-${taskId}`;
         const newConnection = {
           connection_type: isSubgoal ? 'subgoal_to_task' : 'goal_to_task',
           [isSubgoal ? 'source_subgoal' : 'source_goal']: id,

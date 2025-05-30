@@ -40,6 +40,7 @@ interface TaskSidebarProps {
   onDelete: () => void;
   onEdit?: (updatedTask: Partial<Task>) => void;
   onOpenSubtask: (subtaskId: number) => void;
+  refetchTasks: () => void;
 }
 
 const TaskSidebar: React.FC<TaskSidebarProps> = ({
@@ -49,6 +50,7 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
   onDelete,
   onEdit,
   onOpenSubtask,
+  refetchTasks,
 }) => {
   const { data: tags = [] } = useGetTagsQuery();
   const { data: users = [] } = useGetUsersQuery();
@@ -104,6 +106,7 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
         await updateTask({ id: task.id, ...fields });
         onEdit && onEdit(fields);
         refetch();
+        refetchTasks();
       } catch (error) {
         console.error("Ошибка обновления:", error);
       }

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { useDispatch } from "react-redux";
 import TaskCard from "@/components/Task/TaskCardList";
 import {
   useGetTasksQuery,
@@ -11,6 +12,7 @@ import {
   useDeleteSubtaskMutation,
   useUpdateSubtaskMutation,
   useGetUsersQuery,
+  useGetTaskByIdQuery,
 } from "@/state/api";
 import { useParams } from "next/navigation";
 import { Task, Subtask } from "@/state/api";
@@ -167,6 +169,7 @@ const TaskList: React.FC<TaskListProps> = ({
   const handleEditTask = (task: Task) => {
     setSelectedTaskId(task.id);
     setEditModalOpen(true);
+    refetch();
   };
 
   const handleEditTaskSubmit = async (updatedTask: Task) => {
@@ -182,6 +185,7 @@ const TaskList: React.FC<TaskListProps> = ({
   const handleDeleteTask = (task: Task) => {
     setSelectedTaskId(task.id);
     setDeleteModalOpen(true);
+    refetch();
   };
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
@@ -451,6 +455,7 @@ const TaskList: React.FC<TaskListProps> = ({
             refetch();
           }}
           onOpenSubtask={openSubtaskSidebar}
+          refetchTasks={refetch}
         />
       )}
 
